@@ -524,35 +524,10 @@ function changeState(){
   var id_sender = $('#id_sender').val();
   let trackingNo = $('#trackingNo').val();
   let tracking = $('#tracking').val();
-  var is_wms = $('#is_wms').val();
   var reason_id = $('#reason-id').val();
   var cancle_reason = $.trim($('#cancle-reason').val());
   let force_cancel = $('#force-cancel').is(':checked') ? 1 : 0;
-
-  if(is_wms) {
-    if(state == 3 && id_address == "") {
-      swal("กรุณาระบุที่อยู่จัดส่ง");
-      return false;
-    }
-
-    if(state == 3 && id_sender == "") {
-      swal("กรุณาระบุผู้จัดส่ง");
-      return false;
-    }
-
-    if($('#sender option:selected').data('tracking') == 1) {
-      if(trackingNo != tracking) {
-        swal("กรุณากดบันทึก Tracking No");
-        return false;
-      }
-
-      if(trackingNo.length === 0) {
-        swal("กรุณาระบุ Tracking No");
-        return false;
-      }
-    }
-  }
-
+  
   if(state == 9 && cancle_reason.length < 10) {
     showCancleModal();
     return false;

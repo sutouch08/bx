@@ -8,12 +8,7 @@ class Order_payment extends PS_Controller
   public $menu_sub_group_code = '';
 	public $title = 'ตรวจสอบยอดชำระเงิน';
   public $filter;
-	public $wms;
 	public $error;
-  public $wmsApi;
-  public $sokoApi;
-  public $soko_user = 'api@sokochan';
-  public $wms_user = 'api@wms';
 
   public function __construct()
   {
@@ -24,9 +19,6 @@ class Order_payment extends PS_Controller
     $this->load->helper('bank');
     $this->load->helper('order');
     $this->load->helper('channels');
-
-    $this->wmsApi = is_true(getConfig('WMS_API'));
-    $this->sokoApi = is_true(getConfig('SOKOJUNG_API'));
   }
 
 
@@ -124,9 +116,6 @@ class Order_payment extends PS_Controller
       $id = $this->input->post('id');
       $detail = $this->order_payment_model->get_detail($id);
 			$order = $this->orders_model->get($detail->order_code);
-      $is_wms = $order->is_wms;
-
-      $is_api = $is_wms == 0 ? FALSE : ($is_wms == 1 && $this->wmsApi ? TRUE : ($is_wms == 2 && $this->sokoApi ? TRUE : FALSE));
 
       $arr = array(
         'order_code' => $detail->order_code,
@@ -150,68 +139,6 @@ class Order_payment extends PS_Controller
 
 	      //--- add state event
 	      $this->order_state_model->add_state($arr);
-
-        if($is_api)
-        {
-          $this->wms = $this->load->database('wms', TRUE);
-
-          if($is_wms == 1 && ! $order->is_pre_order)
-  				{
-  					$this->load->library('wms_order_api');
-
-  					$ex = $this->wms_order_api->export_order($order->code);
-
-  					if(! $ex)
-  					{
-  						$this->error = "ส่งข้อมูลไป WMS ไม่สำเร็จ <br/> (".$this->wms_order_api->error.")";
-  						$txt = "998 : This order no {$order->code} was already processed by PLC operation.";
-  						if($this->wms_order_api->error == $txt)
-  						{
-  							if($order->wms_export != 1)
-  							{
-  								$arr = array(
-  									'wms_export' => 1,
-  									'wms_export_error' => NULL
-  								);
-
-  								$this->orders_model->update($order->code, $arr);
-  							}
-  						}
-  						else
-  						{
-  							$sc = FALSE;
-  							$this->error = "เปลี่ยนสถานะสำเร็จ แต่ส่งข้อมูลไป WMS ไม่สำเร็จ กรุณาโหลดหน้าเว็บใหม่แล้วกดส่งข้อมูลอีกครั้ง : ".$this->wms_order_api->error;
-  							$arr = array(
-  								'wms_export' => 3,
-  								'wms_export_error' => $this->wms_order_api->error
-  							);
-
-  							$this->orders_model->update($order->code, $arr);
-  						}
-  					}
-  					else
-  					{
-  						$arr = array(
-  							'wms_export' => 1,
-  							'wms_export_error' => NULL
-  						);
-
-  						$this->orders_model->update($order->code, $arr);
-  					}
-  				}
-
-          //---- export to soko
-          if($order->is_wms == 2 && ! $order->is_pre_order)
-          {
-            $this->load->library('soko_order_api');
-
-            if( ! $this->soko_order_api->export_order($order->code))
-            {
-              $sc = FALSE;
-              $this->error = "ส่งข้อมูลไป Sokochan ไม่สำเร็จ <br/> (SOKOCHAN Error : ".$this->soko_order_api->error.")";
-            }
-          } //--- if($order->is_wms == 2)
-        }				
 			}
 
       //--- complete transecrtion with commit or rollback if any error

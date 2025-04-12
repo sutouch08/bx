@@ -9,8 +9,6 @@ class Return_order extends PS_Controller
 	public $title = 'คืนสินค้า(ลดหนี้ขาย)';
   public $filter;
   public $error;
-	public $wms;
-	public $isAPI;
   public $segment = 4;
   public $required_remark = 1;
 
@@ -23,10 +21,6 @@ class Return_order extends PS_Controller
     $this->load->model('masters/zone_model');
     $this->load->model('masters/customers_model');
     $this->load->model('masters/products_model');
-
-		$this->isAPI = is_true(getConfig('WMS_API'));
-    $this->wmsApi = is_true(getConfig('WMS_API'));
-    $this->sokoApi = is_true(getConfig('SOKOJUNG_API'));
   }
 
 
@@ -44,8 +38,6 @@ class Return_order extends PS_Controller
       'status' => get_filter('status', 'sm_status', 'all'),
       'approve' => get_filter('approve', 'sm_approve', 'all'),
 			'zone' => get_filter('zone', 'sm_zone', ''),
-			'api' => get_filter('api', 'sm_api', 'all'),
-      'wms_export' => get_filter('wms_export', 'sm_wms_export', 'all'),
       'is_pos_api' => get_filter('is_pos_api', 'sm_pos_api', 'all'),
       'must_accept' => get_filter('must_accept', 'sm_must_accept', 'all'),
       'sap' => get_filter('sap', 'sm_sap', 'all')
@@ -206,8 +198,6 @@ class Return_order extends PS_Controller
                 $zone_code = trim($cs['D']);
                 $item_code = trim($cs['E']);
                 $return_qty = intval(trim($cs['F']));
-                $api = trim($cs['G']);
-                $is_wms = trim($cs['H']) == 2 ? 2 : 0;
                 $remark = empty($cs['I']) ? NULL : get_null(trim($cs['I']));
 
 
@@ -277,8 +267,6 @@ class Return_order extends PS_Controller
                         'warehouse_code' => $zone->warehouse_code,
                         'zone_code' => $zone->code,
                         'must_accept' => empty($zone->user_id) ? 0 : 1,
-                        'is_wms' => $is_wms,
-                        'api' => (empty($api) OR $api == 'N') ? 0 : 1,
                         'remark' => $remark,
                         'details' => array((object)array(
                           'invoice_code' => $invoice->code,
@@ -355,8 +343,6 @@ class Return_order extends PS_Controller
                 'user' => $this->_user->uname,
                 'date_add' => $sm->date_add,
                 'remark' => $sm->remark,
-        				'is_wms' => $sm->is_wms,
-        				'api' => $sm->api,
                 'status' => 1,
                 'must_accept' => $sm->must_accept,
                 'is_import' => 1,
@@ -383,7 +369,7 @@ class Return_order extends PS_Controller
                       'product_name' => $rs->product_name,
                       'sold_qty' => $rs->sold_qty,
                       'qty' => $rs->return_qty,
-                      'receive_qty' => $sm->is_wms == 2 ? 0 : $rs->return_qty,
+                      'receive_qty' => $rs->return_qty,
                       'price' => $rs->price,
                       'discount_percent' => $rs->discount_percent,
                       'amount' => $rs->amount,
@@ -489,7 +475,7 @@ class Return_order extends PS_Controller
                 $disc_amount = $discount == 0 ? 0 : $rs->qty * ($price * ($discount * 0.01));
                 $amount = ($rs->qty * $price) - $disc_amount;
 
-                $receive_qty = $doc->is_wms == 0 ? $rs->qty : ($doc->api == 0 ? $rs->qty :($doc->is_wms == 1 && $this->wmsApi ? 0 : ($doc->is_wms == 2 && $this->sokoApi ? 0 : $rs->qty)));
+                $receive_qty = $rs->qty;
 
                 $arr = array(
                   'return_code' => $code,
@@ -662,41 +648,38 @@ class Return_order extends PS_Controller
 
               $details = $this->return_order_model->get_details($doc->code);
 
-              if($doc->is_wms == 0 OR $doc->api == 0 OR (($doc->is_wms == 1 && ! $this->wmsApi) OR ($doc->is_wms == 2 && ! $this->sokoApi)))
+              if( ! empty($details))
               {
-                if( ! empty($details))
+                //---- add movement
+                foreach($details as $rs)
                 {
-                  //---- add movement
-                  foreach($details as $rs)
+                  if($sc === FALSE) { break; }
+
+                  $arr = array(
+                    'reference' => $doc->code,
+                    'warehouse_code' => $doc->warehouse_code,
+                    'zone_code' => $doc->zone_code,
+                    'product_code' => $rs->product_code,
+                    'move_in' => $rs->receive_qty,
+                    'date_add' => db_date($doc->date_add, TRUE)
+                  );
+
+                  if($this->movement_model->add($arr) === FALSE)
                   {
-                    if($sc === FALSE) { break; }
-
-                    $arr = array(
-                      'reference' => $doc->code,
-                      'warehouse_code' => $doc->warehouse_code,
-                      'zone_code' => $doc->zone_code,
-                      'product_code' => $rs->product_code,
-                      'move_in' => $rs->receive_qty,
-                      'date_add' => db_date($doc->date_add, TRUE)
-                    );
-
-                    if($this->movement_model->add($arr) === FALSE)
-                    {
-                      $sc = FALSE;
-                      $this->error = 'บันทึก movement ไม่สำเร็จ';
-                    }
-                  }
-
-                  if($sc === TRUE)
-                  {
-                    $this->return_order_model->update($code, array('is_complete' => 1));
+                    $sc = FALSE;
+                    $this->error = 'บันทึก movement ไม่สำเร็จ';
                   }
                 }
-                else
+
+                if($sc === TRUE)
                 {
-                  $sc = FALSE;
-                  $this->error = "ไม่พบรายการรับคืน";
+                  $this->return_order_model->update($code, array('is_complete' => 1));
                 }
+              }
+              else
+              {
+                $sc = FALSE;
+                $this->error = "ไม่พบรายการรับคืน";
               }
             }
 					}
@@ -716,45 +699,10 @@ class Return_order extends PS_Controller
             {
               if( ! empty($details))
               {
-                if($doc->is_wms == 0 OR $doc->api == 0 OR (($doc->is_wms == 1 && ! $this->wmsApi) OR ($doc->is_wms == 2 && ! $this->sokoApi)))
+                if( ! $this->do_export($code))
                 {
-                  if( ! $this->do_export($code))
-                  {
-                    $ex = 1;
-                    $this->error = "อนุมัติสำเร็จ แต่ส่งข้อมูลไป SAP ไม่สำเร็จ กรุณา refresh หน้าจอแล้วกดส่งข้อมูลอีกครั้ง";
-                  }
-                }
-
-                if($doc->is_wms == 1 && $doc->api == 1 && $this->wmsApi)
-                {
-                  $this->wms = $this->load->database('wms', TRUE);
-                  $this->load->library('wms_receive_api');
-
-                  if($this->wms_receive_api->export_return_order($doc, $details))
-                  {
-                    $this->return_order_model->set_status($code, 3); //--- on wms process;
-                  }
-                  else
-                  {
-                    $ex = 1;
-                    $this->error = "อนุมัติสำเร็จ แต่ส่งข้อมูลเข้า Pioneer ไม่สำเร็จ กรุณา refresh หน้าจอแล้วกดส่งข้อมูลอีกครั้ง";
-                  }
-                }
-
-                if($doc->is_wms == 2 && $doc->api == 1 && $this->sokoApi)
-                {
-                  $this->wms = $this->load->database('wms', TRUE);
-                  $this->load->library('soko_receive_api');
-
-                  if($this->soko_receive_api->create_return_order($doc, $details))
-                  {
-                    $this->return_order_model->set_status($code, 3); //--- on wms process;
-                  }
-                  else
-                  {
-                    $ex = 1;
-                    $this->error = "อนุมัติสำเร็จ แต่ส่งข้อมูลเข้า SOKOCHAN ไม่สำเร็จ กรุณา refresh หน้าจอแล้วกดส่งข้อมูลอีกครั้ง";
-                  }
+                  $ex = 1;
+                  $this->error = "อนุมัติสำเร็จ แต่ส่งข้อมูลไป SAP ไม่สำเร็จ กรุณา refresh หน้าจอแล้วกดส่งข้อมูลอีกครั้ง";
                 }
               }
               else
@@ -813,8 +761,8 @@ class Return_order extends PS_Controller
 
       if($doc->status == 4 )
       {
-        $status = $doc->is_wms == 0 ? 1 : ($doc->is_wms == 1 && $this->wmsApi ? 3 : ($doc->is_wms == 2 && $this->sokoApi ? 3 : 1));
-        $ship_date = $doc->is_wms == 0 ? $date_add : ($doc->is_wms == 1 && $this->wmsApi ? NULL : ($doc->is_wms == 2 && $this->sokoApi ? NULL : $date_add));
+        $status = 1;
+        $ship_date = $date_add;
 
         $arr = array(
           "status" => $status,
@@ -839,35 +787,32 @@ class Return_order extends PS_Controller
 
           if( ! empty($details))
           {
-            if($doc->is_wms == 0 OR $doc->api == 0 OR (($doc->is_wms == 1 && ! $this->wmsApi) OR ($doc->is_wms == 2 && ! $this->sokoApi)))
+            foreach($details as $rs)
             {
-              foreach($details as $rs)
+              if($sc === FALSE)
               {
-                if($sc === FALSE)
-                {
-                  break;
-                }
-
-                $arr = array(
-                  'reference' => $doc->code,
-                  'warehouse_code' => $doc->warehouse_code,
-                  'zone_code' => $doc->zone_code,
-                  'product_code' => $rs->product_code,
-                  'move_in' => $rs->receive_qty,
-                  'date_add' => db_date($doc->date_add, TRUE)
-                );
-
-                if($this->movement_model->add($arr) === FALSE)
-                {
-                  $sc = FALSE;
-                  $this->error = 'บันทึก movement ไม่สำเร็จ';
-                }
+                break;
               }
 
-              if($sc === TRUE)
+              $arr = array(
+                'reference' => $doc->code,
+                'warehouse_code' => $doc->warehouse_code,
+                'zone_code' => $doc->zone_code,
+                'product_code' => $rs->product_code,
+                'move_in' => $rs->receive_qty,
+                'date_add' => db_date($doc->date_add, TRUE)
+              );
+
+              if($this->movement_model->add($arr) === FALSE)
               {
-                $this->return_order_model->update($code, array('is_complete' => 1));
+                $sc = FALSE;
+                $this->error = 'บันทึก movement ไม่สำเร็จ';
               }
+            }
+
+            if($sc === TRUE)
+            {
+              $this->return_order_model->update($code, array('is_complete' => 1));
             }
           }
           else
@@ -888,45 +833,10 @@ class Return_order extends PS_Controller
 
         if($sc === TRUE)
         {
-          if($doc->is_wms == 0 OR $doc->api == 0 OR (($doc->is_wms == 1 && ! $this->wmsApi) OR ($doc->is_wms == 2 && ! $this->sokoApi)))
+          if( ! $this->do_export($code))
           {
-            if( ! $this->do_export($code))
-            {
-              $sc = FALSE;
-              $this->error = "อนุมัติสำเร็จ แต่ส่งข้อมูลไป SAP ไม่สำเร็จ กรุณา refresh หน้าจอแล้วกดส่งข้อมูลอีกครั้ง";
-            }
-          }
-
-          if($doc->is_wms == 1 && $doc->api == 1 && $this->wmsApi)
-          {
-            $this->wms = $this->load->database('wms', TRUE);
-            $this->load->library('wms_receive_api');
-
-            if($this->wms_receive_api->export_return_order($doc, $details))
-            {
-              $this->return_order_model->set_status($code, 3); //--- on wms process;
-            }
-            else
-            {
-              $sc = FALSE;
-              $this->error = "ยืนยันสำเร็จ แต่ส่งข้อมูลเข้า Pioneer ไม่สำเร็จ กรุณา refresh หน้าจอแล้วกดส่งข้อมูลอีกครั้ง";
-            }
-          }
-
-          if($doc->is_wms == 2 && $doc->api == 1 && $this->sokoApi)
-          {
-            $this->wms = $this->load->database('wms', TRUE);
-            $this->load->library('soko_receive_api');
-
-            if($this->soko_receive_api->create_return_order($doc, $details))
-            {
-              $this->return_order_model->set_status($code, 3); //--- on wms process;
-            }
-            else
-            {
-              $sc = FALSE;
-              $this->error = "ยืนยันสำเร็จ แต่ส่งข้อมูลเข้า SOKOCHAN ไม่สำเร็จ กรุณา refresh หน้าจอแล้วกดส่งข้อมูลอีกครั้ง";
-            }
+            $sc = FALSE;
+            $this->error = "อนุมัติสำเร็จ แต่ส่งข้อมูลไป SAP ไม่สำเร็จ กรุณา refresh หน้าจอแล้วกดส่งข้อมูลอีกครั้ง";
           }
         }
       }
@@ -1034,17 +944,7 @@ class Return_order extends PS_Controller
 
   public function add_new()
   {
-    $sokoZone = $this->zone_model->get(getConfig('SOKOJUNG_ZONE'));
-    $wmsZone = $this->zone_model->get(getConfig('WMS_ZONE'));
-
-    $ds = array(
-      'soko_zone_code' => empty($sokoZone) ? NULL : $sokoZone->code,
-      'soko_zone_name' => empty($sokoZone) ? NULL : $sokoZone->name,
-      'wms_zone_code' => empty($wmsZone) ? NULL : $wmsZone->code,
-      'wms_zone_name' => empty($wmsZone) ? NULL : $wmsZone->name
-    );
-
-    $this->load->view('inventory/return_order/return_order_add', $ds);
+    $this->load->view('inventory/return_order/return_order_add');
   }
 
 
@@ -1057,28 +957,6 @@ class Return_order extends PS_Controller
     {
       $date_add = db_date($data->date_add, TRUE);
       $shipped_date = empty($data->shipped_date) ? NULL : db_date($data->shipped_date, TRUE);
-      $wmsZone = getConfig('WMS_ZONE');
-      $sokoZone = getConfig('SOKOJUNG_ZONE');
-      $is_wms = $data->is_wms;
-
-      if($is_wms == 1 && $this->wmsApi && $data->zone_code != $wmsZone)
-      {
-        $sc = FALSE;
-        $this->error = "เอกสารต้องรับเข้าที่โซน {$wmsZone}";
-      }
-
-      if($is_wms == 2 && $this->sokoApi && $data->zone_code != $sokoZone)
-      {
-        $sc = FALSE;
-        $this->error = "เอกสารต้องรับเข้าที่โซน {$sokoZone}";
-      }
-
-      if($is_wms == 0 && ($data->zone_code == $wmsZone OR $data->zone_code == $sokoZone))
-      {
-        $sc = FALSE;
-        $this->error = "เอกสารต้องรับเข้าที่โซนของ WARRIX";
-      }
-
 			$zone = $this->zone_model->get($data->zone_code);
 
       if(empty($zone))
@@ -1105,8 +983,6 @@ class Return_order extends PS_Controller
           'date_add' => $date_add,
           'shipped_date' => $shipped_date,
           'remark' => get_null(trim($data->remark)),
-  				'is_wms' => $is_wms,
-  				'api' => $data->api,
           'must_accept' => $must_accept
         );
 
@@ -1140,9 +1016,6 @@ class Return_order extends PS_Controller
     $doc->zone_name = $this->zone_model->get_name($doc->zone_code);
     $doc->warehouse_name = $this->warehouse_model->get_name($doc->warehouse_code);
     $details = $this->return_order_model->get_details($code);
-
-    $wmsZone = $this->zone_model->get(getConfig('WMS_ZONE'));
-    $sokoZone = $this->zone_model->get(getConfig('SOKOJUNG_ZONE'));
 
     $detail = array();
       //--- ถ้าไม่มีรายละเอียดให้ไปดึงจากใบกำกับมา
@@ -1210,11 +1083,7 @@ class Return_order extends PS_Controller
 
     $ds = array(
       'doc' => $doc,
-      'details' => $detail,
-      'wms_zone_code' => empty($wmsZone) ? NULL : $wmsZone->code,
-      'wms_zone_name' => empty($wmsZone) ? NULL : $wmsZone->name,
-      'soko_zone_code' => empty($sokoZone) ? NULL : $sokoZone->code,
-      'soko_zone_name' => empty($sokoZone) ? NULL : $sokoZone->name
+      'details' => $detail
     );
 
     if($doc->status == 0)
@@ -1239,27 +1108,6 @@ class Return_order extends PS_Controller
       $code = $data->code;
       $date_add = db_date($data->date_add, TRUE);
       $shipped_date = empty($data->shipped_date) ? NULL : db_date($data->shipped_date, TRUE);
-      $wmsZone = getConfig('WMS_ZONE');
-      $sokoZone = getConfig('SOKOJUNG_ZONE');
-      $is_wms = $data->is_wms;
-
-      if($is_wms == 1 && $this->wmsApi && $data->zone_code != $wmsZone)
-      {
-        $sc = FALSE;
-        $this->error = "เอกสารต้องรับเข้าที่โซน {$wmsZone}";
-      }
-
-      if($is_wms == 2 && $this->sokoApi && $data->zone_code != $sokoZone)
-      {
-        $sc = FALSE;
-        $this->error = "เอกสารต้องรับเข้าที่โซน {$sokoZone}";
-      }
-
-      if($is_wms == 0 && ($data->zone_code == $wmsZone OR $data->zone_code == $sokoZone))
-      {
-        $sc = FALSE;
-        $this->error = "เอกสารต้องรับเข้าที่โซนของ WARRIX";
-      }
 
       if($sc === TRUE)
       {
@@ -1283,8 +1131,6 @@ class Return_order extends PS_Controller
           'customer_code' => $data->customer_code,
           'warehouse_code' => $zone->warehouse_code,
           'zone_code' => $zone->code,
-          'is_wms' => $is_wms,
-          'api' => $data->api,
           'remark' => get_null(trim($data->remark)),
           'must_accept' => $must_accept,
           'update_user' => $this->_user->uname
@@ -1470,24 +1316,6 @@ class Return_order extends PS_Controller
   }
 
 
-  public function print_wms_return($code)
-  {
-    $this->load->library('xprinter');
-    $doc = $this->return_order_model->get($code);
-    $doc->customer_name = $this->customers_model->get_name($doc->customer_code);
-    $doc->warehouse_name = $this->warehouse_model->get_name($doc->warehouse_code);
-    $doc->zone_name = $this->zone_model->get_name($doc->zone_code);
-    $details = $this->return_order_model->get_count_item_details($code); //--- get only count item
-
-    $ds = array(
-      'order' => $doc,
-      'details' => $details
-    );
-
-    $this->load->view('print/print_wms_return', $ds);
-  }
-
-
   public function cancle_return($code)
   {
     $sc = TRUE;
@@ -1502,12 +1330,6 @@ class Return_order extends PS_Controller
 			{
 				if($doc->status != 2)
 				{
-          if($doc->status == 3 && $doc->is_wms == 1 && ! $this->_SuperAdmin)
-          {
-            $sc = FALSE;
-            $this->error = "เอกสารอยู่ระหว่างการรับเข้าไม่อนุญาติให้ยกเลิก";
-          }
-
 					//--- check sap
 					$sap = $this->return_order_model->get_sap_doc_num($code);
 
@@ -1541,24 +1363,6 @@ class Return_order extends PS_Controller
                   {
                     $sc = FALSE;
                     $this->error = "ยกเลิกเอกสารไม่สำเร็จ";
-                  }
-                }
-
-                if($sc === TRUE)
-                {
-                  if($doc->status == 3 && ! $force_cancel)
-                  {
-                    if($doc->is_wms == 2 && $doc->api == 1 && $this->sokoApi)
-                    {
-                      $this->wms = $this->load->database('wms', TRUE);
-                      $this->load->library('soko_receive_api');
-
-                      if( ! $this->soko_receive_api->cancel_receive_po($doc))
-                      {
-                        $sc = FALSE;
-                        $this->error = "SOKOCHAN Error : ".$this->soko_receive_api->error;
-                      }
-                    }
                   }
                 }
 
@@ -1713,229 +1517,6 @@ class Return_order extends PS_Controller
   }
 
 
-	public function send_to_wms()
-	{
-		$sc = TRUE;
-
-    if($this->wmsApi)
-    {
-      if($this->input->post('code'))
-  		{
-  			$code = trim($this->input->post('code'));
-
-  			$doc = $this->return_order_model->get($code);
-
-  			if( ! empty($doc))
-  			{
-  				if($doc->status != 2 && $doc->status != 0)
-  				{
-  					$details = $this->return_order_model->get_details($doc->code);
-
-  					if( ! empty($details))
-  					{
-  						$this->wms = $this->load->database('wms', TRUE);
-  						$this->load->library('wms_receive_api');
-  						$rs = $this->wms_receive_api->export_return_order($doc, $details);
-
-  						if($rs)
-  						{
-  							$this->return_order_model->set_status($doc->code, 3);
-  						}
-  						else
-  						{
-  							$sc = FALSE;
-  							$this->error = $this->wms_receive_api->error;
-  						}
-  					}
-  					else
-  					{
-  						$sc = FALSE;
-  						$this->error = "ไม่พบรายการคืนสินค้า";
-  					}
-  				}
-  				else
-  				{
-  					$sc = FALSE;
-  					$this->error = "สถานะเอกสารไม่ถุกต้อง";
-  				}
-  			}
-  			else
-  			{
-  				$sc = FALSE;
-  				$this->error = "รหัสเอกสารไม่ถูกต้อง";
-  			}
-  		}
-  		else
-  		{
-  			$sc = FALSE;
-  			$this->error = "Missing required parameter: code";
-  		}
-    }
-    else
-    {
-      $sc = FALSE;
-      $this->error = "API is not enabled";
-    }
-
-
-
-		echo $sc === TRUE ? 'success' : $this->error;
-	}
-
-
-  public function send_to_soko()
-	{
-		$sc = TRUE;
-
-    if($this->sokoApi)
-    {
-      if($this->input->post('code'))
-      {
-        $code = trim($this->input->post('code'));
-
-        $doc = $this->return_order_model->get($code);
-
-        if( ! empty($doc))
-        {
-          if($doc->status != 2 && $doc->status != 0)
-          {
-            $details = $this->return_order_model->get_details($doc->code);
-
-            if( ! empty($details))
-            {
-              $this->wms = $this->load->database('wms', TRUE);
-              $this->load->library('soko_receive_api');
-
-              if( $this->soko_receive_api->create_return_order($doc, $details))
-              {
-                $this->return_order_model->set_status($doc->code, 3);
-              }
-              else
-              {
-                $this->error = "ส่งข้อมูลไม่สำเร็จ : {$this->soko_receive_api->error}";
-              }
-            }
-            else
-            {
-              $sc = FALSE;
-              $this->error = "ไม่พบรายการคืนสินค้า";
-            }
-          }
-          else
-          {
-            $sc = FALSE;
-            $this->error = "สถานะเอกสารไม่ถุกต้อง";
-          }
-        }
-        else
-        {
-          $sc = FALSE;
-          $this->error = "รหัสเอกสารไม่ถูกต้อง";
-        }
-      }
-      else
-      {
-        $sc = FALSE;
-        $this->error = "Missing required parameter: code";
-      }
-    }
-    else
-    {
-      $sc = FALSE;
-      $this->error = "API is not enabled";
-    }
-
-		echo $sc === TRUE ? 'success' : $this->error;
-	}
-
-
-  public function send_to_fulfillment()
-  {
-    $sc = TRUE;
-    $code = $this->input->post('code');
-
-    if( ! empty($code))
-    {
-      $doc = $this->return_order_model->get($code);
-
-      if( ! empty($doc))
-      {
-        if($doc->api == 1)
-        {
-          if($doc->status != 2 && $doc->status != 0)
-          {
-            if($doc->is_wms == 1 && $this->wmsApi)
-            {
-              $details = $this->return_order_model->get_details($doc->code);
-
-              if( ! empty($details))
-              {
-                $this->wms = $this->load->database('wms', TRUE);
-
-                $this->load->library('wms_receive_api');
-
-                if( ! $this->wms_receive_api->export_return_order($doc, $details))
-                {
-                  $sc = FALSE;
-                  $this->error = $this->wms_receive_api->error;
-                }
-              }
-              else
-              {
-                $sc = FALSE;
-                $this->error = "ไม่พบรายการคืนสินค้า";
-              }
-            }
-
-            if($doc->is_wms == 2 && $this->sokoApi)
-            {
-              $details = $this->return_order_model->get_details($doc->code);
-
-              if( ! empty($details))
-              {
-                $this->wms = $this->load->database('wms', TRUE);
-                $this->load->library('soko_receive_api');
-
-                if( ! $this->soko_receive_api->create_return_order($doc, $details))
-                {
-                  $this->error = "ส่งข้อมูลไม่สำเร็จ : {$this->soko_receive_api->error}";
-                }
-              }
-              else
-              {
-                $sc = FALSE;
-                $this->error = "ไม่พบรายการคืนสินค้า";
-              }
-            }
-          }
-          else
-          {
-            $sc = FALSE;
-            $this->error = "สถานะเอกสารไม่ถุกต้อง";
-          }
-        }
-        else
-        {
-          $sc = FALSE;
-          $this->error = "This document was set to not interface";
-        }
-      }
-      else
-      {
-        $sc = FALSE;
-        set_error('notfound');
-      }
-    }
-    else
-    {
-      $sc = FALSE;
-      set_error('required');
-    }
-
-    $this->_response($sc);
-  }
-
-
   public function get_new_code($date)
   {
     $date = $date == '' ? date('Y-m-d') : $date;
@@ -1972,9 +1553,6 @@ class Return_order extends PS_Controller
 			'sm_warehouse',
       'sm_zone',
       'sm_must_accept',
-			'sm_api',
-      'sm_wms_export',
-      'sm_pos_api',
       'sm_sap'
     );
     clear_filter($filter);

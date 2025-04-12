@@ -31,7 +31,7 @@
 				<?php if($isAdmin && $order->is_expired == 1) : ?>
 					<button type="button" class="btn btn-xs btn-warning top-btn" onclick="unExpired()">ทำให้ไม่หมดอายุ</button>
 				<?php endif; ?>
-				<?php if($order->state < 4 && ($order->is_wms == 0 OR $order->state == 1) && ($this->pm->can_add OR $this->pm->can_edit)) : ?>
+				<?php if($order->state < 4 && $order->state == 1 && ($this->pm->can_add OR $this->pm->can_edit)) : ?>
 				<button type="button" class="btn btn-xs btn-yellow top-btn" onclick="editDetail()"><i class="fa fa-pencil"></i> แก้ไขรายการ</button>
 				<?php endif; ?>
 				<?php if($order->status == 0) : ?>
@@ -45,9 +45,6 @@
 				<?php if($order->state == 1 && $order->is_approved == 1 && $order->status == 1 && $order->is_expired == 0 && $this->pm->can_approve) : ?>
 						<button type="button" class="btn btn-xs btn-danger top-btn" onclick="unapprove()"><i class="fa fa-refresh"></i> ไม่อนุมัติ</button>
 				<?php endif; ?>
-				<?php if($is_api && $order->is_wms != 0 && $order->status == 1 && $order->is_expired == 0 && $order->state == 3) : ?>
-					<button type="button" class="btn btn-xs btn-success top-btn" onclick="sendToWMS()">Send to WMS</button>
-				<?php endif; ?>
       </p>
     </div>
 </div><!-- End Row -->
@@ -56,17 +53,6 @@
 <?php $this->load->view('transform/transform_edit_header'); ?>
 <?php if(empty($approve_view)) : ?>
 <?php $this->load->view('orders/order_panel'); ?>
-
-<?php if($is_api && $order->is_wms != 0 && $order->is_api == 0 && $order->state >= 3 && $order->state != 9 && $order->wms_export != 1) : ?>
-	<div class="col-lg-12 col-md-12 col-xs-12 padding-5">
-		<?php 	$this->load->view('wms_error_watermark'); ?>
-	</div>
-<?php endif; ?>
-<?php if($is_api && $order->is_wms != 0 && $order->is_api == 0 && $order->state == 3 && $order->state != 9 && $order->wms_export == 1 && $order->is_backorder == 1) : ?>
-	<div class="col-lg-12 col-md-12 col-xs-12 padding-5">
-		<?php 	$this->load->view('backorder_watermark'); ?>
-	</div>
-<?php endif; ?>
 
 <?php $this->load->view('orders/order_online_modal'); ?>
 <?php else : ?>
@@ -105,9 +91,6 @@
 <script src="<?php echo base_url(); ?>scripts/print/print_address.js?v=<?php echo date('Ymd'); ?>"></script>
 <script src="<?php echo base_url(); ?>scripts/orders/order_online.js?v=<?php echo date('Ymd'); ?>"></script>
 <script src="<?php echo base_url(); ?>scripts/cancel_order.js?v=<?php echo date('Ymd'); ?>"></script>
-<?php if($order->is_wms && $order->status == 1 && $order->is_expired == 0 && $order->state == 3) : ?>
-	<script src="<?php echo base_url(); ?>scripts/wms/wms_order.js?v=<?php echo date('Ymd'); ?>"></script>
-<?php endif; ?>
 
 <?php if($isAdmin) : ?>
 	<script>

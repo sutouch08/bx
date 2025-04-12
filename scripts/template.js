@@ -397,18 +397,6 @@ function sort(field) {
 }
 
 
-function getSearch() {
-  $('#searchForm').submit();
-}
-
-
-$('.search-box').keyup(function(e){
-	if(e.keyCode === 13) {
-		getSearch();
-	}
-});
-
-
 $('.filter').change(function() {
   getSearch();
 })
@@ -419,16 +407,6 @@ $('.search').keyup(function(e){
     getSearch();
   }
 })
-
-function goBack() {
-	window.location.href = HOME;
-}
-
-
-function clearFilter() {
-	let url = HOME + 'clear_filter';
-	$.get(url, function(rs){ goBack(); });
-}
 
 function generateUID() {
     return Math.random().toString(36).substring(2, 15) +

@@ -27,13 +27,7 @@
 			<?php endif; ?>
 			<?php if($doc->status == 1) : ?>
 			<button type="button" class="btn btn-xs btn-success btn-top" onclick="doExport()"><i class="fa fa-send"></i> ส่งข้อมูลไป SAP</button>
-			<?php endif; ?>
-			<?php if($this->wmsApi && $doc->is_wms == 1 && $doc->status == 3) : ?>
-			<button type="button" class="btn btn-xs btn-success btn-top" onclick="sendToWms()"><i class="fa fa-send"></i> Send to WMS</button>
-			<?php endif; ?>
-			<?php if($this->sokoApi && $doc->is_wms == 2 && $doc->status == 3) : ?>
-			<button type="button" class="btn btn-xs btn-success btn-top" onclick="sendToSoko()"><i class="fa fa-send"></i> Send to Soko</button>
-			<?php endif; ?>
+			<?php endif; ?>			
 			<?php if($doc->status == 4 && ($doc->user_id = $this->_user->id OR $canAccept)) : ?>
 				<button type="button" class="btn btn-xs btn-success btn-top" onclick="accept()"><i class="fa fa-check-circle"></i> ยืนยันการรับสินค้า</button>
 			<?php endif; ?>

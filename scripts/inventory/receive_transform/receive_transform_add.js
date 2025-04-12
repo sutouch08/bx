@@ -16,7 +16,6 @@ function updateHeader(){
 	let code = $('#receive_code').val();
 	let date_add = $('#dateAdd').val();
 	let shipped_date = $('#shipped-date').val();
-	let is_wms = $('#is_wms').val();
 	let remark = $('#remark').val().trim();
 	let reqRemark = $('#required-remark').val();
 
@@ -42,7 +41,6 @@ function updateHeader(){
 		cache:false,
 		data:{
 			'code' : code,
-			'is_wms' : is_wms,
 			'date_add' : date_add,
 			'shipped_date' : shipped_date,
 			'remark' : remark
@@ -102,8 +100,6 @@ function receiveProduct(no) {
 
 function save() {
 
-	is_wms = $('#is_wms').val();
-
 	code = $('#receive_code').val();
 
 	//--- อ้างอิง PO Code
@@ -142,20 +138,17 @@ function save() {
 		return false;
 	}
 
-	if(is_wms == 0) {
-		//--- มีรายการในใบสั่งซื้อหรือไม่
-		if(count = 0) {
-			swal('Error!', 'ไม่พบรายการรับเข้า','error');
-			return false;
-		}
-
-		//--- ตรวจสอบโซนรับเข้า
-		if(zone_code == '' || zoneName == ''){
-			swal('กรุณาระบุโซนเพื่อรับเข้า');
-			return false;
-		}
+	//--- มีรายการในใบสั่งซื้อหรือไม่
+	if(count = 0) {
+		swal('Error!', 'ไม่พบรายการรับเข้า','error');
+		return false;
 	}
 
+	//--- ตรวจสอบโซนรับเข้า
+	if(zone_code == '' || zoneName == ''){
+		swal('กรุณาระบุโซนเพื่อรับเข้า');
+		return false;
+	}
 
 	var ds = {
 		"receive_code" : code,

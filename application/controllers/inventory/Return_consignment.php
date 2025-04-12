@@ -8,11 +8,7 @@ class Return_consignment extends PS_Controller
   public $menu_sub_group_code = 'RETURN';
 	public $title = 'ลดหนี้ฝากขายเทียม';
   public $filter;
-  public $error;
-	public $isAPI;
-  public $wmsApi;
-  public $sokoApi;
-	public $wms;
+  public $error;	
   public $required_remark = 1;
 
   public function __construct()
@@ -24,9 +20,6 @@ class Return_consignment extends PS_Controller
     $this->load->model('masters/zone_model');
     $this->load->model('masters/customers_model');
     $this->load->model('masters/products_model');
-
-    $this->wmsApi = is_true(getConfig('WMS_API'));
-    $this->sokoApi = is_true(getConfig('SOKOJUNG_API'));
   }
 
 
@@ -44,7 +37,6 @@ class Return_consignment extends PS_Controller
       'to_date' => get_filter('to_date', 'cn_to_date', ''),
       'status' => get_filter('status', 'cn_status', 'all'),
       'approve' => get_filter('approve', 'cn_approve', 'all'),
-			'api' => get_filter('api', 'cn_api', 'all'),
       'sap' => get_filter('sap', 'cn_sap', 'all')
     );
 
@@ -77,6 +69,7 @@ class Return_consignment extends PS_Controller
     $this->load->view('inventory/return_consignment/return_consignment_list', $filter);
   }
 
+
   public function add_details()
   {
     $sc = TRUE;
@@ -93,7 +86,6 @@ class Return_consignment extends PS_Controller
       {
         $vat = getConfig('SALE_VAT_RATE'); //--- 0.07
 				$date_add = $doc->date_add;
-        $is_wms = ($doc->is_wms == 0  OR $doc->is_api == 0) ? FALSE : ($doc->is_wms == 1 && $this->wmsApi ? TRUE : ($doc->is_wms == 2 && $this->sokoApi ? TRUE : FALSE));
 
 				if(!empty($details))
 				{
@@ -117,16 +109,12 @@ class Return_consignment extends PS_Controller
 								'product_code' => $rs->item_code,
 								'product_name' => $rs->item_name,
 								'qty' => $rs->qty,
+                'receive_qty' => $rs->qty,
 								'price' => $rs->price,
 								'discount_percent' => $rs->discount,
 								'amount' => $amount,
 								'vat_amount' => get_vat_amount($amount)
 							);
-
-							if($is_wms === FALSE)
-							{
-								$arr['receive_qty'] = $rs->qty;
-							}
 
 							if($this->return_consignment_model->add_detail($arr) === FALSE)
 							{
@@ -174,8 +162,6 @@ class Return_consignment extends PS_Controller
 		echo $sc === TRUE ? 'success' : $this->error;
 
   }
-
-
 
 
   public function delete_detail($id = NULL)
@@ -264,15 +250,11 @@ class Return_consignment extends PS_Controller
 						{
 							$this->load->model('approve_logs_model');
 							$this->approve_logs_model->add($code, 1, $this->_user->uname);
-              $is_wms = ($doc->is_wms == 0  OR $doc->is_api == 0) ? FALSE : ($doc->is_wms == 1 && $this->wmsApi ? TRUE : ($doc->is_wms == 2 && $this->sokoApi ? TRUE : FALSE));
 
-							if($is_wms === FALSE)
-							{
-								$date_add = getConfig('ORDER_SOLD_DATE') === 'D' ? $doc->date_add : now();
-								$this->return_consignment_model->update($code, array('shipped_date' => now()));
-								$qr = "UPDATE return_consignment_detail SET receive_qty = qty, valid = 1 WHERE return_code = '{$code}'";
-								$this->db->qurey($qr);
-							}
+              $date_add = getConfig('ORDER_SOLD_DATE') === 'D' ? $doc->date_add : now();
+              $this->return_consignment_model->update($code, array('shipped_date' => now()));
+              $qr = "UPDATE return_consignment_detail SET receive_qty = qty, valid = 1 WHERE return_code = '{$code}'";
+              $this->db->qurey($qr);
 						}
 					}
 
@@ -282,47 +264,12 @@ class Return_consignment extends PS_Controller
 
 						if( ! empty($details))
 						{
-              if(($doc->is_wms == 0 OR $doc->is_api == 0) OR ($doc->is_wms == 1 && ! $this->wmsApi) OR ($doc->is_wms == 2 && ! $this->sokoApi))
+              $this->transfer_model->update($code, array('shipped_date' => $date_add));
+
+              if( ! $this->do_export($code))
               {
-                $this->transfer_model->update($code, array('shipped_date' => $date_add));
-
-                if( ! $this->do_export($code))
-                {
-                  $sc = FALSE;
-                  $this->error = "อนุมัติสำเร็จ แต่ส่งข้อมูลไป SAP ไม่สำเร็จ กรุณา refresh หน้าจอแล้วกดส่งข้อมูลอีกครั้ง";
-                }
-              }
-
-              if($doc->is_wms == 1 && $doc->is_api == 1 && $this->wmsApi)
-              {
-                $this->wms = $this->load->database('wms', TRUE);
-                $this->load->library('wms_receive_api');
-
-                if( ! $this->wms_receive_api->export_return_consignment($doc, $details))
-                {
-                  $sc = FALSE;
-                  $this->error = "บันทึกสำเร็จ แต่ส่งข้อมูลไป WMS ไม่สำเร็จ";
-                }
-                else
-                {
-                  $this->return_consignment_model->set_status($code, 3); //--- on wms process;
-                }
-              }
-
-              if($doc->is_wms == 2 && $doc->is_api == 1 && $this->sokoApi)
-              {
-                $this->wms = $this->load->database('wms', TRUE);
-                $this->load->library('soko_receive_api');
-
-                if( ! $this->soko_receive_api->create_return_consignment($doc, $details))
-                {
-                  $sc = FALSE;
-                  $this->error = "บันทึกสำเร็จ แต่ส่งข้อมูลไป SOKOCHAN ไม่สำเร็จ";
-                }
-                else
-                {
-                  $this->return_consignment_model->set_status($code, 3); //--- on wms process;
-                }
+                $sc = FALSE;
+                $this->error = "อนุมัติสำเร็จ แต่ส่งข้อมูลไป SAP ไม่สำเร็จ กรุณา refresh หน้าจอแล้วกดส่งข้อมูลอีกครั้ง";
               }
 						}
 					}
@@ -363,7 +310,6 @@ class Return_consignment extends PS_Controller
     {
       $date_add = db_date($this->input->post('date_add'), TRUE);
       $invoice = trim($this->input->post('invoice'));
-			$is_api = $this->input->post('is_api');
       $customer_code = trim($this->input->post('customer_code'));
       $remark = trim($this->input->post('remark'));
       $gp = empty($this->input->post('gp')) ? 0 : $this->input->post('gp');
@@ -387,31 +333,6 @@ class Return_consignment extends PS_Controller
 
       if($sc === TRUE)
       {
-        $wmsZone = getConfig('WMS_ZONE');
-        $sokoZone = getConfig('SOKOJUNG_ZONE');
-        $is_wms = $this->input->post('is_wms');
-
-        if($is_wms == 1 && $this->wmsApi && $to_zone != $wmsZone)
-        {
-          $sc = FALSE;
-          $this->error = "เอกสารต้องรับเข้าที่โซน {$wmsZone}";
-        }
-
-        if($is_wms == 2 && $this->sokoApi && $to_zone != $sokoZone)
-        {
-          $sc = FALSE;
-          $this->error = "เอกสารต้องรับเข้าที่โซน {$sokoZone}";
-        }
-
-        if($is_wms == 0 && ($to_zone == $wmsZone OR $to_zone == $sokoZone))
-        {
-          $sc = FALSE;
-          $this->error = "เอกสารต้องรับเข้าที่โซนของ WARRIX";
-        }
-      }
-
-      if($sc === TRUE)
-      {
         $code = $this->get_new_code($date_add);
 
         $arr = array(
@@ -426,9 +347,7 @@ class Return_consignment extends PS_Controller
           'gp' => $gp,
           'user' => $this->_user->uname,
           'date_add' => $date_add,
-          'remark' => $remark,
-          'is_wms' => $is_wms,
-          'is_api' => $is_api
+          'remark' => $remark
         );
 
         if( ! $this->return_consignment_model->add($arr))
@@ -571,39 +490,19 @@ class Return_consignment extends PS_Controller
       $date_add = db_date($this->input->post('date_add'), TRUE);
       $invoice = trim($this->input->post('invoice'));
 
-			$is_wms = $this->input->post('is_wms');
-			$is_api = $is_wms != 0 ? $this->input->post('is_api') : 0;
-
       $customer_code = trim($this->input->post('customer_code'));
       $from_zone = $this->zone_model->get($this->input->post('from_zone'));
       $remark = trim($this->input->post('remark'));
       $gp = empty($this->input->post('gp')) ? 0 : $this->input->post('gp');
 
-			//--- check zone
-			if($is_wms == 1)
-			{
-				$zone_code = getConfig('WMS_ZONE');
-				$warehouse_code = getConfig('WMS_WAREHOUSE');
-			}
-
-      if($is_wms == 2)
-      {
-        $zone_code = getConfig('SOKOJUNG_ZONE');
-        $warehouse_code = getConfig('SOKOJUNG_WAREHOUSE');
-      }
-			else
-			{
-				$zone = $this->zone_model->get($this->input->post('zone_code'));
-				$zone_code = $zone->code;
-				$warehouse_code = $zone->warehouse_code;
-			}
+      $zone = $this->zone_model->get($this->input->post('zone_code'));
+      $zone_code = $zone->code;
+      $warehouse_code = $zone->warehouse_code;
 
       $arr = array(
         'date_add' => $date_add,
         'invoice' => $invoice,
         'customer_code' => $customer_code,
-				'is_wms' => $is_wms,
-				'is_api' => $is_api,
         'from_warehouse_code' => $from_zone->warehouse_code,
         'from_zone_code' => $from_zone->code,
         'warehouse_code' => $warehouse_code,
@@ -666,7 +565,7 @@ class Return_consignment extends PS_Controller
 
     $this->_response($sc);
   }
-  
+
 
   public function view_detail($code)
   {
@@ -1028,25 +927,6 @@ class Return_consignment extends PS_Controller
   }
 
 
-	public function print_wms_return($code)
-  {
-    $this->load->library('xprinter');
-    $doc = $this->return_consignment_model->get($code);
-    $doc->customer_name = $this->customers_model->get_name($doc->customer_code);
-    $doc->warehouse_name = $this->warehouse_model->get_name($doc->warehouse_code);
-    $doc->zone_name = $this->zone_model->get_name($doc->zone_code);
-    $details = $this->return_consignment_model->get_count_item_details($code); //--- get only count item
-
-    $ds = array(
-      'order' => $doc,
-      'details' => $details
-    );
-
-    $this->load->view('print/print_wms_return_consignment', $ds);
-  }
-
-
-
   public function cancle_return($code)
   {
     $sc = TRUE;
@@ -1082,31 +962,6 @@ class Return_consignment extends PS_Controller
               }
             }
 					}
-
-          if($sc === TRUE)
-          {
-            if($doc->status == 3 && ! $force_cancel)
-            {
-              if($doc->is_wms == 2 && $this->sokoApi && $doc->is_api)
-              {
-                $this->wms = $this->load->database('wms', TRUE);
-                $this->load->library('soko_receive_api');
-
-                if( ! $this->soko_receive_api->cancel_return_consignment($doc))
-                {
-                  $sc = FALSE;
-                  $this->error = "SOKOCHAN Error : ".$this->soko_receive_api->error;
-                }
-              }
-
-              if($doc->is_wms == 1 && ! $this->_SuperAdmin)
-              {
-                $sc = FALSE;
-                $this->error = "เอกสารอยู่ระหว่างรับเข้า ไม่อนุญาติให้ยกเลิก";
-              }
-            }
-          }
-
 
 					if($sc === TRUE)
 					{
@@ -1375,82 +1230,6 @@ class Return_consignment extends PS_Controller
   }
 
 
-  public function send_to_wms()
-	{
-		$sc = TRUE;
-
-		if($this->input->post('code'))
-		{
-			$code = trim($this->input->post('code'));
-
-			$doc = $this->return_consignment_model->get($code);
-
-			if(!empty($doc))
-			{
-				if($doc->status != 2 && $doc->status != 0)
-				{
-					$details = $this->return_consignment_model->get_details($doc->code);
-
-					if( ! empty($details))
-					{
-            if($doc->is_wms == 1 && $this->wmsApi && $doc->is_api)
-            {
-              $this->wms = $this->load->database('wms', TRUE);
-              $this->load->library('wms_receive_api');
-              if($this->wms_receive_api->export_return_consignment($doc, $details))
-              {
-                $this->return_consignment_model->set_status($doc->code, 3);
-              }
-              else
-              {
-                $sc = FALSE;
-  							$this->error = $this->wms_receive_api->error;
-              }
-            }
-
-            if($doc->is_wms == 2 && $this->sokoApi && $doc->is_api)
-            {
-              $this->wms = $this->load->database('wms', TRUE);
-              $this->load->library('soko_receive_api');
-              if($this->soko_receive_api->create_return_consignment($doc, $details))
-              {
-                $this->return_consignment_model->set_status($doc->code, 3);
-              }
-              else
-              {
-                $sc = FALSE;
-  							$this->error = $this->soko_receive_api->error;
-              }
-            }
-					}
-					else
-					{
-						$sc = FALSE;
-						$this->error = "ไม่พบรายการคืนสินค้า";
-					}
-				}
-				else
-				{
-					$sc = FALSE;
-					$this->error = "สถานะเอกสารไม่ถุกต้อง";
-				}
-			}
-			else
-			{
-				$sc = FALSE;
-				$this->error = "รหัสเอกสารไม่ถูกต้อง";
-			}
-		}
-		else
-		{
-			$sc = FALSE;
-			$this->error = "Missing required parameter: code";
-		}
-
-		echo $sc === TRUE ? 'success' : $this->error;
-	}
-
-
   public function get_new_code($date)
   {
     $date = $date == '' ? date('Y-m-d') : $date;
@@ -1486,7 +1265,6 @@ class Return_consignment extends PS_Controller
       'cn_from_date',
       'cn_to_date',
       'cn_status',
-			'cn_api',
       'cn_approve',
       'cn_sap'
     );

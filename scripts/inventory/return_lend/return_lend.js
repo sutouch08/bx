@@ -163,15 +163,6 @@ function printReturn(){
 }
 
 
-function printWmsReturn(){
-	var code = $("#code").val();
-	var center = ($(document).width() - 800) /2;
-  var target = HOME + 'print_wms_return/'+code;
-  window.open(target, "_blank", "width=800, height=900, left="+center+", scrollbars=yes");
-}
-
-
-
 function clearFilter(){
   var url = HOME + 'clear_filter';
   $.get(url, function(rs){

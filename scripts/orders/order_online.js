@@ -8,8 +8,6 @@ function viewImage(imageUrl)
 }
 
 
-
-
 function viewPaymentDetail()
 {
 	var order_code = $('#order_code').val();
@@ -39,9 +37,6 @@ function viewPaymentDetail()
 
 
 
-
-
-
 $("#emsNo").keyup(function(e) {
     if( e.keyCode == 13 )
 	{
@@ -51,17 +46,10 @@ $("#emsNo").keyup(function(e) {
 
 
 
-
-
-
 function inputDeliveryNo()
 {
 	$("#deliveryModal").modal('show');
 }
-
-
-
-
 
 
 function saveDeliveryNo()
@@ -88,9 +76,6 @@ function saveDeliveryNo()
 		});
 	}
 }
-
-
-
 
 
 
@@ -186,22 +171,16 @@ function submitPayment()
 }
 
 
-
-
 function readURL(input)
 {
-   if (input.files && input.files[0]) {
-        var reader = new FileReader();
-        reader.onload = function (e) {
-          $('#previewImg').html('<img id="previewImg" src="'+e.target.result+'" width="200px" alt="รูปสลิปของคุณ" />');
-        }
-        reader.readAsDataURL(input.files[0]);
-    }
+	if (input.files && input.files[0]) {
+		var reader = new FileReader();
+		reader.onload = function (e) {
+			$('#previewImg').html('<img id="previewImg" src="'+e.target.result+'" width="200px" alt="รูปสลิปของคุณ" />');
+		}
+		reader.readAsDataURL(input.files[0]);
+	}
 }
-
-
-
-
 
 
 $("#image").change(function(){
@@ -231,8 +210,6 @@ $("#image").change(function(){
 
 
 
-
-
 function clearPaymentForm()
 {
 	$("#id_account").val('');
@@ -242,10 +219,6 @@ function clearPaymentForm()
 	$("#payMin").val('00');
 	removeFile();
 }
-
-
-
-
 
 
 function removeFile()
@@ -258,17 +231,12 @@ function removeFile()
 
 
 
-
-
 $("#payAmount").focusout(function(e) {
 	if( $(this).val() != '' && isNaN(parseFloat($(this).val())) )
 	{
 		swal('กรุณาระบุยอดเงินเป็นตัวเลขเท่านั้น');
 	}
 });
-
-
-
 
 
 function dateClick()
@@ -278,11 +246,7 @@ function dateClick()
 
 
 
-
-
 $("#payDate").datepicker({ dateFormat: 'dd-mm-yy'});
-
-
 
 
 
@@ -290,9 +254,6 @@ function selectFile()
 {
 	$("#image").click();
 }
-
-
-
 
 
 function payOnThis(id, acc_no)
@@ -322,9 +283,6 @@ function payOnThis(id, acc_no)
 }
 
 
-
-
-
 function payOrder()
 {
 	var order_code = $("#order_code").val();
@@ -341,18 +299,6 @@ function payOrder()
 			if(isJson(rs)) {
 				var ds = $.parseJSON(rs);
 
-				if(ds.isAPI && ds.is_wms) {
-					if(!ds.id_address) {
-						swal("กรุณาระบุที่อยู่จัดส่ง");
-						return false;
-					}
-
-					if(!ds.id_sender) {
-						swal("กรุณาระบุผู้จัดส่ง");
-						return false;
-					}
-				}
-
 				$("#orderAmount").val(ds.pay_amount);
 				$("#payAmountLabel").text("ยอดชำระ "+ addCommas(ds.pay_amount) +" บาท");
 				$("#selectBankModal").modal('show');
@@ -367,7 +313,6 @@ function payOrder()
 		}
 	});
 }
-
 
 
 function removeAddress(id)
@@ -401,9 +346,6 @@ function removeAddress(id)
 			});
 		});
 }
-
-
-
 
 
 //----------  edit address  -----------//
@@ -510,6 +452,7 @@ function setAddress(id)
 	});
 }
 
+
 function update_tracking() {
 	var trackingNo = $('#tracking').val();
 	var order_code = $('#order_code').val();
@@ -544,7 +487,6 @@ function update_tracking() {
 }
 
 
-
 function reloadAddressTable()
 {
 	var customer_code = $("#customerCode").val();
@@ -570,10 +512,6 @@ function reloadAddressTable()
 		}
 	});
 }
-
-
-
-
 
 
 function saveAddress()
@@ -631,12 +569,6 @@ function saveAddress()
 		$('#error-msg').text('กรุณาระบุรหัสไปรษณีย์');
 		return false;
 	}
-
-	// if(phone.length < 1 || phone.length > 15) {
-	// 	$('#phone').addClass('has-error');
-	// 	$('#error-msg').text('เบอร์โทรต้องมีความยาว 9-10 ตัว');
-	// 	return false;
-	// }
 
 	if( alias == '' ) {
 		swal('กรุณาตั้งชื่อให้ที่อยู่');
@@ -727,15 +659,11 @@ function saveAddress()
 }
 
 
-
-
-
 function addNewAddress()
 {
 	clearAddressField();
 	$("#addressModal").modal('show');
 }
-
 
 
 $('#sub_district').autocomplete({
@@ -787,7 +715,6 @@ $('#province').autocomplete({
 })
 
 
-
 $('#postcode').autocomplete({
 	source:BASE_URL + 'auto_complete/postcode',
 	autoFocus:true,
@@ -824,12 +751,9 @@ function clearAddressField()
 }
 
 
-
 if($('#btn').length) {
 	var clipboard = new Clipboard('#btn');
 }
-
-
 
 
 function Summary(){
@@ -849,7 +773,6 @@ function print_order(id)
 }
 
 
-
 function getSummary()
 {
 	var order_code = $("#order_code").val();
@@ -867,7 +790,6 @@ function getSummary()
 
 	$("#orderSummaryTab").modal("show");
 }
-
 
 
 $("#Fname").keyup(function(e){ if( e.keyCode == 13 ){ $("#address1").focus(); 	} });

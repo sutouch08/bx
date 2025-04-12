@@ -3,78 +3,75 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 class stock_model extends CI_Model
 {
+  private $tb = "stock";
+
   public function __construct()
   {
     parent::__construct();
   }
 
-
-  public function get_style_sell_stock($style_code, $warehouse = NULL)
+  public function update_stock_zone($zone_code, $product_code, $qty)
   {
-    $this->ms->select_sum('OIBQ.OnHandQty', 'qty')
-    ->from('OBIN')
-    ->join('OIBQ', 'OBIN.WhsCode = OIBQ.WhsCode AND OBIN.AbsEntry = OIBQ.BinAbs', 'left')
-    ->join('OITM', 'OIBQ.ItemCode = OITM.ItemCode', 'left')
-    ->join('OWHS', 'OWHS.WhsCode = OBIN.WhsCode', 'left')
-    ->where('OWHS.U_MAIN', 'Y');
-
-		if(getConfig('SYSTEM_BIN_LOCATION') == 0)
-		{
-			$this->ms->where('OBIN.SysBin', 'N');
-		}
-
-
-    if($warehouse !== NULL)
+    if($qty != 0)
     {
-      $this->ms->where('OWHS.WhsCode', $warehouse);
+      if( ! $this->is_exists($zone_code, $product_code))
+      {
+        $arr = array(
+          'product_code' => $product_code,
+          'zone_code' => $zone_code,
+          'qty' => $qty
+        );
+
+        return $this->db->insert($this->tb, $arr);
+      }
+      else
+      {
+        return $this->db
+        ->set("qty", "qty + {$qty}", FALSE)
+        ->where('zone_code', $zone_code)
+        ->where('product_code', $product_code)
+        ->update($this->tb);
+      }
     }
 
-    $this->ms->where('OITM.U_MODEL', $style_code);
+    return TRUE;
+  }
 
-    $rs = $this->ms->get();
-    if($rs->num_rows() == 1)
-    {
-      return intval($rs->row()->qty);
-    }
 
-    return 0;
+  public function is_exists($zone_code, $product_code)
+  {
+    $count = $this->db
+    ->where('zone_code', $zone_code)
+    ->where('product_code', $product_code)
+    ->count_all_results($this->tb);
+
+    return $count > 0 ? TRUE : FALSE;
   }
 
 
   public function count_items_zone($zone_code)
   {
-    $this->ms
-    ->from('OBIN')
-    ->join('OIBQ', 'OBIN.WhsCode = OIBQ.WhsCode AND OBIN.AbsEntry = OIBQ.BinAbs', 'left')
-    ->where('OBIN.BinCode', $zone_code)
-    ->where('OIBQ.OnHandQty >', 0, FALSE);
-
-    return $this->ms->count_all_results();
+    $this->db->where('zone_code', $zone_code)->where('qty >', 0, FALSE);
+    return $this->db->count_all_results($this->tb);
   }
 
 
   public function count_items_consignment_zone($zone_code)
   {
-    $this->cn
-    ->from('OIBQ')
-    ->join('OBIN', 'OBIN.WhsCode = OIBQ.WhsCode AND OIBQ.BinAbs = OBIN.AbsEntry', 'left')
-    ->where('OBIN.BinCode', $zone_code);
-
-    return $this->cn->count_all_results();
+    $this->db->where('zone_code', $zone_code)->where('qty >', 0, FALSE);
+    return $this->db->count_all_results($this->tb);
   }
 
 
   public function get_stock_zone($zone_code, $pd_code)
   {
-    $this->ms->select_sum('OIBQ.OnHandQty', 'qty')
-    ->from('OBIN')
-    ->join('OIBQ', 'OBIN.WhsCode = OIBQ.WhsCode AND OBIN.AbsEntry = OIBQ.BinAbs', 'left')
-    ->where('OIBQ.ItemCode', $pd_code)
-    ->where('OBIN.BinCode', $zone_code);
+    $rs = $this->db
+    ->select_sum('qty')
+    ->where('product_code', $pd_code)
+    ->where('zone_code', $zone_code)
+    ->get($this->tb);
 
-    $rs = $this->ms->get();
-
-    if($rs->num_rows() == 1)
+    if($rs->num_rows() === 1)
     {
       return intval($rs->row()->qty);
     }
@@ -85,16 +82,13 @@ class stock_model extends CI_Model
 
   public function get_consign_stock_zone($zone_code, $pd_code)
   {
-    $this->cn
-		->select_sum('OIBQ.OnHandQty', 'qty')
-    ->from('OBIN')
-    ->join('OIBQ', 'OBIN.WhsCode = OIBQ.WhsCode AND OBIN.AbsEntry = OIBQ.BinAbs', 'left')
-    ->where('OIBQ.ItemCode', $pd_code)
-    ->where('OBIN.BinCode', $zone_code);
+    $rs = $this->db
+    ->select_sum('qty')
+    ->where('product_code', $pd_code)
+    ->where('zone_code', $zone_code)
+    ->get($this->tb);
 
-    $rs = $this->cn->get();
-
-    if($rs->num_rows() == 1)
+    if($rs->num_rows() === 1)
     {
       return intval($rs->row()->qty);
     }
@@ -104,38 +98,30 @@ class stock_model extends CI_Model
 
 
   //---- ยอดรวมสินค้าในคลังที่สั่งได้ ยอดในโซน
-  public function get_sell_stock($item, $warehouse = NULL, $zone = NULL, $sysBin = NULL)
+  public function get_sell_stock($item, $warehouse = NULL, $zone = NULL)
   {
-    $sysBin = $sysBin === NULL ? getConfig('SYSTEM_BIN_LOCATION') : $sysBin;
+    $this->db
+    ->select_sum('s.qty')
+    ->from('stock AS s')
+    ->join('zone AS z', 's.zone_code = z.code', 'left');
 
-    $this->ms
-    ->select_sum('OnHandQty', 'qty')
-    ->from('OIBQ')
-    ->join('OBIN', 'OBIN.WhsCode = OIBQ.WhsCode AND OBIN.AbsEntry = OIBQ.BinAbs', 'left')
-    ->join('OWHS', 'OWHS.WhsCode = OBIN.WhsCode', 'left')
-    ->where('OIBQ.ItemCode', $item);
-    // ->where('OWHS.U_MAIN', 'Y');
-
-		if( $sysBin == 0)
-		{
-			$this->ms->where('OBIN.SysBin', 'N');
-		}
-
-    if( ! empty($warehouse))
+    if(empty($warehouse))
     {
-      $this->ms->where('OWHS.WhsCode', $warehouse);
+      $this->db
+      ->join('warehouse AS w', 'z.warehouse_code = w.code', 'left')
+      ->where_in('w.role', [1, 3, 5]);
     }
     else
     {
-      $this->ms->where('OWHS.U_MAIN', 'Y');
+      $this->db->where('z.warehouse_code', $warehouse);
     }
 
     if( ! empty($zone))
     {
-      $this->ms->where('OBIN.BinCode', $zone);
+      $this->db->where('s.zone_code', $zone);
     }
 
-    $rs = $this->ms->get();
+    $rs = $this->db->where('s.product_code', $item)->get();
 
     return intval($rs->row()->qty);
   }
@@ -144,18 +130,7 @@ class stock_model extends CI_Model
   //--- ยอดรวมสินค้าทั้งหมดทุกคลัง (รวมฝากขาย)
   public function get_stock($item)
   {
-    $this->ms
-    ->select_sum('OIBQ.OnHandQty', 'qty')
-    ->from('OIBQ')
-    ->join('OBIN', 'OIBQ.BinAbs = OBIN.AbsEntry', 'left')
-		->where('ItemCode', $item);
-
-		if(getConfig('SYSTEM_BIN_LOCATION') == 0)
-		{
-			$this->ms->where('OBIN.SysBin', 'N');
-		}
-
-    $rs = $this->ms->get();
+    $rs = $this->db->select_sum('qty')->where('product_code', $item)->get($this->tb);
 
     return intval($rs->row()->qty);
   }
@@ -164,79 +139,71 @@ class stock_model extends CI_Model
 	//--- ยอดรวมสินค้าทั้งหมดในคลังฝากขายเทียมเท่านั้น
   public function get_consignment_stock($item)
   {
-    $rs = $this->cn
-    ->select_sum('OIBQ.OnHandQty', 'qty')
-    ->from('OIBQ')
-    ->join('OBIN', 'OIBQ.BinAbs = OBIN.AbsEntry', 'left')
-    ->where('ItemCode', $item)
+    $rs = $this->db
+    ->select_sum('s.qty')
+    ->from('stock AS s')
+    ->join('zone AS z', 's.zone_code = z.code', 'left')
+    ->join('warehouse AS w', 'z.warehouse_code = w.code', 'left')
+    ->where('w.role', 2)
+    ->where('w.is_consignment', 1)
+    ->where('s.product_code', $item)
     ->get();
 
     return intval($rs->row()->qty);
   }
 
 
-
-
-
   //---- ยอดสินค้าคงเหลือในแต่ละโซน
   public function get_stock_in_zone($item, $warehouse = NULL)
   {
-    $this->ms
-    ->select('OBIN.BinCode AS code, OBIN.Descr AS name, OIBQ.OnHandQty AS qty')
-    ->from('OIBQ')
-    ->join('OBIN', 'OBIN.WhsCode = OIBQ.WhsCode AND OBIN.AbsEntry = OIBQ.BinAbs', 'left')
-    ->join('OWHS', 'OWHS.WhsCode = OBIN.WhsCode', 'left')
-    ->where('ItemCode', $item);
+    $this->db
+    ->select('s.zone_code, s.qty, z.name')
+    ->from('stock AS s')
+    ->join('zone AS z', 's.zone_code = z.code', 'left');
 
-		if(getConfig('SYSTEM_BIN_LOCATION') == 0)
-		{
-			$this->ms->where('OBIN.SysBin', 'N');
-		}
-
-    if($warehouse !== NULL)
+    if( ! empty($warehouse))
     {
-      $this->ms->where('OWHS.WhsCode', $warehouse);
+      $this->db->where('z.warehouse_code', $warehouse);
     }
     else
     {
-      $this->ms->where('OWHS.U_MAIN', 'Y');
+      $this->db
+      ->join('warehouse AS w', 'z.warehouse_code = w.code', 'left')
+      ->where_in('w.role', [1,3,5]);
     }
 
-    $rs = $this->ms->get();
+    $rs = $this->db->where('s.product_code', $item)->get();
 
     if($rs->num_rows() > 0)
     {
       return $rs->result();
     }
 
-    return array();
+    return NULL;
   }
+
 
   //---- สินค้าทั้งหมดที่อยู่ในโซน (ใช้โอนสินค้าระหว่างคลัง)
   public function get_all_stock_in_zone($zone_code, $item_code = NULL)
   {
-    $this->ms
-    ->select('OIBQ.ItemCode AS product_code, OIBQ.OnHandQty AS qty')
-    ->select('OITM.ItemName AS product_name, OITM.CodeBars AS barcode')
-    ->select('ITM1.Price AS cost, ITM2.Price AS price')
-    ->from('OIBQ')
-    ->join('OBIN', 'OBIN.WhsCode = OIBQ.WhsCode AND OBIN.AbsEntry = OIBQ.BinAbs', 'left')
-    ->join('OITM', 'OIBQ.ItemCode = OITM.ItemCode', 'left')
-    ->join('ITM1 AS ITM1', '(ITM1.ItemCode = OITM.ItemCode AND ITM1.PriceList = 13)')
-    ->join('ITM1 AS ITM2', '(ITM2.ItemCode = OITM.ItemCode AND ITM2.PriceList = 11)')
-    ->where('OBIN.BinCode', $zone_code)
-    ->where('OIBQ.OnHandQty !=', 0);
+    $this->db
+    ->select('s.product_code, s.qty')
+    ->select('p.name AS product_name, p.barcode, p.cost, p.price')
+    ->from('stock AS s')
+    ->join('products AS p', 's.product_code = p.code', 'left')
+    ->where('s.zone_code', $zone_code)
+    ->where('s.qty !=', 0);
 
     if( ! empty($item_code))
     {
-      $this->ms
+      $this->db
       ->group_start()
-      ->like('OIBQ.ItemCode', $item_code)
-      ->or_like('OITM.CodeBars', $item_code)
+      ->like('s.product_code', $item_code)
+      ->or_like('p.barcode', $item_code)
       ->group_end();
     }
 
-    $rs = $this->ms->get();
+    $rs = $this->db->get();
 
     if($rs->num_rows() > 0)
     {
@@ -250,15 +217,13 @@ class stock_model extends CI_Model
   //---- สินค้าทั้งหมดที่อยู่ในโซน POS API
   public function getAllStockInZone($zone_code, $limit = 10000, $offset = 0)
   {
-    $rs = $this->ms
-    ->select('OIBQ.ItemCode AS product_code, OIBQ.OnHandQty AS qty')
-    ->from('OIBQ')
-    ->join('OBIN', 'OBIN.WhsCode = OIBQ.WhsCode AND OBIN.AbsEntry = OIBQ.BinAbs', 'left')
-    ->where('OBIN.BinCode', $zone_code)
-    ->where('OIBQ.OnHandQty !=', 0)
-    ->order_by('OIBQ.ItemCode', 'ASC')
+    $rs = $this->db
+    ->select('product_code, qty')
+    ->where('zone_code', $zone_code)
+    ->where('qty !=', 0)
+    ->order_by('product_code', 'ASC')
     ->limit($limit, $offset)
-    ->get();
+    ->get($this->tb);
 
     if($rs->num_rows() > 0)
     {
@@ -272,15 +237,13 @@ class stock_model extends CI_Model
   //---- สินค้าทั้งหมดที่อยู่ในโซน POS API
   public function getAllStockInConsignmentZone($zone_code, $limit = 10000, $offset = 0)
   {
-    $rs = $this->cn
-    ->select('OIBQ.ItemCode AS product_code, OIBQ.OnHandQty AS qty')
-    ->from('OIBQ')
-    ->join('OBIN', 'OBIN.WhsCode = OIBQ.WhsCode AND OBIN.AbsEntry = OIBQ.BinAbs', 'left')
-    ->where('OBIN.BinCode', $zone_code)
-    ->where('OIBQ.OnHandQty !=', 0)
-    ->order_by('OIBQ.ItemCode', 'ASC')
+    $rs = $this->db
+    ->select('product_code, qty')
+    ->where('zone_code', $zone_code)
+    ->where('qty !=', 0)
+    ->order_by('product_code', 'ASC')
     ->limit($limit, $offset)
-    ->get();
+    ->get($this->tb);
 
     if($rs->num_rows() > 0)
     {
@@ -293,28 +256,24 @@ class stock_model extends CI_Model
 
   public function get_all_stock_consignment_zone($zone_code, $item_code = NULL)
   {
-    $this->cn
-    ->select('OIBQ.ItemCode AS product_code, OIBQ.OnHandQty AS qty')
-    ->select('OITM.ItemName AS product_name, OITM.CodeBars AS barcode')
-    ->select('ITM1.Price AS cost, ITM2.Price AS price')
-    ->from('OIBQ')
-    ->join('OBIN', 'OBIN.WhsCode = OIBQ.WhsCode AND OBIN.AbsEntry = OIBQ.BinAbs', 'left')
-    ->join('OITM', 'OIBQ.ItemCode = OITM.ItemCode', 'left')
-    ->join('ITM1 AS ITM1', '(ITM1.ItemCode = OITM.ItemCode AND ITM1.PriceList = 13)')
-    ->join('ITM1 AS ITM2', '(ITM2.ItemCode = OITM.ItemCode AND ITM2.PriceList = 11)')
-    ->where('OBIN.BinCode', $zone_code)
-    ->where('OIBQ.OnHandQty !=', 0);
+    $this->db
+    ->select('s.product_code, s.qty')
+    ->select('p.name AS product_name, p.barcode, p.cost, p.price')
+    ->from('stock AS s')
+    ->join('products AS p', 's.product_code = p.code', 'left')
+    ->where('s.zone_code', $zone_code)
+    ->where('s.qty !=', 0);
 
     if( ! empty($item_code))
     {
-      $this->cn
+      $this->db
       ->group_start()
-      ->like('OIBQ.ItemCode', $item_code)
-      ->or_like('OITM.CodeBars', $item_code)
+      ->like('s.product_code', $item_code)
+      ->or_like('p.barcode', $item_code)
       ->group_end();
     }
 
-    $rs = $this->cn->get();
+    $rs = $this->db->get();
 
     if($rs->num_rows() > 0)
     {
@@ -327,14 +286,15 @@ class stock_model extends CI_Model
 	//--- for compare stock
 	public function get_items_stock($warehouse_code)
 	{
-		$rs = $this->ms
-		->select('OITM.ItemCode AS code, OITM.ItemName AS name, OITM.CodeBars AS barcode, OITM.InvntryUom AS unit_code')
-		->select('OITW.OnHand AS qty')
-		->from('OITW')
-		->join('OITM', 'OITW.ItemCode = OITM.ItemCode', 'left')
-		->where('OITW.WhsCode', $warehouse_code)
-		->where('OITM.InvntItem', 'Y')
-		->get();
+    $rs = $this->db
+    ->select('s.product_code, s.qty')
+    ->select('p.code, p.name, p.barcode, p.unit_code, p.count_stock')
+    ->from('stock AS s')
+    ->join('products AS p', 's.product_code = p.code', 'left')
+    ->join('zone AS z', 's.zone_code = z.code', 'left')
+    ->where('z.warehouse_code', $warehouse_code)
+    ->where('p.count_stock', 1)
+    ->get();
 
 		if($rs->num_rows() > 0)
 		{
@@ -343,5 +303,68 @@ class stock_model extends CI_Model
 
 		return NULL;
 	}
+
+
+  public function get_list(array $ds = array(), $perpage = 20, $offset = 0)
+  {
+    if(!empty($ds['item_code']) OR !empty($ds['zone_code']))
+    {
+      $itemCode = $ds['item_code'];
+      $zoneCode = $ds['zone_code'];
+
+      $this->db
+      ->select('product_code, zone_code, qty')
+      ->select('qty, product_code, zone_code')
+      ->where('qty !=', 0);
+
+      if( ! empty($ds['item_code']))
+      {
+        $this->db->like('product_code', $ds['item_code']);
+      }
+
+      if( ! empty($ds['zone_code']))
+      {
+        $this->db->like('zone_code', $ds['zone_code']);
+      }
+
+      $rs = $this->db
+      ->order_by('product_code', 'ASC')
+      ->order_by('zone_code', 'ASC')
+      ->limit($perpage, $offset)->get($this->tb);
+
+      if($rs->num_rows() > 0)
+      {
+        return $rs->result();
+      }
+    }
+
+    return NULL;
+  }
+
+
+  public function count_rows(array $ds = array())
+  {
+    if(!empty($ds['item_code']) OR !empty($ds['zone_code']))
+    {
+      $itemCode = $ds['item_code'];
+      $zoneCode = $ds['zone_code'];
+
+      $this->db->where('qty !=', 0);
+
+      if( ! empty($ds['item_code']))
+      {
+        $this->db->like('product_code', $ds['item_code']);
+      }
+
+      if( ! empty($ds['zone_code']))
+      {
+        $this->db->like('zone_code', $ds['zone_code']);
+      }
+
+      return $this->db->count_all_results($this->tb);
+    }
+
+    return 0;
+  }
 
 }//--- end class

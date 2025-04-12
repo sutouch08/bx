@@ -465,11 +465,6 @@ class Receive_po_model extends CI_Model
       $this->db->where('r.date_add <=', to_date($ds['to_date']));
     }
 
-		if($ds['is_wms'] !== 'all')
-		{
-			$this->db->where('is_wms', $ds['is_wms']);
-		}
-
     if($ds['status'] !== 'all')
     {
       if($ds['status'] == 5)
@@ -481,18 +476,6 @@ class Receive_po_model extends CI_Model
         $this->db->where('r.is_expire', 0)->where('status', $ds['status']);
       }
     }
-
-    if(isset($ds['wms_export']) && $ds['wms_export'] !== 'all')
-		{
-      if($ds['wms_export'] == '0')
-      {
-        $this->db->where('wms_export IS NULL', NULL, FALSE);
-      }
-      else
-      {
-        $this->db->where('wms_export', $ds['wms_export']);
-      }
-		}
 
     if($ds['must_accept'] != 'all')
     {
@@ -573,10 +556,6 @@ class Receive_po_model extends CI_Model
       $this->db->where('r.date_add <=', to_date($ds['to_date']));
     }
 
-		if($ds['is_wms'] !== 'all')
-		{
-			$this->db->where('is_wms', $ds['is_wms']);
-		}
 
     if($ds['status'] !== 'all')
     {
@@ -588,19 +567,7 @@ class Receive_po_model extends CI_Model
       {
         $this->db->where('r.is_expire', 0)->where('status', $ds['status']);
       }
-    }
-
-    if(isset($ds['wms_export']) && $ds['wms_export'] !== 'all')
-		{
-      if($ds['wms_export'] == '0')
-      {
-        $this->db->where('wms_export IS NULL', NULL, FALSE);
-      }
-      else
-      {
-        $this->db->where('wms_export', $ds['wms_export']);
-      }
-		}
+    }    
 
     if($ds['must_accept'] != 'all')
     {

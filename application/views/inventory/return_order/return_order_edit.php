@@ -48,23 +48,14 @@
 	</div>
 	<div class="col-lg-1-harf col-md-1-harf col-sm-1-harf col-xs-6 padding-5">
 		<label>การรับ</label>
-		<select class="form-control input-sm edit" name="is_wms" id="is_wms" onchange="updateZone()" disabled>
-			<option value="">เลือก</option>
-			<?php if($this->wmsApi OR $doc->is_wms == 1) : ?>
-				<option value="1" data-zonecode="<?php echo $wms_zone_code; ?>" data-zonename="<?php echo $wms_zone_name; ?>" <?php echo is_selected('1', $doc->is_wms); ?>>Pioneer</optoin>
-			<?php endif; ?>
-			<?php if($this->sokoApi OR $doc->is_wms == 2) : ?>
-				<option value="2" data-zonecode="<?php echo $soko_zone_code; ?>" data-zonename="<?php echo $soko_zone_name; ?>" <?php echo is_selected('2', $doc->is_wms); ?>>SOKOCHAN</option>
-			<?php endif; ?>
-				<option value="0" <?php echo is_selected('0', $doc->is_wms); ?>>Warrix</option>
+		<select class="form-control input-sm edit" name="is_wms" id="is_wms" disabled>
+				
 			</select>
 		</div>
 
 		<div class="col-lg-1-harf col-md-1-harf col-sm-1-harf col-xs-6 padding-5">
 			<label>Interface</label>
 			<select class="form-control input-sm edit" name="api" id="api" disabled>
-				<option value="1" <?php echo is_selected('1', $doc->api); ?>>ส่ง</option>
-				<option value="0" <?php echo is_selected('0', $doc->api); ?>>ไม่ส่ง</option>
 			</select>
 		</div>
 	<div class="col-lg-2-harf col-md-2-harf col-sm-2-harf col-xs-4 padding-5">

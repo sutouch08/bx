@@ -46,16 +46,6 @@
 		</div>
 
 		<div class="col-lg-1-harf col-md-2 col-sm-2 col-xs-6 padding-5">
-			<label>การรับ</label>
-			<select name="is_wms" class="form-control input-sm" onchange="getSearch()">
-				<option value="all">ทั้งหมด</option>
-				<option value="0" <?php echo is_selected('0', $is_wms); ?>>Warrix</option>
-				<option value="1" <?php echo is_selected('1', $is_wms); ?>>Pioneer</option>
-				<option value="2" <?php echo is_selected('2', $is_wms); ?>>SOKOCHAN</option>
-			</select>
-		</div>
-
-		<div class="col-lg-1-harf col-md-2 col-sm-2 col-xs-6 padding-5">
 			<label>สถานะ</label>
 			<select name="status" class="form-control input-sm" onchange="getSearch()">
 				<option value="all">ทั้งหมด</option>
@@ -66,17 +56,7 @@
 				<option value="4" <?php echo is_selected('4', $status); ?>>รอการยืนยัน</option>
 				<option value="5" <?php echo is_selected('5', $status); ?>>หมดอายุ</option>
 			</select>
-		</div>
-
-		<div class="col-lg-1 col-md-2 col-sm-2 col-xs-4 padding-5">
-			<label>WMS</label>
-			<select name="wms_export" class="form-control input-sm" onchange="getSearch()">
-				<option value="all">ทั้งหมด</option>
-				<option value="0" <?php echo is_selected('0', $wms_export); ?>>ยังไม่ส่ง</option>
-				<option value="1" <?php echo is_selected('1', $wms_export); ?>>ส่งแล้ว</option>
-				<option value="3" <?php echo is_selected('3', $wms_export); ?>>ส่งไม่ผ่าน</option>
-			</select>
-		</div>
+		</div>	
 
 		<div class="col-lg-2 col-md-2 col-sm-2 col-xs-4 padding-5">
 			<label>การยืนยัน</label>

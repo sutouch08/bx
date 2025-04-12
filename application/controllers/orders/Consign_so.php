@@ -9,8 +9,6 @@ class Consign_so extends PS_Controller
 	public $title = 'ฝากขาย(ใบกำกับ)';
   public $filter;
   public $role = 'C';
-  public $wmsApi;
-  public $sokoApi;
 
   public function __construct()
   {
@@ -35,9 +33,6 @@ class Consign_so extends PS_Controller
     $this->load->helper('warehouse');
 
     $this->filter = getConfig('STOCK_FILTER');
-
-    $this->wmsApi = is_true(getConfig('WMS_API'));
-    $this->sokoApi = is_true(getConfig('SOKOJUNG_API'));
   }
 
 
@@ -55,7 +50,6 @@ class Consign_so extends PS_Controller
       'isExpire' => get_filter('isExpire', 'consign_isExpire', NULL),
       'isApprove' => get_filter('isApprove', 'consign_isApprove', 'all'),
 			'warehouse' => get_filter('warehouse', 'consign_warehouse', ''),
-			'wms_export' => get_filter('wms_export', 'consign_wms_export', 'all'),
       'is_backorder' => get_filter('is_backorder', 'consign_is_backorder', 'all'),
       'sap_status' => get_filter('sap_status', 'consign_sap_status', 'all')
     );
@@ -182,8 +176,6 @@ class Consign_so extends PS_Controller
 
     if( ! empty($data))
     {
-      $wmsWh = getConfig('WMS_WAREHOUSE');
-      $sokoWh = getConfig('SOKOJUNG_WAREHOUSE');
       $book_code = getConfig('BOOK_CODE_CONSIGN_SO');
 
       $date_add = db_date($data->date_add);
@@ -202,11 +194,6 @@ class Consign_so extends PS_Controller
 
           if( ! empty($wh))
           {
-            $isSoko = $wh->code == $sokoWh ? TRUE : FALSE;
-            $isWms = $wh->code == $wmsWh ? TRUE : FALSE;
-
-            $is_wms = $isWms ? 1 : ($isSoko ? 2 : 0);
-
             $customer = $this->customers_model->get($data->customer_code);
 
             if( ! empty($customer))
@@ -224,8 +211,7 @@ class Consign_so extends PS_Controller
                 'user' => $this->_user->uname,
                 'remark' => get_null($data->remark),
                 'zone_code' => $zone->code,
-                'warehouse_code' => $wh->code,
-                'is_wms' => $is_wms
+                'warehouse_code' => $wh->code
               );
 
               if( ! $this->orders_model->add($ds))
@@ -332,7 +318,6 @@ class Consign_so extends PS_Controller
     $ds['allowEditDisc'] = getConfig('ALLOW_EDIT_DISCOUNT') == 1 ? TRUE : FALSE;
     $ds['allowEditPrice'] = getConfig('ALLOW_EDIT_PRICE') == 1 ? TRUE : FALSE;
     $ds['edit_order'] = TRUE; //--- ใช้เปิดปิดปุ่มแก้ไขราคาสินค้าไม่นับสต็อก
-    $ds['is_api'] = is_api($rs->is_wms, $this->wmsApi, $this->sokoApi);
     $this->load->view('order_consign/consign_edit', $ds);
   }
 
@@ -369,8 +354,6 @@ class Consign_so extends PS_Controller
     if( ! empty($data))
     {
 			$this->load->model('masters/warehouse_model');
-      $sokoWh = getConfig('SOKOJUNG_WAREHOUSE');
-      $wmsWh = getConfig('WMS_WAREHOUSE');
 
       $code = $data->code;
 
@@ -380,11 +363,6 @@ class Consign_so extends PS_Controller
 
         if( ! empty($wh))
         {
-          $isSoko = $wh->code == $sokoWh ? TRUE : FALSE;
-          $isWms = $wh->code == $wmsWh ? TRUE : FALSE;
-
-          $is_wms = $isWms ? 1 : ($isSoko ? 2 : 0);
-
           $zone = $this->zone_model->get($data->zone_code);
 
           if( ! empty($zone))
@@ -399,7 +377,6 @@ class Consign_so extends PS_Controller
                 'remark' => get_null($data->remark),
                 'zone_code' => $data->zone_code,
                 'warehouse_code' => $wh->code,
-      					'is_wms' => $is_wms,
       					'id_address' => NULL,
       					'id_sender' => NULL
               );
@@ -864,8 +841,7 @@ class Consign_so extends PS_Controller
       'consign_fromDate',
       'consign_toDate',
       'consign_isApprove',
-			'consign_warehouse',
-			'consign_wms_export',
+			'consign_warehouse',			
       'consign_is_backorder',
       'consign_sap_status',
       'consign_notSave',

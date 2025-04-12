@@ -31,7 +31,6 @@ function updateHeader() {
 	let date_add = $('#doc-date').val();
 	let due_date = $('#due-date').val();
 	let posting_date = $('#posting-date').val();
-	let is_wms = $('#is_wms').val();
 	let remark = $('#remark').val();
 
 	if( ! isDate(date_add)) {
@@ -46,11 +45,6 @@ function updateHeader() {
 		return false;
 	}
 
-	if( is_wms === "") {
-		$('#is_wms').addClass('has-error');
-		swal("กรุณาเลือกช่องทางการรับ");
-		return false;
-	}
 
 	load_in();
 
@@ -63,8 +57,7 @@ function updateHeader() {
 			'date_add' : date_add,
 			'due_date' : due_date,
 			'posting_date' : posting_date,
-			'remark' : remark,
-			'is_wms' : is_wms
+			'remark' : remark
 		},
 		success:function(rs) {
 			load_out();
@@ -99,7 +92,6 @@ function save() {
 	let  h = {
 		'code' : $('#receive_code').val(),
 		'save_type' : $('#save-type').val(), //--- 0 = draft,  1 = บันทึกรับทันที , 3 = บันทึกรอรับ
-		'is_wms' : $('#is_wms').val(),
 		'doc_date' : $('#doc-date').val(),
 		'due_date' : $('#due-date').val(),
 		'posting_date' : $('#posting-date').val(),
@@ -116,11 +108,6 @@ function save() {
 		'rows' : []
 	};
 
-	if(h.is_wms == "") {
-		$('#is_wms').hasError();
-		swal('กรุณาเลือกช่องทางการรับ');
-		return false;
-	}
 
 	if( ! isDate(h.doc_date)) {
 		$('#doc-date').hasError();

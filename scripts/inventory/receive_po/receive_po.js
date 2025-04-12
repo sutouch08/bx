@@ -97,7 +97,6 @@ function addNew(){
   let date_add = $('#doc-date').val();
 	let due_date = $('#due-date').val();
 	let posting_date = $('#posting-date').val();
-	let is_wms = $('#is_wms').val();
   let remark = $.trim($('#remark').val());
 	let reqRemark = $('#required_remark').val();
 
@@ -110,12 +109,6 @@ function addNew(){
 	if( ! isDate(due_date)) {
 		$('#due-date').addClass('has-error');
 		swal('กรุณาระบุวันที่สินค้าเข้า');
-		return false;
-	}
-
-	if( is_wms === "") {
-		$('#is_wms').addClass('has-error');
-		swal('กรุณาเลือกช่องทางการรับ');
 		return false;
 	}
 
@@ -135,7 +128,6 @@ function addNew(){
 			'date_add' : date_add,
 			'due_date' : due_date,
 			'posting_date' : posting_date,
-			'is_wms' : is_wms,
 			'remark' : remark
 		},
 		success:function(rs) {
@@ -264,84 +256,6 @@ function doExport(){
 			}
 		}
 	})
-}
-
-
-function sendToWms() {
-	var code = $('#receive_code').val();
-	load_in();
-	$.ajax({
-		url:HOME + 'send_to_wms/'+code,
-		type:'POST',
-		cache:false,
-		success:function(rs) {
-			load_out();
-			var rs = $.trim(rs);
-			if(rs === 'success') {
-				swal({
-					title:'Success',
-					type:'success',
-					timer:1000
-				});
-			}
-			else {
-				swal({
-					title:'Error!',
-					text:rs,
-					type:'error',
-					html:true
-				});
-			}
-		},
-		error:function(xhr, status, error) {
-			load_out();
-			swal({
-				title:'Error!',
-				text:xhr.responseText,
-				type:'error',
-				html:true
-			});
-		}
-	});
-}
-
-
-function sendToSoko() {
-	var code = $('#receive_code').val();
-	load_in();
-	$.ajax({
-		url:HOME + 'send_to_soko/'+code,
-		type:'POST',
-		cache:false,
-		success:function(rs) {
-			load_out();
-			var rs = $.trim(rs);
-			if(rs === 'success') {
-				swal({
-					title:'Success',
-					type:'success',
-					timer:1000
-				});
-			}
-			else {
-				swal({
-					title:'Error!',
-					text:rs,
-					type:'error',
-					html:true
-				});
-			}
-		},
-		error:function(xhr, status, error) {
-			load_out();
-			swal({
-				title:'Error!',
-				text:xhr.responseText,
-				type:'error',
-				html:true
-			});
-		}
-	});
 }
 
 

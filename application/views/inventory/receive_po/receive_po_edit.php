@@ -62,15 +62,8 @@
 	</div>
 	<div class="col-lg-2 col-md-2 col-sm-2 col-xs-4 padding-5">
 		<label>ช่องทางการรับ</label>
-		<select class="form-control input-sm h" name="is_wms" id="is_wms">
-			<option value="">เลือก</option>
-			<?php if($this->wmsApi OR $doc->is_wms == 1) : ?>
-			<option value="1" <?php echo is_selected('1', $doc->is_wms); ?>>Pioneer</option>
-			<?php endif; ?>
-			<?php if($this->sokoApi OR $doc->is_wms == 2) : ?>
-			<option value="2" <?php echo is_selected('2', $doc->is_wms); ?>>SOKOCHAN</option>
-			<?php endif; ?>
-			<option value="0" <?php echo is_selected('0', $doc->is_wms); ?>>Warrix</option>
+		<select class="form-control input-sm h" name="is_wms" id="is_wms">		
+			<option value="0">Warrix</option>
 		</select>
 	</div>
 	<?php $c_hide = empty($doc->po_code) ? '' : 'hide'; ?>

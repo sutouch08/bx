@@ -1,8 +1,6 @@
 <?php
 class Product_brand_model extends CI_Model
 {
-  private $tb = "product_brand";
-
   public function __construct()
   {
     parent::__construct();
@@ -18,6 +16,7 @@ class Product_brand_model extends CI_Model
 
     return FALSE;
   }
+
 
 
   public function update($code, array $ds = array())
@@ -36,6 +35,28 @@ class Product_brand_model extends CI_Model
   {
     return $this->db->where('code', $code)->delete('product_brand');
   }
+
+
+  public function count_rows($code = '', $name = '')
+  {
+    $this->db->select('code');
+
+    if($code != '')
+    {
+      $this->db->like('code', $code);
+    }
+
+    if($name != '')
+    {
+      $this->db->like('name', $name);
+    }
+
+    $rs = $this->db->get('product_brand');
+
+    return $rs->num_rows();
+  }
+
+
 
 
   public function get($code)
@@ -68,57 +89,33 @@ class Product_brand_model extends CI_Model
   }
 
 
-  public function count_rows(array $ds = array())
+
+
+  public function get_data($code = '', $name = '', $perpage = '', $offset = '')
   {
-    if( ! empty($ds['code']))
+    if($code != '')
     {
-      $this->db->like('code', $ds['code']);
+      $this->db->like('code', $code);
     }
 
-    if( ! empty($ds['name']))
+    if($name != '')
     {
-      $this->db->like('name', $ds['name']);
+      $this->db->like('name', $name);
     }
 
-    return $this->db->count_all_results($this->tb);
+    if($perpage != '')
+    {
+      $offset = $offset === NULL ? 0 : $offset;
+      $this->db->limit($perpage, $offset);
+    }
+
+    $rs = $this->db->get('product_brand');
+
+    return $rs->result();
   }
 
 
-  public function get_list(array $ds = array(), $perpage = 20, $offset = 0)
-  {
-    if( ! empty($ds['code']))
-    {
-      $this->db->like('code', $ds['code']);
-    }
 
-    if( ! empty($ds['name']))
-    {
-      $this->db->like('name', $ds['name']);
-    }
-
-    $rs = $this->db->limit($perpage, $offset)->get($this->tb);
-
-    if($rs->num_rows() > 0)
-    {
-      return $rs->result();
-    }
-
-    return NULL;
-  }
-
-
-  public function get_data()
-  {
-    $rs = $this->db->get($this->tb);
-
-    if($rs->num_rows() > 0)
-    {
-      return $rs->result();
-    }
-
-    return NULL;
-  }
-  
 
   public function is_exists($code, $old_code = '')
   {
@@ -139,23 +136,64 @@ class Product_brand_model extends CI_Model
 
 
 
-  public function is_exists_name($name, $code = NULL)
+  public function is_exists_name($name, $old_name = '')
   {
-    if( ! empty($code))
+    if($old_name != '')
     {
-      $this->db->where('code !=', $code);
+      $this->db->where('name !=', $old_name);
     }
 
-    $count = $this->db->where('name', $name)->count_all_results($this->tb);
+    $rs = $this->db->where('name', $name)->get('product_brand');
 
-    return $count > 0 ? TRUE : FALSE;
+    if($rs->num_rows() > 0)
+    {
+      return TRUE;
+    }
+
+    return FALSE;
   }
+
 
 
   public function count_members($code)
   {
-    return $this->db->where('brand_code', $code)->count_all_results('products');
+    $this->db->select('active')->where('brand_code', $code);
+    $rs = $this->db->get('products');
+    return $rs->num_rows();
   }
 
+  public function is_sap_exists($code)
+  {
+    $rs = $this->mc->select('Code')->where('Code', $code)->get('BRAND');
+    if($rs->num_rows() > 0)
+    {
+      return TRUE;
+    }
+
+    return FALSE;
+  }
+
+
+  public function add_sap_brand(array $ds = array())
+  {
+    if(!empty($ds))
+    {
+      return $this->mc->insert('BRAND', $ds);
+    }
+
+    return FALSE;
+  }
+
+
+
+  public function update_sap_brand($code, array $ds = array())
+  {
+    if(!empty($ds))
+    {
+      return $this->mc->where('Code', $code)->update('BRAND', $ds);
+    }
+
+    return FALSE;
+  }
 }
 ?>

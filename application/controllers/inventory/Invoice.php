@@ -27,7 +27,6 @@ class Invoice extends PS_Controller
 
     $filter = array(
       'code' => get_filter('code', 'ic_code', ''),
-      'reference' => get_filter('reference', 'ic_reference', ''),
       'customer' => get_filter('customer', 'ic_customer', ''),
       'user' => get_filter('user', 'ic_user', ''),
       'role' => get_filter('role', 'ic_role', ''),
@@ -130,7 +129,6 @@ class Invoice extends PS_Controller
   {
     $filter = array(
       'ic_code',
-      'ic_reference',
       'ic_customer',
       'ic_user',
       'ic_role',

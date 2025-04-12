@@ -25,9 +25,6 @@
 		<?php if($order->state == 1 && $order->is_approved == 1 && $order->status == 1 && $order->is_expired == 0 && $this->pm->can_approve) : ?>
 			<button type="button" class="btn btn-white btn-danger top-btn" onclick="unapprove()"><i class="fa fa-refresh"></i> ยกเลิกอนุมัติ</button>
 		<?php endif; ?>
-		<?php if($is_api && $order->is_wms != 0 && $order->status == 1 && $order->is_expired == 0 && $order->state == 3) : ?>
-			<button type="button" class="btn btn-white btn-success top-btn" onclick="sendToWMS()">Send to WMS</button>
-		<?php endif; ?>
 		<div class="btn-group">
 			<button data-toggle="dropdown" class="btn btn-info btn-white dropdown-toggle margin-top-5" aria-expanded="false">
 				<i class="ace-icon fa fa-list icon-on-left"></i>ตัวเลือก
@@ -41,7 +38,7 @@
 				<?php if($order->state < 3 && $order->status != 2 && ($this->pm->can_add OR $this->pm->can_edit) && $can_upload) : ?>
 					<li class="success">
 						<a href="javascript:getUploadFile()"><i class="fa fa-upload"></i> &nbsp; Import Excel</a>
-					</li>					
+					</li>
 				<?php endif; ?>
 				<li class="purple">
 					<a href="javascript:getTemplate()"><i class="fa fa-download"></i> &nbsp; ไฟล์ Template</a>
@@ -119,8 +116,5 @@
 <script src="<?php echo base_url(); ?>scripts/print/print_address.js?v=<?php echo date('Ymd'); ?>"></script>
 <script src="<?php echo base_url(); ?>scripts/orders/order_online.js?v=<?php echo date('Ymd'); ?>"></script>
 <script src="<?php echo base_url(); ?>scripts/cancel_order.js?v=<?php echo date('Ymd'); ?>"></script>
-<?php if($order->is_wms && $order->status == 1 && $order->is_expired == 0 && $order->state == 3) : ?>
-	<script src="<?php echo base_url(); ?>scripts/wms/wms_order.js?v=<?php echo date('Ymd'); ?>"></script>
-<?php endif; ?>
 
 <?php $this->load->view('include/footer'); ?>

@@ -47,17 +47,7 @@
 			<option value="1" <?php echo is_selected($isApprove, "1"); ?>>อนุมัติแล้ว</option>
 		</select>
 	</div>
-
-	<div class="col-lg-1-harf col-md-2 col-sm-2 col-xs-6 padding-5">
-		<label>WMS</label>
-		<select class="form-control input-sm" name="wms_export" onchange="getSearch()">
-			<option value="all">ทั้งหมด</option>
-			<option value="0" <?php echo is_selected('0', $wms_export); ?>>ยังไม่ส่ง</option>
-			<option value="1" <?php echo is_selected('1', $wms_export); ?>>ส่งแล้ว</option>
-			<option value="3" <?php echo is_selected('3', $wms_export); ?>>Error</option>
-		</select>
-	</div>
-
+	
 	<div class="col-lg-1 col-md-2 col-sm-2 col-xs-6 padding-5">
 		<label>Back order</label>
 		<select class="form-control input-sm" name="is_backorder" onchange="getSearch()">

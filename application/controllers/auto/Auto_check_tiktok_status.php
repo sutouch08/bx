@@ -135,5 +135,27 @@ class Auto_check_tiktok_status extends CI_Controller
     return NULL;
   }
 
+
+  public function update_status()
+	{
+    $sc = TRUE;
+    $code = $this->input->post('code');
+    $status = $this->input->post('status');
+    $message = $this->input->post('message');
+
+    $ds = array(
+      'status' => $status,
+      'message' => $message
+    );
+
+		if( ! $this->db->where('code', $code)->update('auto_send_to_sap_order', $ds))
+    {
+      $sc = FALSE;
+      $this->error = "Update false";
+    }
+
+    echo $sc === TRUE ? 'success' : $this->error;
+	}
+
 } //--- end class
  ?>

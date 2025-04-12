@@ -29,30 +29,7 @@
 		<input type="text" class="form-control input-sm edit h t" name="to_warehouse" id="to_warehouse" value="<?php echo $doc->to_warehouse_name; ?>" required disabled/>
   </div>
 
-  <div class="col-lg-1-harf col-md-1-harf col-sm-2 col-xs-6 padding-5">
-		<label>การดำเนินการ</label>
-		<select class="form-control input-sm edit h" name="is_wms" id="is_wms" disabled>
-			<option value="">เลือก</option>
-			<?php if($this->wmsApi OR $doc->is_wms == 1) : ?>
-				<option value="1" <?php echo is_selected('1', $doc->is_wms); ?>>PIONEER</option>
-			<?php endif; ?>
-			<?php if($this->sokoApi OR $doc->is_wms == 2) : ?>
-				<option value="2" <?php echo is_selected('2', $doc->is_wms); ?>>SOKOCHAN</option>
-			<?php endif; ?>
-			<option value="0" <?php echo is_selected('0', $doc->is_wms); ?>>WARRIX</option>
-      <option value="-1" <?php echo is_selected('-1', $doc->is_wms); ?>>ย้ายคลัง</option>
-		</select>
-	</div>
-
-  <div class="col-lg-1-harf col-md-1-harf col-sm-2 col-xs-6 padding-5">
-		<label>Interface</label>
-		<select class="form-control input-sm edit" name="api" id="api" disabled>
-			<option value="1" <?php echo is_selected('1', $doc->api); ?>>ปกติ</option>
-			<option value="0" <?php echo is_selected('0', $doc->api); ?>>ไม่ส่ง</option>
-		</select>
-	</div>
-
-	<div class="col-lg-8 col-md-7-harf col-sm-10-harf col-xs-8 padding-5">
+	<div class="col-lg-11 col-md-10-harf col-sm-10-harf col-xs-8 padding-5">
     <label>หมายเหตุ</label>
     <input type="text" class="form-control input-sm edit h" name="remark" id="remark" value="<?php echo $doc->remark; ?>" disabled>
   </div>

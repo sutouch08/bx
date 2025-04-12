@@ -347,11 +347,6 @@ class Receive_transform_model extends CI_Model
       }
     }
 
-		if($ds['is_wms'] !== 'all')
-		{
-			$this->db->where('is_wms', $ds['is_wms']);
-		}
-
     if(isset($ds['sap_status']) && $ds['sap_status'] != 'all')
     {
       if($ds['sap_status'] == 0) {
@@ -423,12 +418,7 @@ class Receive_transform_model extends CI_Model
       {
         $this->db->where('is_expire', 0)->where('status', $ds['status']);
       }
-    }
-
-		if($ds['is_wms'] !== 'all')
-		{
-			$this->db->where('is_wms', $ds['is_wms']);
-		}
+    }		
 
     if(isset($ds['sap_status']) && $ds['sap_status'] != 'all')
     {

@@ -498,22 +498,6 @@ class Consign_order_model extends CI_Model
 	}
 
 
-	public function get_sap_doc_num($code)
-  {
-    $rs = $this->ms
-    ->select('DocNum')
-    ->where('U_ECOMNO', $code)
-    ->where('CANCELED', 'N')
-    ->get('ODLN');
-
-    if($rs->num_rows() > 0)
-    {
-      return $rs->row()->DocNum;
-    }
-
-    return NULL;
-  }
-
 	public function update_inv($code, $doc_num)
   {
     return $this->db->set('inv_code', $doc_num)->where('code', $code)->update('consign_order');

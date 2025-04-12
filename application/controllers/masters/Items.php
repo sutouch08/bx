@@ -452,6 +452,7 @@ class Items extends PS_Controller
   }
 
 
+
   public function duplicate($id)
   {
     $item = $this->products_model->get_by_id($id);
@@ -515,6 +516,19 @@ class Items extends PS_Controller
 			$this->error = "Missing form data";
 		}
 
+		if($sc === TRUE)
+		{
+			$this->do_export($code);
+
+      if($this->sokoApi)
+      {
+        if( ! empty($ds->barcode))
+        {
+          $this->soko_product_api->update_item($ds->code, $ds);
+        }
+      }
+		}
+
 		echo $sc === TRUE ? 'success' : $this->error;
   }
 
@@ -530,6 +544,7 @@ class Items extends PS_Controller
       echo 'ok';
     }
   }
+
 
 
   public function toggle_can_sell($code)
@@ -562,6 +577,7 @@ class Items extends PS_Controller
       echo 'fail';
     }
   }
+
 
 
   public function toggle_api($code)
@@ -612,48 +628,136 @@ class Items extends PS_Controller
   }
 
 
-  public function download_template($token)
+
+  public function do_export($code, $method = 'A')
   {
-    //--- load excel library
-    $this->load->library('excel');
+		$sc = TRUE;
 
-    $this->excel->setActiveSheetIndex(0);
-    $this->excel->getActiveSheet()->setTitle('Items Master Template');
+    $item = $this->products_model->get($code);
+    //--- เช็คข้อมูลในฐานข้อมูลจริง
+    $exst = $this->products_model->is_sap_exists($item->code);
 
-    //--- set report title header
-    $this->excel->getActiveSheet()->setCellValue('A1', 'Code');
-    $this->excel->getActiveSheet()->setCellValue('B1', 'Name');
-    $this->excel->getActiveSheet()->setCellValue('C1', 'Barcode');
-    $this->excel->getActiveSheet()->setCellValue('D1', 'Model');
-    $this->excel->getActiveSheet()->setCellValue('E1', 'Color');
-    $this->excel->getActiveSheet()->setCellValue('F1', 'Size');
-    $this->excel->getActiveSheet()->setCellValue('G1', 'Group');
-    $this->excel->getActiveSheet()->setCellValue('H1', 'MainGroup');
-    $this->excel->getActiveSheet()->setCellValue('I1', 'SubGroup');
-    $this->excel->getActiveSheet()->setCellValue('J1', 'Category');
-    $this->excel->getActiveSheet()->setCellValue('K1', 'Kind');
-    $this->excel->getActiveSheet()->setCellValue('L1', 'Type');
-    $this->excel->getActiveSheet()->setCellValue('M1', 'Brand');
-    $this->excel->getActiveSheet()->setCellValue('N1', 'Collection');
-    $this->excel->getActiveSheet()->setCellValue('O1', 'Year');
-    $this->excel->getActiveSheet()->setCellValue('P1', 'Cost');
-    $this->excel->getActiveSheet()->setCellValue('Q1', 'Price');
-    $this->excel->getActiveSheet()->setCellValue('R1', 'Unit');
-    $this->excel->getActiveSheet()->setCellValue('S1', 'CountStock');
-    $this->excel->getActiveSheet()->setCellValue('T1', 'IsAPI');
-    $this->excel->getActiveSheet()->setCellValue('U1', 'OldModel');
-    $this->excel->getActiveSheet()->setCellValue('V1', 'OldCode');
+    $method = $exst === TRUE ? 'U' : $method;
 
+    //--- เช็คข้อมูลในถังกลาง
+    $middle = $this->products_model->get_un_import_middle($item->code);
+    if(!empty($middle))
+    {
+      foreach($middle as $mid)
+      {
+        $this->products_model->drop_middle_item($mid->DocEntry);
+      }
+    }
 
-    setToken($token);
+    $ds = array(
+      'ItemCode' => $item->code, //--- รหัสสินค้า
+      'ItemName' => limitText($item->name, 97),//--- ชื่อสินค้า
+      'FrgnName' => NULL,   //--- ชื่อสินค้าภาษาต่างประเทศ
+      'ItmsGrpCod' => getConfig('ITEM_GROUP_CODE'),  //--- กลุ่มสินค้า (ต้องตรงกับ SAP)
+      'VatGourpSa' => getConfig('SALE_VATE_CODE'), //--- รหัสกลุ่มภาษีขาย
+      'CodeBars' => $item->barcode, //--- บาร์โค้ด
+      'VATLiable' => 'Y', //--- มี vat หรือไม่
+      'PrchseItem' => 'Y', //--- สินค้าสำหรับซื้อหรือไม่
+      'SellItem' => 'Y', //--- สินค้าสำหรับขายหรือไม่
+      'InvntItem' => $item->count_stock == 1 ? 'Y' : 'N', //--- นับสต้อกหรือไม่
+      'SalUnitMsr' => $item->unit_code, //--- หน่วยขาย
+      'BuyUnitMsr' => $item->unit_code, //--- หน่วยซื้อ
+      'CntUnitMsr' => $item->unit_code,
+      'VatGroupPu' => getConfig('PURCHASE_VAT_CODE'), //---- รหัสกลุ่มภาษีซื้อ (ต้องตรงกับ SAP)
+      'ItemType' => 'I', //--- ประเภทของรายการ F=Fixed Assets, I=Items, L=Labor, T=Travel
+      'InvntryUom' => $item->unit_code, //--- หน่วยในการนับสต็อก
+      'validFor' => $item->active == 1 ? 'Y' : 'N',
+      'U_MODEL' => $item->style_code,
+      'U_COLOR' => $item->color_code,
+      'U_SIZE' => $item->size_code,
+      'U_GROUP' => $item->group_code,
+			'U_MAINGROUP' => $item->main_group_code,
+      'U_MAJOR' => $item->sub_group_code,
+      'U_CATE' => $item->category_code,
+      'U_SUBTYPE' => $item->kind_code,
+      'U_TYPE' => $item->type_code,
+      'U_BRAND' => $item->brand_code,
+      'U_YEAR' => $item->year,
+      'U_COST' => $item->cost,
+      'U_PRICE' => $item->price,
+      'U_OLDCODE' => $item->old_code,
+      'F_E_Commerce' => $method,
+      'F_E_CommerceDate' => sap_date(now(), TRUE)
+    );
 
-    $file_name = "Items_master_template.xlsx";
-    header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'); /// form excel 2007 XLSX
-    header('Content-Disposition: attachment;filename="'.$file_name.'"');
-    $writer = PHPExcel_IOFactory::createWriter($this->excel, 'Excel2007');
-    $writer->save('php://output');
+		if( ! $this->products_model->add_item($ds))
+		{
+      $sc = FALSE;
+      $this->error = "Update Item failed";
+		}
+		
+    return $sc;
+
   }
 
+
+
+  public function export_style($style_code)
+  {
+    $style = $this->product_style_model->get($style_code);
+
+    if(!empty($style))
+    {
+      $ext = $this->product_style_model->is_middle_exists($style_code);
+      $flag = $ext === TRUE ? 'U' : 'A';
+      $arr = array(
+        'Code' => $style->code,
+        'Name' => $style->name,
+        'UpdateDate' => sap_date(now(), TRUE),
+        'Flag' => $flag
+      );
+      return $this->product_style_model->add_sap_model($arr);
+    }
+    return FALSE;
+  }
+
+
+    public function download_template($token)
+    {
+      //--- load excel library
+      $this->load->library('excel');
+
+      $this->excel->setActiveSheetIndex(0);
+      $this->excel->getActiveSheet()->setTitle('Items Master Template');
+
+      //--- set report title header
+      $this->excel->getActiveSheet()->setCellValue('A1', 'Code');
+      $this->excel->getActiveSheet()->setCellValue('B1', 'Name');
+      $this->excel->getActiveSheet()->setCellValue('C1', 'Barcode');
+      $this->excel->getActiveSheet()->setCellValue('D1', 'Model');
+      $this->excel->getActiveSheet()->setCellValue('E1', 'Color');
+      $this->excel->getActiveSheet()->setCellValue('F1', 'Size');
+      $this->excel->getActiveSheet()->setCellValue('G1', 'Group');
+      $this->excel->getActiveSheet()->setCellValue('H1', 'MainGroup');
+      $this->excel->getActiveSheet()->setCellValue('I1', 'SubGroup');
+      $this->excel->getActiveSheet()->setCellValue('J1', 'Category');
+      $this->excel->getActiveSheet()->setCellValue('K1', 'Kind');
+      $this->excel->getActiveSheet()->setCellValue('L1', 'Type');
+      $this->excel->getActiveSheet()->setCellValue('M1', 'Brand');
+      $this->excel->getActiveSheet()->setCellValue('N1', 'Collection');
+      $this->excel->getActiveSheet()->setCellValue('O1', 'Year');
+      $this->excel->getActiveSheet()->setCellValue('P1', 'Cost');
+      $this->excel->getActiveSheet()->setCellValue('Q1', 'Price');
+      $this->excel->getActiveSheet()->setCellValue('R1', 'Unit');
+      $this->excel->getActiveSheet()->setCellValue('S1', 'CountStock');
+      $this->excel->getActiveSheet()->setCellValue('T1', 'IsAPI');
+      $this->excel->getActiveSheet()->setCellValue('U1', 'OldModel');
+      $this->excel->getActiveSheet()->setCellValue('V1', 'OldCode');
+
+
+      setToken($token);
+
+      $file_name = "Items_master_template.xlsx";
+      header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'); /// form excel 2007 XLSX
+      header('Content-Disposition: attachment;filename="'.$file_name.'"');
+      $writer = PHPExcel_IOFactory::createWriter($this->excel, 'Excel2007');
+      $writer->save('php://output');
+    }
 
   public function clear_filter()
 	{

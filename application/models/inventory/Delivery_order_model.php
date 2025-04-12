@@ -7,7 +7,6 @@ class Delivery_order_model extends CI_Model
   }
 
 
-
   public function get_sold_details($reference)
   {
     $rs = $this->db->where('reference', $reference)->get('order_sold');
@@ -38,11 +37,6 @@ class Delivery_order_model extends CI_Model
     if( ! empty($ds['code']))
     {
       $this->db->like('code', $ds['code']);
-    }
-
-    if( ! empty($ds['reference']))
-    {
-      $this->db->like('reference', $ds['reference']);
     }
 
     if(! empty($ds['customer']))
@@ -149,11 +143,6 @@ class Delivery_order_model extends CI_Model
     if( ! empty($ds['code']))
     {
       $this->db->like('code', $ds['code']);
-    }
-
-    if( ! empty($ds['reference']))
-    {
-      $this->db->like('reference', $ds['reference']);
     }
 
     if(! empty($ds['customer']))
@@ -397,145 +386,6 @@ class Delivery_order_model extends CI_Model
       return FALSE;
     }
 
-
-    public function add_sap_delivery_order(array $ds = array())
-    {
-      $rs = $this->mc->insert('ODLN', $ds);
-      if($rs)
-      {
-        return $this->mc->insert_id();
-      }
-
-      return FALSE;
-    }
-
-
-    public function update_sap_delivery_order($code, $ds)
-    {
-      return $this->mc->where('U_ECOMNO', $code)->update('ODLN', $ds);
-    }
-
-
-    public function add_delivery_row(array $ds = array())
-    {
-      return $this->mc->insert('DLN1', $ds);
-    }
-
-
-    public function is_doc_exists($code)
-    {
-      $rs = $this->mc->select('U_ECOMNO')->where('U_ECOMNO', $code)->get('ODLN');
-      if($rs->num_rows() > 0)
-      {
-        return TRUE;
-      }
-
-      return FALSE;
-    }
-
-
-    public function get_middle_delivery_order($code)
-    {
-      $rs = $this->mc
-      ->select('DocEntry')
-      ->where('U_ECOMNO', $code)
-      ->group_start()
-      ->where('F_Sap', 'N')
-      ->or_where('F_Sap IS NULL', NULL, FALSE)
-      ->group_end()
-      ->get('ODLN');
-
-      if($rs->num_rows() > 0)
-      {
-        return $rs->result();
-      }
-
-      return NULL;
-    }
-
-
-
-    public function get_sap_delivery_order($code)
-    {
-      $rs = $this->ms
-      ->select('DocEntry, DocStatus')
-      ->where('U_ECOMNO', $code)
-      ->where('CANCELED', 'N')
-      ->get('ODLN');
-      if($rs->num_rows() > 0)
-      {
-        return $rs->result();
-      }
-
-      return NULL;
-    }
-
-
-		public function exists_sap_delivery_order($code)
-    {
-      $rs = $this->ms
-      ->where('U_ECOMNO', $code)
-      ->where('CANCELED', 'N')
-      ->count_all_results('ODLN');
-      if($rs > 0)
-      {
-        return TRUE;
-      }
-
-      return FALSE;
-    }
-
-
-
-    public function sap_exists_details($code)
-    {
-      $rs = $this->mc->select('LineNum')->where('U_ECOMNO', $code)->get('DLN1');
-      if($rs->num_rows() > 0)
-      {
-        return TRUE;
-      }
-
-      return FALSE;
-    }
-
-
-    //--- ลบรายการที่ค้างใน middle ที่ยังไม่ได้เอาเข้า SAP ออก
-    public function drop_middle_exits_data($docEntry)
-    {
-      $this->mc->trans_start();
-      $this->mc->where('DocEntry', $docEntry)->delete('DLN1');
-      $this->mc->where('DocEntry', $docEntry)->delete('ODLN');
-      $this->mc->trans_complete();
-      return $this->mc->trans_status();
-    }
-
-
-    public function drop_sap_exists_details($code)
-    {
-      return $this->mc->where('U_ECOMNO', $code)->delete('DLN1');
-    }
-
-
-
-
-    public function update_delivery_row($DocEntry, $line, $ds = array())
-    {
-
-      return $this->mc->where('DocEntry', $DocEntry)->where('LineNum', $line)->update('DLN1', $ds);
-    }
-
-
-
-    public function getDocEntry($code)
-    {
-      $rs = $this->mc->select_max('DocEntry')->where('U_ECOMNO', $code)->get('ODLN');
-      if($rs->num_rows() === 1)
-      {
-        return $rs->row()->DocEntry;
-      }
-
-      return FALSE;
-    }
 
     private function get_max_id()
     {

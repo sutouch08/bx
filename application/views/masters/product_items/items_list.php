@@ -163,13 +163,32 @@
 				<?php foreach($data as $rs) : ?>
 					<tr id="row-<?php echo $no; ?>" class="font-size-12">
 						<td class="middle text-center">
-							<button type="button" class="btn btn-minier btn-info" onclick="viewDetail(<?php echo $rs->id; ?>)"><i class="fa fa-eye"></i></button>
-							<?php if($this->pm->can_edit) : ?>
-								<button type="button" class="btn btn-minier btn-warning" onclick="getEdit(<?php echo $rs->id; ?>)"><i class="fa fa-pencil"></i></button>
-							<?php endif; ?>
-							<?php if($this->pm->can_delete) : ?>
-								<button type="button" class="btn btn-minier btn-danger" onclick="getDelete(<?php echo $rs->id; ?>, '<?php echo $rs->code; ?>', <?php echo $no; ?>)"><i class="fa fa-trash"></i></button>
-							<?php endif; ?>							
+							<div class="btn-group">
+								<button data-toggle="dropdown" class="btn btn-sm btn-primary btn-white dropdown-toggle" aria-expanded="false">
+									Action
+									<i class="ace-icon fa fa-angle-down icon-on-right"></i>
+								</button>
+
+								<ul class="dropdown-menu">
+									<?php if($this->pm->can_add) : ?>
+										<li>
+											<a href="javascript:duplicate('<?php echo $rs->id; ?>')"><i class="fa fa-copy purple"></i> Duplicate</a>
+										</li>
+									<?php endif; ?>
+
+									<?php if($this->pm->can_edit) : ?>
+										<li>
+											<a href="javascript:getEdit('<?php echo $rs->id; ?>')"><i class="fa fa-pencil orange"></i> Edit</a>
+										</li>
+									<?php endif; ?>
+
+									<?php if($this->pm->can_delete) : ?>
+										<li>
+											<a href="javascript:getDelete(<?php echo $rs->id; ?>, '<?php echo $rs->code; ?>', <?php echo $no; ?>)"><i class="fa fa-trash red"></i> Delete</a>
+										</li>
+									<?php endif; ?>
+								</ul>
+							</div>
 						</td>
 						<td class="middle text-center"><?php echo $no; ?></td>
 						<td class="middle"><?php echo $rs->barcode; ?></td>
@@ -190,7 +209,6 @@
 						<td class="middle text-center"><?php echo is_active($rs->can_sell); ?></td>
 						<td class="middle text-center"><?php echo is_active($rs->active); ?></td>
 						<td class="middle"><?php echo $rs->old_code; ?></td>
-
 					</tr>
 					<?php $no++; ?>
 				<?php endforeach; ?>

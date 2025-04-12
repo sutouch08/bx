@@ -386,97 +386,6 @@ function doExport(){
 }
 
 
-function sendToWms() {
-	var code = $('#return_code').val();
-
-	load_in();
-	$.ajax({
-		url:HOME + 'send_to_wms',
-		type:'POST',
-		cache:false,
-		data:{
-			'code' : code
-		},
-		success:function(rs) {
-			load_out();
-			var rs = $.trim(rs);
-			if(rs === 'success') {
-				swal({
-					title:'Success',
-					type:'success',
-					timer:1000
-				});
-			}
-			else {
-				swal({
-					title:'Error!',
-					text:rs,
-					type:'error',
-					html:true
-				});
-			}
-		},
-		error:function(xhr, status, error) {
-			load_out();
-			swal({
-				title:'Error!',
-				text:xhr.responseText,
-				type:'error',
-				html:true
-			})
-		}
-	})
-}
-
-
-function sendToSoko() {
-	var code = $('#return_code').val();
-
-	load_in();
-	$.ajax({
-		url:HOME + 'send_to_soko',
-		type:'POST',
-		cache:false,
-		data:{
-			'code' : code
-		},
-		success:function(rs) {
-			load_out();
-			var rs = $.trim(rs);
-			if(rs === 'success') {
-				swal({
-					title:'Success',
-					type:'success',
-					timer:1000
-				});
-
-				setTimeout(() => {
-					window.location.reload();
-				}, 1200);
-			}
-			else {
-				swal({
-					title:'Error!',
-					text:rs,
-					type:'error',
-					html:true
-				});
-			}
-		},
-		error:function(xhr, status, error) {
-			load_out();
-			swal({
-				title:'Error!',
-				text:xhr.responseText,
-				type:'error',
-				html:true
-			})
-		}
-	})
-}
-
-
-
 function editHeader(){
 	$('.edit').removeAttr('disabled');
 	$('#btn-edit').addClass('hide');
@@ -493,8 +402,6 @@ function updateHeader(){
 	let invoice = $('#invoice').val();
 	let customer_code = $('#customer_code').val();
 	let zone_code = $('#zone_code').val();
-	let is_wms = $('#is_wms').val();
-	let api = $('#api').val();
 	let reqRemark = $('#required_remark').val();
   let remark = $.trim($('#remark').val());
 
@@ -513,12 +420,6 @@ function updateHeader(){
 	if(customer_code.length == 0){
 		swal('กรุณาอ้างอิงลูกค้า');
 		$('#customer_code').addClass('has-error');
-		return false;
-	}
-
-	if(is_wms == "") {
-		swal("กรุณาระบุการรับ");
-		$('#is_wms').addClass('has-error');
 		return false;
 	}
 
@@ -546,8 +447,6 @@ function updateHeader(){
 		'invoice' : invoice,
 		'customer_code' : customer_code,
 		'zone_code' : zone_code,
-		'is_wms' : is_wms,
-		'api' : api,
 		'remark' : remark
 	}
 
@@ -604,13 +503,6 @@ $('#shipped-date').datepicker({
 });
 
 
-function updateZone() {
-	let el = $('#is_wms option:selected');
-	$('#zone_code').val(el.data('zonecode'));
-	$('#zone').val(el.data('zonename'));
-}
-
-
 function addNew()
 {
 	$('.h').removeClass('has-error');
@@ -620,8 +512,6 @@ function addNew()
 	let invoice = $('#invoice').val();
 	let customer_code = $('#customer_code').val();
 	let zone_code = $('#zone_code').val();
-	let is_wms = $('#is_wms').val();
-	let api = $('#api').val();
 	let remark = $.trim($('#remark').val());
 	let reqRemark = $('#required-remark').val();
 
@@ -641,12 +531,6 @@ function addNew()
 	if(customer_code.length == 0){
 		swal('กรุณาอ้างอิงลูกค้า');
 		$('#customer_code').addClass('has-error');
-		return false;
-	}
-
-	if(is_wms == "") {
-		swal("กรุณาระบุการรับ");
-		$('#is_wms').addClass('has-error');
 		return false;
 	}
 
@@ -673,9 +557,7 @@ function addNew()
 		'shipped_date' : shipped_date,
 		'invoice' : invoice,
 		'customer_code' : customer_code,
-		'zone_code' : zone_code,
-		'is_wms' : is_wms,
-		'api' : api,
+		'zone_code' : zone_code,		
 		'remark' : remark
 	}
 

@@ -90,10 +90,7 @@
 						<?php echo $no; ?>
 					</td>
 					<td class="middle">
-						<?php echo $rs->product_code; ?>
-						<?php if(!empty($rs->old_code)) : ?>
-							<?php  echo " | {$rs->old_code}"; ?>
-						<?php endif; ?>
+						<?php echo $rs->product_code; ?>						
 						<input type="hidden" name="item[<?php echo $no; ?>]" id="item_<?php echo $no; ?>" value="<?php echo $rs->product_code; ?>">
 					</td>
 					<td class="middle text-center">

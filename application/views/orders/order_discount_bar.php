@@ -28,9 +28,7 @@
 
     </div>
 		<div class="col-lg-6 col-md-5-harf col-sm-4-harf col-xs-12 text-center padding-5">
-			<?php if($is_api && $order->is_wms != 0 && $order->is_api == 0 && $order->state >= 3 && $order->state != 9 && $order->wms_export != 1) : ?>
-				<?php 	$this->load->view('wms_error_watermark'); ?>
-			<?php endif; ?>			
+					
 		</div>
 
 		<?php if($order->role == 'S') : ?>

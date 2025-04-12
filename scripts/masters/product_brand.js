@@ -1,54 +1,25 @@
 function addNew(){
-  window.location.href = HOME + 'add_new';
+  window.location.href = BASE_URL + 'masters/product_brand/add_new';
 }
 
 
+
 function goBack(){
-  window.location.href = HOME;
+  window.location.href = BASE_URL + 'masters/product_brand';
 }
 
 
 function getEdit(code){
-  window.location.href = HOME + 'edit/'+code;
+  window.location.href = BASE_URL + 'masters/product_brand/edit/'+code;
 }
 
 
-function update() {
-  clearErrorByClass('e')
-  let code = $('#code').val().trim();
-  let name = $('#name').val().trim();
-
-  if(name.length == 0) {
-    $('#name').hasError();
-    return false;
-  }
-
-  $.ajax({
-    url:HOME + 'update',
-    type:'POST',
-    cache:false,
-    data:{
-      'code' : code,
-      'name' : name
-    },
-    success:function(rs) {
-      if(rs.trim() == 'success') {
-        swal({
-          title:'Success',
-          type:'success',
-          timer:1000
-        });
-      }
-      else {
-        beep();
-        showError(rs);
-      }
-    },
-    error:function(rs) {
-      beep();
-      showError(rs);
-    }
-  })
+function clearFilter(){
+  var url = BASE_URL + 'masters/product_brand/clear_filter';
+  var page = BASE_URL + 'masters/product_brand';
+  $.get(url, function(rs){
+    window.location.href = page;
+  });
 }
 
 
@@ -62,8 +33,13 @@ function getDelete(code, name){
 		confirmButtonText: 'ใช่, ฉันต้องการลบ',
 		cancelButtonText: 'ยกเลิก',
 		closeOnConfirm: false
-  },
-  function(){
-    window.location.href = HOME + 'delete/' + code;
+  },function(){
+    window.location.href = BASE_URL + 'masters/product_brand/delete/' + code;
   })
+}
+
+
+
+function getSearch(){
+  $('#searchForm').submit();
 }

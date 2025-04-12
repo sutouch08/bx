@@ -486,7 +486,7 @@ class Transfer_model extends CI_Model
     if(!empty($ds))
     {
       $id = $this->get_temp_id($ds['transfer_code'], $ds['product_code'], $ds['zone_code']);
-      
+
       if(!empty($id))
       {
         return $this->update_temp_qty($id, $ds['qty']);
@@ -817,21 +817,6 @@ class Transfer_model extends CI_Model
       }
     }
 
-		if($ds['api'] != 'all')
-		{
-			$this->db->where('api', $ds['api']);
-		}
-
-    if(isset($ds['is_wms']) && $ds['is_wms'] != 'all')
-    {
-      $this->db->where('is_wms', $ds['is_wms']);
-    }
-
-    if(isset($ds['wms_export']) && $ds['wms_export'] != 'all')
-    {
-      $this->db->where('wms_export', $ds['wms_export']);
-    }
-
     if( ! empty($ds['from_date']) && ! empty($ds['to_date']))
     {
       $this->db->where('date_add >=', from_date($ds['from_date']));
@@ -923,22 +908,7 @@ class Transfer_model extends CI_Model
       {
         $this->db->where('inv_code IS NOT NULL', NULL, FALSE);
       }
-    }
-
-		if($ds['api'] != 'all')
-		{
-			$this->db->where('api', $ds['api']);
-		}
-
-    if(isset($ds['is_wms']) && $ds['is_wms'] != 'all')
-    {
-      $this->db->where('is_wms', $ds['is_wms']);
-    }
-
-    if(isset($ds['wms_export']) && $ds['wms_export'] != 'all')
-    {
-      $this->db->where('wms_export', $ds['wms_export']);
-    }
+    }	
 
     if( ! empty($ds['from_date']) && ! empty($ds['to_date']))
     {

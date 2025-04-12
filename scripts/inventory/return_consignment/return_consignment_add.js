@@ -188,47 +188,6 @@ function doExport(){
 }
 
 
-function sendToWms() {
-	var code = $('#return_code').val();
-
-	load_in();
-	$.ajax({
-		url:HOME + 'send_to_wms',
-		type:'POST',
-		cache:false,
-		data:{
-			'code' : code
-		},
-		success:function(rs) {
-			load_out();
-			var rs = $.trim(rs);
-			if(rs === 'success') {
-				swal({
-					title:'Success',
-					type:'success',
-					timer:1000
-				});
-			}
-			else {
-				swal({
-					title:'Error!',
-					text:rs,
-					type:'error',
-					html:true
-				});
-			}
-		},
-		error:function(xhr, status, error) {
-			load_out();
-			swal({
-				title:'Error!',
-				text:xhr.responseText,
-				type:'error',
-				html:true
-			})
-		}
-	})
-}
 
 
 
@@ -244,8 +203,6 @@ function updateHeader(){
 	var date_add = $('#dateAdd').val();
 	var invoice = $('#invoice').val();
 	var customer_code = $('#customer_code').val();
-	var is_wms = $('#is_wms').val();
-	var is_api = $('#is_api').val();
 	var warehouse_code = $('#warehouse_code').val();
 	var zone_code = $('#zone_code').val();
 	var from_warehouse_code = $('#from_warehouse_code').val();
@@ -288,8 +245,6 @@ function updateHeader(){
 			'date_add' : date_add,
 			'invoice' : invoice,
 			'customer_code' : customer_code,
-			'is_wms' : is_wms,
-			'is_api' : is_api,
 			'warehouse_code' : warehouse_code,
 			'zone_code' : zone_code,
 			'from_zone' : from_zone_code,
@@ -353,8 +308,6 @@ function addNew()
 {
   var date_add = $('#dateAdd').val();
 	var invoice = $('#invoice').val();
-	var is_wms = $('#is_wms').val();
-	var is_api = $('#is_api').val();
 	var gp = $('#gp').val();
 	var customer_code = $('#customer_code').val();
 	var from_zone = $('#from_zone_code').val();
@@ -395,8 +348,6 @@ function addNew()
 		data:{
 			'date_add' : date_add,
 			'invoice' : invoice,
-			'is_wms' : is_wms,
-			'is_api' : is_api,
 			'gp' : gp,
 			'customer_code' : customer_code,
 			'from_zone' : from_zone,

@@ -1,8 +1,6 @@
 <?php
 class Employee_model extends CI_Model
 {
-  private $tb = "employee";
-
   public function __construct()
   {
     parent::__construct();
@@ -11,27 +9,46 @@ class Employee_model extends CI_Model
 
   public function get($id)
   {
-    $rs = $this->db->where('id', $id)->get($this->tb);
-
+    $rs = $this->ms
+    ->select('empID, lastName, firstName')
+    ->where('empID', $id)->get('OHEM');
     if($rs->num_rows() === 1)
     {
       return $rs->row();
     }
 
-    return NULL;
+    return FALSE;
   }
+
 
 
   public function get_name($id)
   {
-    $rs = $this->db->select('first_name, last_name')->where('id', $id)->get($this->tb);
+    $rs = $this->ms->select('firstName, lastName')->where('empID', $id)->get('OHEM');
     if($rs->num_rows() === 1)
     {
-      return $rs->row()->first_name.' '.$rs->row()->last_name;
+      return $rs->row()->firstName.' '.$rs->row()->lastName;
     }
 
-    return NULL;
+    return FALSE;
   }
+
+
+  public function search($txt)
+  {
+    $qr  = "SELECT empID, firstName, lastName FROM OHEM ";
+    $qr .= "WHERE firstName LIKE N'%{$txt}%' OR lastName LIKE N'%{$txt}%'";
+    $rs = $this->ms->query($qr);
+    if($rs->num_rows() > 0)
+    {
+      return $rs->result();
+    }
+    else
+    {
+      return array();
+    }
+  }
+
 
 }//--- end class
  ?>

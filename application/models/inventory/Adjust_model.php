@@ -152,7 +152,6 @@ class Adjust_model extends CI_Model
   }
 
 
-
   public function delete_detail($id)
   {
     return $this->db->where('id', $id)->delete('adjust_detail');
@@ -163,7 +162,6 @@ class Adjust_model extends CI_Model
   {
     return $this->db->where('adjust_code', $code)->delete('adjust_detail');
   }
-
 
 
 
@@ -488,161 +486,6 @@ class Adjust_model extends CI_Model
 
     return $this->db->where('code', $code)->update('adjust', $arr);
   }
-
-
-
-  public function get_sap_issue_doc($code)
-  {
-    $rs = $this->ms
-    ->select('DocEntry, DocNum')
-    ->where('U_ECOMNO', $code)
-    ->where('CANCELED', 'N')
-    ->get('OIGE');
-    if($rs->num_rows() === 1)
-    {
-      return $rs->row();
-    }
-
-    return FALSE;
-  }
-
-
-  public function get_sap_receive_doc($code)
-  {
-    $rs = $this->ms
-    ->select('DocEntry, DocNum')
-    ->where('U_ECOMNO', $code)
-    ->where('CANCELED', 'N')
-    ->get('OIGN');
-    if($rs->num_rows() === 1)
-    {
-      return $rs->row();
-    }
-
-    return FALSE;
-  }
-
-
-  public function get_middle_goods_issue($code)
-  {
-    $rs = $this->mc
-    ->select('DocEntry')
-    ->where('U_ECOMNO', $code)
-    ->group_start()
-    ->where('F_Sap', 'N')
-    ->or_where('F_Sap IS NULL', NULL, FALSE)
-    ->group_end()
-    ->get('OIGE');
-
-    if($rs->num_rows() > 0)
-    {
-      return $rs->result();
-    }
-
-    return NULL;
-  }
-
-
-
-  public function get_middle_goods_receive($code)
-  {
-    $rs = $this->mc
-    ->select('DocEntry')
-    ->where('U_ECOMNO', $code)
-    ->group_start()
-    ->where('F_Sap', 'N')
-    ->or_where('F_Sap IS NULL', NULL, FALSE)
-    ->group_end()
-    ->get('OIGN');
-
-    if($rs->num_rows() > 0)
-    {
-      return $rs->result();
-    }
-
-    return NULL;
-  }
-
-
-  //--- ลบรายการที่ค้างใน middle ที่ยังไม่ได้เอาเข้า SAP ออก
-  public function drop_middle_issue_data($docEntry)
-  {
-    $this->mc->trans_start();
-    $this->mc->where('DocEntry', $docEntry)->delete('IGE1');
-    $this->mc->where('DocEntry', $docEntry)->delete('OIGE');
-    $this->mc->trans_complete();
-    return $this->mc->trans_status();
-  }
-
-
-  //--- ลบรายการที่ค้างใน middle ที่ยังไม่ได้เอาเข้า SAP ออก
-  public function drop_middle_receive_data($docEntry)
-  {
-    $this->mc->trans_start();
-    $this->mc->where('DocEntry', $docEntry)->delete('IGN1');
-    $this->mc->where('DocEntry', $docEntry)->delete('OIGN');
-    $this->mc->trans_complete();
-    return $this->mc->trans_status();
-  }
-
-
-
-  //--- add new doc
-  public function add_sap_goods_issue($ds = array())
-  {
-    if(!empty($ds))
-    {
-      $rs = $this->mc->insert('OIGE', $ds);
-      if($rs)
-      {
-        return $this->mc->insert_id();
-      }
-    }
-
-    return FALSE;
-  }
-
-
-  public function add_sap_goods_issue_row($ds = array())
-  {
-    if(!empty($ds))
-    {
-      return $this->mc->insert('IGE1', $ds);
-    }
-
-    return FALSE;
-  }
-
-
-
-  //--- add new doc
-  public function add_sap_goods_receive($ds = array())
-  {
-    if(!empty($ds))
-    {
-      $rs = $this->mc->insert('OIGN', $ds);
-      if($rs)
-      {
-        return $this->mc->insert_id();
-      }
-    }
-
-    return FALSE;
-  }
-
-
-  public function add_sap_goods_receive_row($ds = array())
-  {
-    if(!empty($ds))
-    {
-      return $this->mc->insert('IGN1', $ds);
-    }
-
-    return FALSE;
-  }
-
-
-
 
   public function get_max_code($code)
   {

@@ -1,3 +1,5 @@
+//var intv = setInterval(function(){ goBack(); }, 60000*5); //--- Reload every 5 minutes.
+
 
 $("#fromDate").datepicker({
   dateFormat:'dd-mm-yy',
@@ -49,3 +51,9 @@ function clearFilter(){
     goBack();
   });
 }
+
+
+$(document).ready(function() {
+	//---	reload ทุก 5 นาที
+	setTimeout(function(){ goBack(); }, 300000);
+});

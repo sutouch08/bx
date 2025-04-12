@@ -17,9 +17,7 @@ class Prepare extends PS_Controller
     $this->load->model('inventory/prepare_model');
     $this->load->model('orders/orders_model');
     $this->load->model('orders/order_state_model');
-    $this->load->model('masters/warehouse_model');
-
-    $this->full_mode = is_true(getConfig('WMS_FULL_MODE'));
+    $this->load->model('masters/warehouse_model');    
   }
 
 
@@ -46,8 +44,7 @@ class Prepare extends PS_Controller
       'endTime' => get_filter('endTime', 'ic_endTime', ''),
       'item_code' => get_filter('item_code', 'ic_item_code', ''),
       'payment' => get_filter('payment', 'ic_payment', 'all'),
-      'warehouse' => get_filter('warehouse', 'ic_warehouse', 'all'),
-      'is_backorder' => get_filter('is_backorder', 'ic_is_backorder', 'all')
+      'warehouse' => get_filter('warehouse', 'ic_warehouse', 'all')
     );
 
     if($this->input->post('search'))
@@ -95,8 +92,7 @@ class Prepare extends PS_Controller
       'endTime' => get_filter('endTime', 'ic_endTime', ''),
       'item_code' => get_filter('item_code', 'ic_item_code', ''),
       'payment' => get_filter('payment', 'ic_payment', 'all'),
-      'warehouse' => get_filter('warehouse', 'ic_warehouse', 'all'),
-      'is_backorder' => get_filter('is_backorder', 'ic_is_backorder', 'all')
+      'warehouse' => get_filter('warehouse', 'ic_warehouse', 'all')
     );
 
     if($this->input->post('search'))
@@ -118,29 +114,6 @@ class Prepare extends PS_Controller
   		$this->pagination->initialize($init);
       $this->load->view('inventory/prepare/prepare_view_process', $filter);
     }
-  }
-
-
-  public function update_back_order()
-  {
-    $sc = TRUE;
-    $ds = json_decode($this->input->post('data'));
-
-    if( ! empty($ds))
-    {
-      if( ! $this->prepare_model->update_back_order($ds->option, $ds->orders))
-      {
-        $sc = FALSE;
-        $this->error = "Change backorder status failed";
-      }
-    }
-    else
-    {
-      $sc = FALSE;
-      set_error('required');
-    }
-
-    $this->_response($sc);
   }
 
 
@@ -278,18 +251,6 @@ class Prepare extends PS_Controller
       }
     }
 
-    if($channels == 'SHOPEE')
-    {
-      $this->load->library('wrx_shopee_api');
-
-      $order_status = $this->wrx_shopee_api->get_order_status($reference);
-
-      if($order_status == 'CANCELLED' OR $order_status == 'IN_CANCEL')
-      {
-        $is_cancel = TRUE;
-      }
-    }
-
     return $is_cancel;
   }
 
@@ -310,7 +271,7 @@ class Prepare extends PS_Controller
       //--- check cancel request
       $is_cancel = $this->orders_model->is_cancel_request($order->code);
 
-      if( ! $is_cancel && ! empty($order->reference) && ($order->channels_code == '0009' OR $order->channels_code == 'SHOPEE'))
+      if( ! $is_cancel && ! empty($order->reference) && ($order->channels_code == '0009'))
       {
         $is_cancel = $this->is_cancel($order->reference, $order->channels_code);
       }
@@ -917,8 +878,7 @@ class Prepare extends PS_Controller
       'ic_item_code',
       'ic_display_name',
       'ic_payment',
-      'ic_warehouse',
-      'ic_is_backorder'
+      'ic_warehouse'
     );
 
     clear_filter($filter);

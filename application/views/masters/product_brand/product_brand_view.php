@@ -53,7 +53,7 @@
 				</tr>
 			</thead>
 			<tbody>
-			<?php if( ! empty($data)) : ?>
+			<?php if(!empty($data)) : ?>
 				<?php $no = $this->uri->segment(4) + 1; ?>
 				<?php foreach($data as $rs) : ?>
 					<tr>

@@ -8,6 +8,7 @@ class Products extends PS_Controller
 	public $title = 'เพิ่ม/แก้ไข สินค้า';
   public $error = '';
 
+  
   public function __construct()
   {
     parent::__construct();
@@ -330,6 +331,7 @@ class Products extends PS_Controller
   }
 
 
+
   public function edit($code, $tab = 'styleTab')
   {
     $code = urldecode($code);
@@ -353,6 +355,8 @@ class Products extends PS_Controller
       redirect($this->home);
     }
   }
+
+
 
 
   //--- update item data
@@ -391,6 +395,11 @@ class Products extends PS_Controller
       echo 'Item code not found';
     }
   }
+
+
+
+
+
 
 
   public function update_style()
@@ -519,6 +528,8 @@ class Products extends PS_Controller
     }
   }
 
+
+
   //---- update style data
   public function update()
   {
@@ -580,6 +591,8 @@ class Products extends PS_Controller
 
     redirect($this->home.'/edit/'.$code);
   }
+
+
 
 
   public function update_cost_price_by_size()
@@ -664,7 +677,6 @@ class Products extends PS_Controller
     redirect($this->home.'/edit/'.$code.'/priceTab');
   }
 
-
   public function toggle_can_sell($id)
   {
     $status = $this->products_model->get_status('can_sell', $id);
@@ -697,6 +709,7 @@ class Products extends PS_Controller
   }
 
 
+
   public function toggle_api($id)
   {
     $status = $this->products_model->get_status('is_api', $id);
@@ -725,6 +738,7 @@ class Products extends PS_Controller
 
     $this->load->view('masters/products/product_generater', $data);
   }
+
 
 
   public function gen_items()
@@ -792,6 +806,7 @@ class Products extends PS_Controller
   }
 
 
+
   public function gen_color_and_size($style, $colors, $sizes, $cost, $price, $old_code)
   {
     $sc = TRUE;
@@ -849,6 +864,8 @@ class Products extends PS_Controller
   }
 
 
+
+
   public function gen_color_only($style, $colors)
   {
     $sc = TRUE;
@@ -894,6 +911,8 @@ class Products extends PS_Controller
   }
 
 
+
+
   public function gen_size_only($style, $sizes)
   {
     $sc = TRUE;
@@ -937,6 +956,8 @@ class Products extends PS_Controller
       }
     }
   }
+
+
 
 
   public function generate_old_code_item()
@@ -1024,6 +1045,8 @@ class Products extends PS_Controller
   }
 
 
+
+
   public function delete_style($style)
   {
     $sc = TRUE;
@@ -1056,6 +1079,8 @@ class Products extends PS_Controller
 
     echo $sc === TRUE ? 'success' : $message;
   }
+
+
 
   //--- ดึง items และรูปภาพ เพื่อทำการเชื่อมโยงรูปภาพ
   public function get_image_items()
@@ -1128,6 +1153,10 @@ class Products extends PS_Controller
 
   }
 
+
+
+
+
   public function mapping_image()
   {
     $sc = TRUE;
@@ -1153,6 +1182,9 @@ class Products extends PS_Controller
 
     echo $sc === TRUE ? 'success' : $this->error;
   }
+
+
+
 
 
   public function generate_barcode()
@@ -1209,6 +1241,8 @@ class Products extends PS_Controller
   }
 
 
+
+
   public function is_style_exists($code)
   {
     $rs = $this->product_style_model->is_exists($code);
@@ -1223,9 +1257,10 @@ class Products extends PS_Controller
   }
 
 
+
   public function do_export($code, $method = 'A')
   {
-    $sc = TRUE;
+		$sc = TRUE;
 
     $item = $this->products_model->get($code);
     //--- เช็คข้อมูลในฐานข้อมูลจริง
@@ -1266,7 +1301,7 @@ class Products extends PS_Controller
       'U_COLOR' => $item->color_code,
       'U_SIZE' => $item->size_code,
       'U_GROUP' => $item->group_code,
-      'U_MAINGROUP' => $item->main_group_code,
+			'U_MAINGROUP' => $item->main_group_code,
       'U_MAJOR' => $item->sub_group_code,
       'U_CATE' => $item->category_code,
       'U_SUBTYPE' => $item->kind_code,
@@ -1278,16 +1313,16 @@ class Products extends PS_Controller
       'U_OLDCODE' => $item->old_code,
       'F_E_Commerce' => $method,
       'F_E_CommerceDate' => sap_date(now(), TRUE)
-      );
+    );
 
-      if( ! $this->products_model->add_item($ds))
-      {
-        $sc = FALSE;
-        $this->error = "Update Item failed";
-      }
+    if( ! $this->products_model->add_item($ds))
+		{
+      $sc = FALSE;
+      $this->error = "Update Item failed";
+		}
 
-      return $sc;
-    }
+		return $sc;
+  }
 
 
   public function export_products($style_code)
@@ -1316,6 +1351,7 @@ class Products extends PS_Controller
 
     echo $sc === TRUE ? 'success' : "Success : {$success}, Fail : {$fail}";
   }
+
 
 
   public function export_barcode($code, $token)

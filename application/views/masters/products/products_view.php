@@ -195,17 +195,7 @@
 								<ul class="dropdown-menu">
 									<li>
 										<a href="javascript:sendToSap('<?php echo $rs->code; ?>')"><i class="fa fa-send green"></i> Send To SAP</a>
-									</li>
-									<?php if($this->wmsApi) : ?>
-										<li>
-											<a href="javascript:sendToWms('<?php echo $rs->code; ?>')"><i class="fa fa-send purple"></i> Send To WMS</a>
-										</li>
-									<?php endif; ?>
-									<?php if($this->sokoApi) : ?>
-										<li>
-											<a href="javascript:sendToSoko('<?php echo $rs->code; ?>')"><i class="fa fa-send blue"></i> Send To Soko</a>
-										</li>
-									<?php endif; ?>
+									</li>									
 									<?php if($this->pm->can_edit) : ?>
 										<li>
 											<a href="javascript:getEdit('<?php echo $rs->code; ?>')"><i class="fa fa-pencil orange"></i> Edit</a>

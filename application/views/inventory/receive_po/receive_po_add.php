@@ -30,20 +30,13 @@
     	<label>Posting date</label>
       <input type="text" class="form-control input-sm text-center e" id="posting-date" value="" />
     </div>
-		<div class="col-lg-1-harf col-md-2 col-sm-2 col-xs-6 padding-5">
+		<div class="col-lg-1-harf col-md-2 col-sm-2 col-xs-6 padding-5 hide">
 			<label>ช่องทางการรับ</label>
 			<select class="form-control input-sm e" name="is_wms" id="is_wms">
-				<option value="">เลือก</option>
-				<?php if($this->wmsApi) : ?>
-				<option value="1">Pioneer</option>
-				<?php endif; ?>
-				<?php if($this->sokoApi) : ?>
-				<option value="2">SOKOCHAN</option>
-				<?php endif; ?>
 				<option value="0">Warrix</option>
 			</select>
 		</div>
-    <div class="col-lg-6-harf col-md-10-harf col-sm-10-harf col-xs-8 padding-5">
+    <div class="col-lg-5 col-md-10-harf col-sm-10-harf col-xs-8 padding-5">
     	<label>หมายเหตุ</label>
         <input type="text" class="form-control input-sm e" name="remark" id="remark" placeholder="ระบุหมายเหตุเอกสาร (ถ้ามี)" />
     </div>

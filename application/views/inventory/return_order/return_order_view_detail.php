@@ -26,12 +26,6 @@
 				<button type="button" class="btn btn-xs btn-info top-btn" onclick="doExport()"><i class="fa fa-send"></i> ส่งข้อมูลไป SAP</button>
 	<?php endif; ?>
 
-	<?php if($this->wmsApi && $doc->is_wms == 1 && $doc->api == 1 && $doc->status != 0 && $doc->status !=2 && $doc->is_complete != 1 && $doc->is_approve == 1) : ?>
-				<button type="button" class="btn btn-xs btn-success top-btn" onclick="sendToWms()"><i class="fa fa-send"></i> Send to Pioneer</button>
-	<?php endif; ?>
-	<?php if($this->_SuperAdmin OR ($this->sokoApi && $doc->is_wms == 2 && $doc->api == 1 && $doc->status != 0 && $doc->status !=2 && $doc->is_complete != 1 && $doc->is_approve == 1)) : ?>
-				<button type="button" class="btn btn-xs btn-success top-btn" onclick="sendToSoko()"><i class="fa fa-send"></i> Send to SOKOCHAN</button>
-	<?php endif; ?>
 	<?php if($doc->status == 4 && ($doc->uname == $this->_user->uname OR $canAccept)) : ?>
 		<button type="button" class="btn btn-xs btn-success top-btn" onclick="accept()">ยืนยันการรับสินค้า</button>
 	<?php endif; ?>
@@ -46,9 +40,6 @@
 				<button type="button" class="btn btn-xs btn-danger top-btn" onclick="unapprove()"><i class="fa fa-refresh"></i> ยกเลิกอนุมัติ</button>
 	<?php endif; ?>
 				<button type="button" class="btn btn-xs btn-info top-btn" onclick="printReturn()"><i class="fa fa-print"></i> พิมพ์</button>
-			<?php if($doc->is_wms != 0) : ?>
-				<button type="button" class="btn btn-xs btn-info top-btn" onclick="printWmsReturn()"><i class="fa fa-print"></i> พิมพ์ใบส่งของ</button>
-			<?php endif; ?>
     </p>
   </div>
 </div>
@@ -115,21 +106,6 @@
 		<option value="2" <?php echo is_selected('2', $doc->status); ?>>ยกเลิก</option>
 		<option value="3" <?php echo is_selected('3', $doc->status); ?>>WMS Process</option>
 		<option value="4" <?php echo is_selected('4', $doc->status); ?>>รอยืนยัน</option>
-	</select>
-</div>
-<div class="col-lg-1-harf col-md-1-harf col-sm-1-harf col-xs-4 padding-5">
-	<label>รับที่</label>
-	<select class="form-control input-sm" disabled>
-		<option value="1" <?php echo is_selected('1', $doc->is_wms); ?>>Pioneer</option>
-		<option value="2" <?php echo is_selected('2', $doc->is_wms); ?>>SOKOCHAN</option>
-		<option value="0" <?php echo is_selected('0', $doc->is_wms); ?>>Warrix</option>
-	</select>
-</div>
-<div class="col-lg-1-harf col-md-1-harf col-sm-1-harf col-xs-4 padding-5">
-	<label>Interface</label>
-	<select class="form-control input-sm" disabled>
-		<option value="1" <?php echo is_selected('1', $doc->api); ?>>ปกติ</option>
-		<option value="0" <?php echo is_selected('0', $doc->api); ?>>ไม่ส่ง</option>
 	</select>
 </div>
 <?php if($doc->status == 1) : ?>

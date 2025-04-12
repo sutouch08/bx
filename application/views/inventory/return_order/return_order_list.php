@@ -64,23 +64,7 @@
   			<option value="1" <?php echo is_selected($approve, '1'); ?>>อนุมัติแล้ว</option>
   		</select>
     </div>
-		<div class="col-lg-1-harf col-md-1-harf col-sm-1-harf col-xs-6 padding-5">
-      <label>WMS</label>
-      <select class="form-control input-sm" name="api" onchange="getSearch()">
-  			<option value="all">ทั้งหมด</option>
-  			<option value="0" <?php echo is_selected($api, '0'); ?>>ไม่ส่ง</option>
-  			<option value="1" <?php echo is_selected($api, '1'); ?>>ปกติ</option>
-  		</select>
-    </div>
-    <div class="col-lg-1-harf col-md-1-harf col-sm-1-harf col-xs-6 padding-5">
-      <label>Interface</label>
-      <select class="form-control input-sm" name="wms_export" onchange="getSearch()">
-  			<option value="all">ทั้งหมด</option>
-  			<option value="0" <?php echo is_selected($wms_export, '0'); ?>>ยังไม่ส่ง</option>
-  			<option value="1" <?php echo is_selected($wms_export, '1'); ?>>ส่งแล้ว</option>
-        <option value="3" <?php echo is_selected($wms_export, '3'); ?>>ส่งไม่สำเร็จ</option>
-  		</select>
-    </div>
+
     <div class="col-lg-1-harf col-md-1-harf col-sm-1-harf col-xs-6 padding-5">
       <label>POS</label>
       <select class="form-control input-sm" name="is_pos_api" onchange="getSearch()">
@@ -129,19 +113,10 @@
       <span class="dark blod">EXP</span> = หมดอายุ
     </p>
   </div>
-  <?php
-    $ex = $this->_SuperAdmin && is_true(getConfig('WMS_FAST_EXPORT')) ? TRUE : FALSE;
-    $width = 1320;
-    $width = $ex ? $width + 80 : $width;
-
-  ?>
   <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 padding-5 table-responsive">
-    <table class="table table-striped border-1" style="min-width:<?php echo $width; ?>px;">
+    <table class="table table-striped border-1" style="min-width:1320px;">
       <thead>
         <tr>
-          <?php if($ex) : ?>
-            <th class="fix-width-80 text-center">WMS</th>
-          <?php endif; ?>
           <th class="fix-width-100"></th>
           <th class="fix-width-40 text-center">ลำดับ</th>
           <th class="fix-width-100 text-center">วันที่</th>
@@ -153,7 +128,6 @@
           <th class="fix-width-100 text-right">มลูค่า</th>
           <th class="fix-width-60 text-center">สถานะ</th>
           <th class="fix-width-60 text-center">อนุมัติ</th>
-					<th class="fix-width-60 text-center">WMS</th>
           <th class="fix-width-150">พนักงาน</th>
         </tr>
       </thead>
@@ -162,16 +136,6 @@
 <?php   $no = $this->uri->segment($this->segment) + 1; ?>
 <?php   foreach($docs as $rs) : ?>
           <tr class="font-size-12" id="row-<?php echo $rs->code; ?>" style="<?php echo statusBackgroundColor($rs->is_expire, $rs->status, $rs->is_approve); ?>">
-            <?php if($ex) : ?>
-              <td class="fix-width-40 text-center">
-                <?php if($this->wmsApi && $rs->is_wms == 1 && $rs->api == 1 && $rs->status != 0 && $rs->status !=2 && $rs->is_approve == 1) : ?>
-              				<button type="button" class="btn btn-minier btn-success top-btn" onclick="sendToFulfillment('<?php echo $rs->code; ?>')"><i class="fa fa-send"></i> PLC</button>
-              	<?php endif; ?>
-              	<?php if($this->sokoApi && $rs->is_wms == 2 && $rs->api == 1 && $rs->status != 0 && $rs->status !=2 && $rs->is_approve == 1) : ?>
-              				<button type="button" class="btn btn-minier btn-success top-btn" onclick="sendToFulfillment('<?php echo $rs->code; ?>')"><i class="fa fa-send"></i> SOKO</button>
-              	<?php endif; ?>
-              </td>
-            <?php endif; ?>
             <td class="middle">
               <button type="button" class="btn btn-minier btn-info" onclick="viewDetail('<?php echo $rs->code; ?>')"><i class="fa fa-eye"></i></button>
           <?php if($this->pm->can_edit && $rs->status == 0 && $rs->is_expire == 0) : ?>
@@ -183,15 +147,7 @@
             </td>
             <td class="middle text-center no"><?php echo $no; ?></td>
             <td class="middle text-center"><?php echo thai_date($rs->date_add, FALSE); ?></td>
-            <td class="middle">
-              <?php echo $rs->code; ?>
-              <?php if($rs->wms_export == 3) : ?>
-                <span class="red">failed</span>
-              <?php endif; ?>
-              <?php if($rs->wms_export == 1 && ! empty($rs->soko_code)) : ?>
-                [<?php echo $rs->soko_code; ?>]
-              <?php endif; ?>
-            </td>
+            <td class="middle"> <?php echo $rs->code; ?></td>
             <td class="middle"><?php echo ($rs->is_pos_api == 1 ? $rs->bill_code : $rs->invoice); ?></td>
             <td class="middle"><?php echo inputRow($rs->customer_name); ?></td>
 						<td class="middle"><?php echo $rs->zone_code; ?></td>
@@ -220,10 +176,7 @@
             </td>
             <td class="middle text-center">
               <?php echo is_active($rs->is_approve); ?>
-            </td>
-						<td class="middle text-center">
-              <?php echo $rs->api == 1 ? 'Y' : 'N'; ?>
-            </td>
+            </td>						
             <td class="middle"><?php echo $rs->display_name; ?></td>
           </tr>
 <?php     $no++; ?>

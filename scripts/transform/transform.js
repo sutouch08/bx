@@ -74,23 +74,6 @@ function approve()
   if(validateTransformProducts()) {
     var order_code = $('#order_code').val();
 
-  	var is_wms = $('#is_wms').val();
-
-  	if(is_wms) {
-  		var id_address = $('#address_id').val();
-  		var id_sender = $('#id_sender').val();
-
-  		if(id_address == "") {
-  			swal("กรุณาระบุที่อยู่จัดส่ง");
-  			return false;
-  		}
-
-  		if(id_sender == "") {
-  			swal("กรุณาระบุผู้จัดส่ง");
-  			return false;
-  		}
-  	}
-
   	load_in();
 
     $.ajax({
@@ -165,32 +148,7 @@ function change_state(){
 	var id_sender = $('#id_sender').val();
 	var trackingNo = $('#trackingNo').val();
 	var tracking = $('#tracking').val();
-	var is_wms = $('#is_wms').val();
-
-	if(is_wms) {
-		if(state == 3 && id_address == "") {
-			swal("กรุณาระบุที่อยู่จัดส่ง");
-			return false;
-		}
-
-		if(state == 3 && id_sender == "") {
-			swal("กรุณาระบุผู้จัดส่ง");
-			return false;
-		}
-
-		if($('#sender option:selected').data('tracking') == 1) {
-			if(trackingNo != tracking) {
-				swal("กรุณากดบันทึก Tracking No");
-				return false;
-			}
-
-			if(trackingNo.length === 0) {
-				swal("กรุณาระบุ Tracking No");
-				return false;
-			}
-		}
-	}
-
+	
 	if( state != 0){
 		load_in();
 			$.ajax({

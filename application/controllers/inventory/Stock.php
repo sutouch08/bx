@@ -6,14 +6,16 @@ class Stock extends PS_Controller
   public $menu_code = 'ICCKST';
 	public $menu_group_code = 'IC';
   public $menu_sub_group_code = 'CHECK';
-	public $title = 'ตรวจสอบสต็อกคงเหลือ(SAP)';
+	public $title = 'ตรวจสอบสต็อกคงเหลือ';
   public $filter;
   public $error;
   public function __construct()
   {
     parent::__construct();
     $this->home = base_url().'inventory/stock';
-    $this->load->model('inventory/sap_stock_model');
+    $this->load->model('stock/stock_model');
+    $this->load->model('masters/products_model');
+    $this->load->model('masters/zone_model');
   }
 
 
@@ -21,23 +23,17 @@ class Stock extends PS_Controller
   {
     $filter = array(
       'item_code' => get_filter('item_code', 'item_code', ''),
-      'zone_code' => get_filter('zone_code', 'zone_code', ''),
-      'show_system' => get_filter('show_system', 'show_system', 'no')
+      'zone_code' => get_filter('zone_code', 'zone_code', '')
     );
 
 		//--- แสดงผลกี่รายการต่อหน้า
 		$perpage = get_rows();
-		//--- หาก user กำหนดการแสดงผลมามากเกินไป จำกัดไว้แค่ 300
-		if($perpage > 300)
-		{
-			$perpage = 20;
-		}
 
 		$segment  = 4; //-- url segment
-		$rows     = $this->sap_stock_model->count_rows($filter);
+		$rows     = $this->stock_model->count_rows($filter);
 		//--- ส่งตัวแปรเข้าไป 4 ตัว base_url ,  total_row , perpage = 20, segment = 3
 		$init	    = pagination_config($this->home.'/index/', $rows, $perpage, $segment);
-		$ds   = $this->sap_stock_model->get_list($filter, $perpage, $this->uri->segment($segment));
+		$ds   = $this->stock_model->get_list($filter, $perpage, $this->uri->segment($segment));
 
     $filter['data'] = $ds;
 

@@ -6,11 +6,7 @@ class Orders extends REST_Controller
 {
   public $error;
   public $user;
-  public $ms;
-  public $mc;
-  public $wms;
-	public $api_path = "rest/api/ix/orders";
-	public $logs;
+	public $api_path = "rest/api/orders";
 	public $log_json = FALSE;
 	public $api = FALSE;
   public $checkBackorder = FALSE;
@@ -23,10 +19,7 @@ class Orders extends REST_Controller
 
 		if($this->api)
 		{
-      $this->wms = $this->load->database('wms', TRUE); //--- Temp database
-      $this->ms = $this->load->database('ms', TRUE);
-      $this->mc = $this->load->database('mc', TRUE);
-      $this->load->model('rest/V1/ix_api_logs_model');
+      $this->load->model('rest/api/api_logs_model');
 
 	    $this->load->model('orders/orders_model');
 	    $this->load->model('orders/order_state_model');
@@ -86,7 +79,7 @@ class Orders extends REST_Controller
           'response_json' => json_encode($arr)
         );
 
-        $this->ix_api_logs_model->add_logs($logs);
+        $this->api_logs_model->add_logs($logs);
       }
 
       $this->response($arr, 400);
@@ -116,7 +109,7 @@ class Orders extends REST_Controller
           'response_json' => json_encode($arr)
         );
 
-        $this->ix_api_logs_model->add_logs($logs);
+        $this->api_logs_model->add_logs($logs);
       }
 
       $this->response($arr, 400);
@@ -146,7 +139,7 @@ class Orders extends REST_Controller
           'response_json' => json_encode($arr)
         );
 
-        $this->ix_api_logs_model->add_logs($logs);
+        $this->api_logs_model->add_logs($logs);
       }
 
       $this->response($arr, 400);
@@ -177,7 +170,7 @@ class Orders extends REST_Controller
           'response_json' => json_encode($arr)
         );
 
-        $this->ix_api_logs_model->add_logs($logs);
+        $this->api_logs_model->add_logs($logs);
       }
 
       $this->response($arr, 400);
@@ -211,7 +204,7 @@ class Orders extends REST_Controller
           'response_json' => json_encode($arr)
         );
 
-        $this->ix_api_logs_model->add_logs($logs);
+        $this->api_logs_model->add_logs($logs);
       }
 
       $this->response($arr, 400);
@@ -262,7 +255,7 @@ class Orders extends REST_Controller
           'response_json' => json_encode($arr)
         );
 
-        $this->ix_api_logs_model->add_logs($logs);
+        $this->api_logs_model->add_logs($logs);
       }
 
       $this->response($arr, 400);
@@ -293,8 +286,6 @@ class Orders extends REST_Controller
       $state = 3;
 
       $warehouse_code = getConfig('IX_WAREHOUSE');
-
-      $is_wms = 0;
 
       //---- id_sender
       $sender = $this->sender_model->get_id($data->shipping);
@@ -352,8 +343,6 @@ class Orders extends REST_Controller
           'is_api' => 1,
           'is_pre_order' => $is_pre_order ? 1 : 0,
           'id_sender' => $id_sender,
-          'is_wms' => $is_wms,
-          'wms_export' => 0,
           'tax_status' => $tax_status,
           'is_etax' => $is_etax
         );
@@ -426,8 +415,6 @@ class Orders extends REST_Controller
           'is_api' => 1,
           'is_pre_order' => $is_pre_order ? 1 : 0,
           'id_sender' => $id_sender,
-          'is_wms' => $is_wms,
-          'wms_export' => 0,
           'tax_status' => $tax_status,
           'is_etax' => $is_etax
         );
@@ -518,7 +505,7 @@ class Orders extends REST_Controller
             'response_json' => json_encode($arr)
           );
 
-          $this->ix_api_logs_model->add_logs($logs);
+          $this->api_logs_model->add_logs($logs);
         }
 
         $this->response($arr, 400);
@@ -735,7 +722,7 @@ class Orders extends REST_Controller
             'response_json' => json_encode($arr)
           );
 
-          $this->ix_api_logs_model->add_logs($logs);
+          $this->api_logs_model->add_logs($logs);
         }
 
         $this->response($arr, 200);
@@ -764,7 +751,7 @@ class Orders extends REST_Controller
             'response_json' => json_encode($arr)
           );
 
-          $this->ix_api_logs_model->add_logs($logs);
+          $this->api_logs_model->add_logs($logs);
         }
 
         $this->response($arr, 200);
@@ -800,7 +787,7 @@ class Orders extends REST_Controller
           'response_json' => json_encode($arr)
         );
 
-        $this->ix_api_logs_model->add_logs($logs);
+        $this->api_logs_model->add_logs($logs);
       }
 
       $this->response($arr, 400);
@@ -834,7 +821,7 @@ class Orders extends REST_Controller
           'response_json' => json_encode($arr)
         );
 
-        $this->ix_api_logs_model->add_logs($logs);
+        $this->api_logs_model->add_logs($logs);
       }
 
       $this->response($arr, 400);
@@ -865,7 +852,7 @@ class Orders extends REST_Controller
           'response_json' => json_encode($arr)
         );
 
-        $this->ix_api_logs_model->add_logs($logs);
+        $this->api_logs_model->add_logs($logs);
       }
 
       $this->response($arr, 400);
@@ -899,38 +886,7 @@ class Orders extends REST_Controller
           'response_json' => json_encode($arr)
         );
 
-        $this->ix_api_logs_model->add_logs($logs);
-      }
-
-      $this->response($arr, 400);
-    }
-
-
-    if($order->is_wms != 0)
-    {
-      $this->error = "This order belong to other fulfilment cannot cancel by this api";
-
-      $arr = array(
-        'status' => FALSE,
-        'error' => $this->error,
-        'retry' => FALSE
-      );
-
-      if($this->logs_json)
-      {
-        $logs = array(
-          'trans_id' => genUid(),
-          'api_path' => $this->api_path,
-          'type' => $this->type,
-          'code' => NULL,
-          'action' => $action,
-          'status' => 'failed',
-          'message' => $this->error,
-          'request_json' => $json,
-          'response_json' => json_encode($arr)
-        );
-
-        $this->ix_api_logs_model->add_logs($logs);
+        $this->api_logs_model->add_logs($logs);
       }
 
       $this->response($arr, 400);
@@ -1241,7 +1197,7 @@ class Orders extends REST_Controller
 					'response_json' => json_encode($arr)
 				);
 
-				$this->ix_api_logs_model->add_logs($logs);
+				$this->api_logs_model->add_logs($logs);
 			}
 
 			$this->response($arr, 200);
@@ -1270,7 +1226,7 @@ class Orders extends REST_Controller
 					'response_json' => json_encode($arr)
 				);
 
-				$this->ix_api_logs_model->add_logs($logs);
+				$this->api_logs_model->add_logs($logs);
 			}
 
 			$this->response($arr, 200);
@@ -1310,7 +1266,7 @@ class Orders extends REST_Controller
           'response_json' => json_encode($arr)
         );
 
-        $this->ix_api_logs_model->add_logs($logs);
+        $this->api_logs_model->add_logs($logs);
       }
 
       $this->response($arr, 400);
@@ -1340,7 +1296,7 @@ class Orders extends REST_Controller
           'response_json' => json_encode($arr)
         );
 
-        $this->ix_api_logs_model->add_logs($logs);
+        $this->api_logs_model->add_logs($logs);
       }
 
       $this->response($arr, 400);
@@ -1370,7 +1326,7 @@ class Orders extends REST_Controller
           'response_json' => json_encode($arr)
         );
 
-        $this->ix_api_logs_model->add_logs($logs);
+        $this->api_logs_model->add_logs($logs);
       }
 
       $this->response($arr, 400);
@@ -1404,7 +1360,7 @@ class Orders extends REST_Controller
           'response_json' => json_encode($arr)
         );
 
-        $this->ix_api_logs_model->add_logs($logs);
+        $this->api_logs_model->add_logs($logs);
       }
 
       $this->response($arr, 400);
@@ -1438,7 +1394,7 @@ class Orders extends REST_Controller
         'response_json' => json_encode($arr)
         );
 
-        $this->ix_api_logs_model->add_logs($logs);
+        $this->api_logs_model->add_logs($logs);
       }
 
       $this->response($arr, 400);
@@ -1529,7 +1485,7 @@ class Orders extends REST_Controller
           'response_json' => json_encode($arr)
         );
 
-        $this->ix_api_logs_model->add_logs($logs);
+        $this->api_logs_model->add_logs($logs);
       }
 
       $this->response($arr, 200);
@@ -1558,7 +1514,7 @@ class Orders extends REST_Controller
           'response_json' => json_encode($arr)
         );
 
-        $this->ix_api_logs_model->add_logs($logs);
+        $this->api_logs_model->add_logs($logs);
       }
 
       $this->response($arr, 200);
@@ -1598,7 +1554,7 @@ class Orders extends REST_Controller
           'response_json' => json_encode($arr)
         );
 
-        $this->ix_api_logs_model->add_logs($logs);
+        $this->api_logs_model->add_logs($logs);
       }
 
       $this->response($arr, 400);
@@ -1629,7 +1585,7 @@ class Orders extends REST_Controller
           'response_json' => json_encode($arr)
         );
 
-        $this->ix_api_logs_model->add_logs($logs);
+        $this->api_logs_model->add_logs($logs);
       }
 
       $this->response($arr, 400);
@@ -1661,7 +1617,7 @@ class Orders extends REST_Controller
           'response_json' => json_encode($arr)
         );
 
-        $this->ix_api_logs_model->add_logs($logs);
+        $this->api_logs_model->add_logs($logs);
       }
 
       $this->response($arr, 200);
@@ -1694,7 +1650,7 @@ class Orders extends REST_Controller
           'response_json' => json_encode($arr)
         );
 
-        $this->ix_api_logs_model->add_logs($logs);
+        $this->api_logs_model->add_logs($logs);
       }
 
       $this->response($arr, 400);
@@ -1727,7 +1683,7 @@ class Orders extends REST_Controller
         'response_json' => json_encode($arr)
         );
 
-        $this->ix_api_logs_model->add_logs($logs);
+        $this->api_logs_model->add_logs($logs);
       }
 
       $this->response($arr, 400);
@@ -1778,7 +1734,7 @@ class Orders extends REST_Controller
           'response_json' => json_encode($arr)
         );
 
-        $this->ix_api_logs_model->add_logs($logs);
+        $this->api_logs_model->add_logs($logs);
       }
 
       $this->response($arr, 200);
@@ -1805,7 +1761,7 @@ class Orders extends REST_Controller
           'response_json' => json_encode($arr)
         );
 
-        $this->ix_api_logs_model->add_logs($logs);
+        $this->api_logs_model->add_logs($logs);
       }
 
       $this->response($arr, 200);

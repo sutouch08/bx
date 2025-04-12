@@ -40,13 +40,10 @@
 			</select>
 		</div>
 
-		<div class="col-xs-6 padding-5 fi">
+		<div class="col-xs-6 padding-5 fi hide">
 			<label>การรับ</label>
 			<select name="is_wms" class="form-control input-sm" onchange="getSearch()">
 				<option value="all">ทั้งหมด</option>
-				<option value="0" <?php echo is_selected('0', $is_wms); ?>>Warrix</option>
-				<option value="1" <?php echo is_selected('1', $is_wms); ?>>Pioneer</option>
-				<option value="2" <?php echo is_selected('2', $is_wms); ?>>SOKOCHAN</option>
 			</select>
 		</div>
 

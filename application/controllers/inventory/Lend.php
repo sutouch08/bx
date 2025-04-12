@@ -9,8 +9,6 @@ class Lend extends PS_Controller
 	public $title = 'เบิกยืมสินค้า';
   public $filter;
   public $error;
-	public $wmsApi;
-  public $sokoApi;
 
   public function __construct()
   {
@@ -31,9 +29,6 @@ class Lend extends PS_Controller
     $this->load->helper('state');
     $this->load->helper('product_images');
     $this->load->helper('warehouse');
-
-		$this->wmsApi = is_true(getConfig('WMS_API'));
-    $this->sokoApi = is_true(getConfig('SOKOJUNG_API'));
   }
 
 
@@ -51,7 +46,6 @@ class Lend extends PS_Controller
 			'notSave' => get_filter('notSave', 'lend_notSave', NULL),
       'onlyMe' => get_filter('onlyMe', 'lend_onlyMe', NULL),
       'isExpire' => get_filter('isExpire', 'lend_isExpire', NULL),
-			'wms_export' => get_filter('wms_export', 'lend_wms_export', 'all'),
       'is_backorder' => get_filter('is_backorder', 'lend_is_backorder', 'all'),
       'sap_status' => get_filter('sap_status', 'lend_sap_status', 'all')
     );
@@ -143,9 +137,6 @@ class Lend extends PS_Controller
 
       $book_code = getConfig('BOOK_CODE_LEND');
 
-      $wmsWh = getConfig('WMS_WAREHOUSE');
-      $sokoWh = getConfig('SOKOJUNG_WAREHOUSE');
-
       $date_add = db_date($data->date_add);
       $code = $this->get_new_code($date_add);
 
@@ -159,11 +150,6 @@ class Lend extends PS_Controller
 
       if( ! empty($wh))
       {
-        $isSoko = $wh->code == $sokoWh ? TRUE : FALSE;
-        $isWms = $wh->code == $wmsWh ? TRUE : FALSE;
-
-        $is_wms = $isWms ? 1 : ($isSoko ? 2 : 0);
-
         $ds = array(
           'date_add' => $date_add,
           'code' => $code,
@@ -176,8 +162,7 @@ class Lend extends PS_Controller
           'empID' => $data->empID,
           'empName' => $data->empName,
           'zone_code' => $zone->code, //---- zone ที่จะโอนสินค้าไปเก็บ
-          'warehouse_code' => $wh->code, //--- คลังที่จะจัดสินค้าออก
-  				'is_wms' => $is_wms
+          'warehouse_code' => $wh->code
         );
 
         if($this->orders_model->add($ds))
@@ -253,7 +238,7 @@ class Lend extends PS_Controller
 		$ds['cancle_reason'] = ($rs->state == 9 ? $this->orders_model->get_cancle_reason($code) : NULL);
     $ds['approve_view'] = $approve_view;
     $ds['approve_logs'] = $this->approve_logs_model->get($code);
-    $ds['is_api'] = is_api($rs->is_wms, $this->wmsApi, $this->sokoApi);
+    $ds['is_api'] = FALSE;
     $ds['tracking'] = $this->orders_model->get_order_tracking($code);
     $ds['backlogs'] = $rs->is_backorder == 1 ? $this->orders_model->get_backlog_details($rs->code) : NULL;
     $this->load->view('lend/lend_edit', $ds);
@@ -286,13 +271,6 @@ class Lend extends PS_Controller
 
           if( ! empty($wh))
           {
-            $wmsWh = getConfig('WMS_WAREHOUSE');
-            $sokoWh = getConfig('SOKOJUNG_WAREHOUSE');
-            $isSoko = $wh->code == $sokoWh ? TRUE : FALSE;
-            $isWms = $wh->code == $wmsWh ? TRUE : FALSE;
-
-            $is_wms = $isWms ? 1 : ($isSoko ? 2 : 0);
-
             $ds = array(
               'empID' => $data->empID,
               'empName' => $data->empName,
@@ -301,7 +279,6 @@ class Lend extends PS_Controller
               'zone_code' => $data->zone_code,
               'remark' => get_null(trim($data->remark)),
               'warehouse_code' => $wh->code,
-  						'is_wms' => $is_wms,
   						'id_address' => NULL,
   						'id_sender' => NULL,
               'status' => 0
@@ -427,8 +404,7 @@ class Lend extends PS_Controller
       'lend_fromDate',
       'lend_toDate',
       'lend_isApprove',
-			'lend_warehouse',
-			'lend_wms_export',
+			'lend_warehouse',			
       'lend_is_backorder',
       'lend_sap_status',
       'lend_notSave',

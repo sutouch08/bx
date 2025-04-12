@@ -21,8 +21,6 @@ function addTransfer() {
   //--- คลังปลายทาง
   var to_warehouse = $('#to_warehouse').val();
   var to_warehouse_code = $('#to_warehouse_code').val();
-  var is_wms = $('#is_wms').val();
-  var api = $('#api').val();
   var wx_code = $('#wx_code').val();
 
   //--- หมายเหตุ
@@ -63,13 +61,6 @@ function addTransfer() {
     return false;
   }
 
-  if( is_wms == "") {
-    swal('กรุณาเลือกการดำเนินการ');
-    $('#is_wms').addClass('has-error');
-    click = 0;
-    return false;
-  }
-
   if(reqRemark && remark.length < 10) {
     swal({
       title: 'Required',
@@ -93,8 +84,6 @@ function addTransfer() {
       'date' : date_add,
       'from_warehouse_code' : from_warehouse_code,
       'to_warehouse_code' : to_warehouse_code,
-      'is_wms' : is_wms,
-      'api' : api,
       'wx_code' : wx_code,
       'remark' : remark
     },
@@ -149,8 +138,6 @@ function update() {
   var old_to_wh = $('#old_to_warehouse_code').val();
   //--  วันที่เอกสาร
   var date_add = $('#date').val();
-
-  var is_wms = $('#is_wms').val();
   //--- หมายเหตุ
   var remark = $('#remark').val();
 
@@ -188,13 +175,6 @@ function update() {
     $('.t').addClass('has-error');
     return false;
   }
-
-  if(is_wms == '') {
-    swal("กรุณาเลือกการดำเนินการ");
-    $('#is_wms').addClass('has-error');
-    return false;
-  }
-
 
   //--- ตรวจสอบหากมีการเปลี่ยนคลัง ต้องเช็คก่อนว่ามีการทำรายการไปแล้วหรือยัง
   if(from_warehouse != old_from_wh || to_warehouse != old_to_wh)
@@ -234,7 +214,6 @@ function do_update(code, date_add, from_warehouse, to_warehouse, remark)
 {
 	var api = $('#api').val();
 	var wx_code = $('#wx_code').val();
-  var is_wms = $('#is_wms').val();
 
   load_in();
   //--- ถ้าไม่มีอะไรผิดพลาด ส่งข้อมูไป update
@@ -246,9 +225,7 @@ function do_update(code, date_add, from_warehouse, to_warehouse, remark)
       'date_add' : date_add,
       'from_warehouse' : from_warehouse,
       'to_warehouse' : to_warehouse,
-      'is_wms' : is_wms,
-      'remark' : remark,
-			'api' : api,
+      'remark' : remark,			
 			'wx_code' : wx_code
     },
     success:function(rs){

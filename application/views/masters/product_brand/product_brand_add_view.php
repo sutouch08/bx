@@ -15,15 +15,17 @@
 	<div class="form-group">
     <label class="col-sm-3 control-label no-padding-right">รหัส</label>
     <div class="col-xs-12 col-sm-3">
-      <input type="text" name="code" id="code" class="width-100" value="" autofocus required />
+      <input type="text" name="code" id="code" class="width-100" value="<?php echo $code; ?>" autofocus required />
     </div>
     <div class="help-block col-xs-12 col-sm-reset inline red" id="code-error"></div>
   </div>
 
+
+
   <div class="form-group">
     <label class="col-sm-3 control-label no-padding-right">ชื่อ</label>
     <div class="col-xs-12 col-sm-3">
-			<input type="text" name="name" id="name" class="width-100" value="" required />
+			<input type="text" name="name" id="name" class="width-100" value="<?php echo $name; ?>" required />
     </div>
     <div class="help-block col-xs-12 col-sm-reset inline red" id="name-error"></div>
   </div>
@@ -44,5 +46,5 @@
   </div>
 </form>
 
-<script src="<?php echo base_url(); ?>scripts/masters/product_brand.js?v=<?php echo date('Ymd'); ?>"></script>
+<script src="<?php echo base_url(); ?>scripts/masters/product_brand.js"></script>
 <?php $this->load->view('include/footer'); ?>

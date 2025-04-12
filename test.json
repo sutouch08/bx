@@ -61,3 +61,98 @@
     },
   ]
 }
+
+
+{
+  "refId": "xxxx",
+  "customerCode": "xxxx",
+  "salesChannel": "xxxx",
+  "paymentChannel": "xxxx",
+  "requestDate":"2025-02-31",
+  "items": [
+    {
+      "productId": "xxxx",
+      "itemSKU": "xxxx",
+      "qty": 200.00,
+      "sellingPrice": 450.00
+    }
+  ]
+}
+
+
+
+{
+  "refId": "xxxx",
+  "items": [
+    {
+      "productId": "xxxx",
+      "itemSKU": "xxxx",
+      "discount": 200.00,
+      "discountLabel": "10+30%",
+      "promotionName": "xx",
+      "promotionCode": "1223",
+      "conditionName":"xx",
+      "conditionCode":"2345",
+      "freeQty":20,
+      "freeItems":[
+        {
+          "freeSKU":"xxxx",
+        }
+      ],
+      "Conditions":[
+        {
+          "conditionCode":"123",
+          "priority":1
+        },
+        {
+          "conditionCode":"152",
+          "priority":1
+        },
+        {
+          "conditionCode":"2345",
+          "priority":3
+        }
+      ]
+    }
+  ]
+}
+
+
+{
+  "refId": "xxxx",
+  "maxDiscountPercent": 20.00,
+  "discountGPpercent": 20.00,
+  "items": [
+    {
+      "productId": "xxxx",
+      "itemSKU": "xxxx",
+      "discount": 200.00,
+      "discountPercent": 20.00,
+      "discountLabel": "10+30%",
+      "discountGP": 200.00,
+      "discountGPpercent": 20.00,
+      "promotion": [
+        {
+          "name": "xxx",
+          "code": "2345",
+          "conditionName": "xxx",
+          "conditionCode": "2345",
+          "conditionPriority": "1"
+        },
+        {
+          "name": "xxx2",
+          "code": "678",
+          "conditionName": "xxx",
+          "conditionCode": "2345",
+          "conditionPriority": "1"
+        }
+      ],
+      "freeQty": 20,
+      "freeItems": [
+        {
+          "freeSKU": "xxxx"
+        }
+      ]
+    }
+  ]
+}

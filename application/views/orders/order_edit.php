@@ -49,9 +49,6 @@
 				<?php else : ?>
 					<button type="button" id="btn-save-order" class="btn btn-xs btn-success btn-100 top-btn hide" onclick="saveOrder()">บันทึก</button>
 				<?php endif; ?>
-				<?php if($is_api && $order->is_wms != 0 && $order->status == 1 && $order->is_expired == 0 && $order->state == 3) : ?>
-					<button type="button" class="btn btn-xs btn-success top-btn" onclick="sendToWMS()">Send to WMS</button>
-				<?php endif; ?>
       </p>
     </div>
 </div><!-- End Row -->
@@ -67,13 +64,6 @@
 <?php $this->load->view('orders/order_discount_bar'); ?>
 <?php $this->load->view('orders/order_detail'); ?>
 <?php $this->load->view('orders/order_online_modal'); ?>
-<?php if($this->_SuperAdmin) : ?>
-	<div class="row">
-		<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-			Start : <?php echo $start; ?> &nbsp;&nbsp; End : <?php echo $end; ?>
-		</div>
-	</div>
-<?php endif; ?>
 <script src="<?php echo base_url(); ?>assets/js/clipboard.min.js"></script>
 <script src="<?php echo base_url(); ?>scripts/orders/orders.js?v=<?php echo date('Ymd'); ?>"></script>
 <script src="<?php echo base_url(); ?>scripts/orders/order_add.js?v=<?php echo date('Ymd'); ?>"></script>
@@ -82,8 +72,5 @@
 <script src="<?php echo base_url(); ?>scripts/print/print_order.js?v=<?php echo date('Ymd'); ?>"></script>
 <script src="<?php echo base_url(); ?>scripts/print/print_address.js?v=<?php echo date('Ymd'); ?>"></script>
 <script src="<?php echo base_url(); ?>scripts/cancel_order.js?v=<?php echo date('Ymd'); ?>"></script>
-<?php if($order->is_wms && $order->status == 1 && $order->is_expired == 0 && $order->state == 3) : ?>
-	<script src="<?php echo base_url(); ?>scripts/wms/wms_order.js?v=<?php echo date('Ymd'); ?>"></script>
-<?php endif; ?>
 
 <?php $this->load->view('include/footer'); ?>

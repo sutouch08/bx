@@ -40,41 +40,20 @@
 		<label>ชื่อลูกค้า</label>
 		<input type="text" class="form-control input-sm h" id="customer" value="" />
 	</div>
-	<div class="col-lg-1-harf col-md-1-harf col-sm-1-harf col-xs-6 padding-5">
-		<label>การรับ</label>
-		<select class="form-control input-sm h" name="is_wms" id="is_wms" onchange="updateZone()">
-			<option value="">เลือก</option>
-			<?php if($this->wmsApi) : ?>
-				<option value="1" data-zonecode="<?php echo $wms_zone_code; ?>" data-zonename="<?php echo $wms_zone_name; ?>">Pioneer</optoin>
-			<?php endif; ?>
-			<?php if($this->sokoApi) : ?>
-				<option value="2" data-zonecode="<?php echo $soko_zone_code; ?>" data-zonename="<?php echo $soko_zone_name; ?>">SOKOCHAN</option>
-			<?php endif; ?>
-			<option value="0" data-zonecode="" data-zonename="">Warrix</option>
-		</select>
-	</div>
-	<div class="col-lg-1-harf col-md-1-harf col-sm-1-harf col-xs-6 padding-5">
-		<label>Interface</label>
-		<select class="form-control input-sm" name="api" id="api">
-			<option value="1">ปกติ</option>
-			<option value="0">ไม่ส่ง</option>
-		</select>
-	</div>
-	<div class="col-lg-2-harf col-md-2-harf col-sm-2-harf col-xs-4 padding-5">
+	<div class="col-lg-2 col-md-3-harf col-sm-3-harf col-xs-4 padding-5">
 		<label>รหัสโซน</label>
 		<input type="text" class="form-control input-sm text-center h" name="zone_code" id="zone_code" value="" />
 	</div>
-	<div class="col-lg-6-harf col-md-6-harf col-sm-6-harf col-xs-8 padding-5">
+	<div class="col-lg-3-harf col-md-8-harf col-sm-8-harf col-xs-8 padding-5">
 		<label>ชื่อโซน</label>
 		<input type="text" class="form-control input-sm h" name="zone" id="zone" value="" />
 	</div>
 
-
-	<div class="col-lg-10-harf col-md-10-harf col-sm-10-harf col-xs-9 padding-5">
+	<div class="col-lg-5-harf col-md-10-harf col-sm-10-harf col-xs-9 padding-5">
 		<label>หมายเหตุ</label>
 			<input type="text" class="form-control input-sm h" name="remark" id="remark" placeholder="ระบุหมายเหตุเอกสาร (ถ้ามี)" />
 	</div>
-	<div class="col-lg-1-harf col-md-1-harf col-sm-1-harf col-xs-3 padding-5">
+	<div class="col-lg-1 col-md-1-harf col-sm-1-harf col-xs-3 padding-5">
 		<label class="display-block not-show">save</label>
 		<?php 	if($this->pm->can_add) : ?>
 		<button type="button" class="btn btn-xs btn-success btn-block" onclick="addNew()"><i class="fa fa-plus"></i> เพิ่ม</button>

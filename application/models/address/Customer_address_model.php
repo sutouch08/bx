@@ -53,87 +53,11 @@ class Customer_address_model extends CI_Model
   }
 
 
-  public function add_sap_bill_to(array $ds = array())
-  {
-    if(!empty($ds))
-    {
-      return $this->mc->insert('CRD1', $ds);
-    }
-
-    return FALSE;
-  }
-
-
-
   public function update_bill_to($customer_code, array $ds = array())
   {
     if(!empty($ds))
     {
       return $this->db->where('customer_code', $customer_code)->update('address_bill_to', $ds);
-    }
-
-    return FALSE;
-  }
-
-
-
-  public function update_sap_bill_to($code, $address, array $ds = array())
-  {
-    if(!empty($ds))
-    {
-      return $this->mc->where('CardCode', $code)->where('Address', $address)->where('AdresType', 'B')->update('CRD1', $ds);
-    }
-
-    return FALSE;
-  }
-
-
-
-
-
-
-  //----- Ship To
-  public function add_sap_ship_to(array $ds = array())
-  {
-    if(!empty($ds))
-    {
-      return $this->mc->insert('CRD1', $ds);
-    }
-
-    return FALSE;
-  }
-
-
-
-  public function update_sap_ship_to($code, $address, array $ds = array())
-  {
-    if(!empty($ds))
-    {
-      return $this->mc->where('CardCode', $code)->where('Address', $address)->where('AdresType', 'S')->update('CRD1', $ds);
-    }
-
-    return FALSE;
-  }
-
-
-
-  public function get_max_line_num($code, $type = 'B')
-  {
-    $rs = $this->mc->select_max('LineNum')->where('CardCode', $code)->where('AdresType', $type)->get('CRD1');
-    return $rs->row()->LineNum;
-  }
-
-
-  public function is_sap_address_exists($code, $address, $type = 'B')
-  {
-    $rs = $this->mc
-    ->where('Address', $address)
-    ->where('CardCode', $code)
-    ->where('AdresType', $type)
-    ->get('CRD1');
-    if($rs->num_rows() > 0)
-    {
-      return TRUE;
     }
 
     return FALSE;

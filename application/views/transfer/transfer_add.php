@@ -45,35 +45,12 @@
 		<input type="text" class="form-control input-sm h t" id="to_warehouse" value="" readonly />
   </div>
 
-	<div class="col-lg-1-harf col-md-1-harf col-sm-2 col-xs-4 padding-5">
-		<label>การดำเนินการ</label>
-		<select class="form-control input-sm h" name="is_wms" id="is_wms">
-			<option value="">เลือก</option>
-			<?php if($this->wmsApi) : ?>
-				<option value="1">PIONEER</option>
-			<?php endif; ?>
-			<?php if($this->sokoApi) : ?>
-				<option value="2">SOKOCHAN</option>
-			<?php endif; ?>
-			<option value="0">WARRIX</option>
-			<option value="-1">ย้ายคลัง</option>
-		</select>
-	</div>
-
-	<div class="col-lg-1 col-md-1-harf col-sm-1-harf col-xs-4 padding-5">
-		<label>Interface</label>
-		<select class="form-control input-sm h" name="api" id="api">
-			<option value="1">ปกติ</option>
-			<option value="0">ไม่ส่ง</option>
-		</select>
-	</div>
-
 	<div class="col-lg-1-harf col-md-1-harf col-sm-1-harf col-xs-4 padding-5">
 		<label>เลขที่ WX</label>
 		<input type="text" class="form-control input-sm h" name="wx_code" id="wx_code" />
 	</div>
 
-  <div class="col-lg-6-harf col-md-6 col-sm-5-harf col-xs-8 padding-5">
+  <div class="col-lg-9 col-md-9 col-sm-9 col-xs-8 padding-5">
     <label>หมายเหตุ</label>
     <input type="text" class="form-control input-sm h" name="remark" id="remark" value="">
   </div>

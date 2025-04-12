@@ -2,7 +2,6 @@
 <?php $allow_upload = getConfig('ALLOW_UPLOAD_ORDER'); ?>
 <?php $cim = get_permission('SOIMOR', $this->_user->uid, $this->_user->id_profile); ?>
 <?php $can_upload = (is_true($allow_upload) && can_do($cim)) ? TRUE : FALSE; ?>
-<?php $instant_export = getConfig('WMS_INSTANT_EXPORT'); ?>
 <style>
 	.backorder {
 		color:#811818 !important;
@@ -19,9 +18,6 @@
 			<?php endif;?>
 			<button type="button" class="btn btn-white btn-purple top-btn btn-100" onclick="getTemplate()"><i class="fa fa-download"></i> &nbsp; Template</button>
 			<button type="button" class="btn btn-white btn-success top-btn btn-100" onclick="addNew()"><i class="fa fa-plus"></i> เพิมใหม่</button>
-		<?php endif; ?>
-		<?php if($this->sokoApi OR $this->wmsApi) : ?>
-			<button type="button" class="btn btn-white btn-primary top-btn btn-100" onclick="sendOrdersToWms()"><i class="fa fa-send"></i> Send to WMS</button>
 		<?php endif; ?>
 	</div>
 </div><!-- End Row -->
@@ -81,16 +77,6 @@
     </div>
   </div>
 
-	<div class="col-lg-1-harf col-md-1-harf col-sm-1-harf col-xs-6 padding-5">
-		<label>WMS</label>
-		<select class="form-control input-sm" name="wms_export" onchange="getSearch()">
-			<option value="all">ทั้งหมด</option>
-			<option value="0" <?php echo is_selected('0', $wms_export); ?>>ยังไม่ส่ง</option>
-			<option value="1" <?php echo is_selected('1', $wms_export); ?>>ส่งแล้ว</option>
-			<option value="3" <?php echo is_selected('3', $wms_export); ?>>Error</option>
-		</select>
-	</div>
-
 	<div class="col-lg-1-harf col-md-2 col-sm-2 col-xs-4 padding-5">
 		<label>Back order</label>
 		<select class="form-control input-sm" name="is_backorder" onchange="getSearch()">
@@ -145,15 +131,6 @@
 			<option value="0" <?php echo is_selected('0', $method); ?>>Manual</option>
 			<option value="1" <?php echo is_selected('1', $method); ?>>Upload</option>
 			<option value="2" <?php echo is_selected('2', $method); ?>>API</option>
-		</select>
-	</div>
-
-	<div class="col-lg-1-harf col-md-1-harf col-sm-1-harf col-xs-6 padding-5">
-		<label>Canceled</label>
-		<select class="form-control input-sm" name="is_cancled" onchange="getSearch()">
-			<option value="all">ทั้งหมด</option>
-			<option value="1" <?php echo is_selected('1', $is_cancled); ?>>Yes</option>
-			<option value="0" <?php echo is_selected('0', $is_cancled); ?>>No</option>
 		</select>
 	</div>
 
@@ -218,14 +195,6 @@
 		<table class="table table-striped table-hover dataTable tableFixHead" style="min-width:1330px; margin-bottom:20px;">
 			<thead>
 				<tr>
-			<?php if($this->sokoApi OR $this->wmsApi) : ?>
-					<th class="fix-width-40 middle text-center fix-header">
-						<label>
-							<input type="checkbox" class="ace" id="chk-all" />
-							<span class="lbl"></span>
-						</label>
-					</th>
-			<?php endif; ?>
 					<th class="fix-width-40 middle text-center fix-header">ลำดับ</th>
 					<th class="fix-width-100 middle text-center fix-header sorting <?php echo $sort_date; ?>" id="sort_date_add" onclick="sort('date_add')">วันที่</th>
 					<th class="fix-width-150 middle fix-header sorting <?php echo $sort_code; ?>" id="sort_code" onclick="sort('code')">เลขที่เอกสาร</th>
@@ -234,10 +203,7 @@
 					<th class="fix-width-100 middle text-right fix-header">ยอดเงิน</th>
 					<th class="fix-width-150 middle fix-header">ช่องทางขาย</th>
 					<th class="fix-width-150 middle fix-header">การชำระเงิน</th>
-					<th class="fix-width-150 middle fix-header">สถานะ</th>
-					<?php if($this->_SuperAdmin && $instant_export) : ?>
-						<th class="fix-width-100 middle fix-header"></th>
-					<?php endif; ?>
+					<th class="fix-width-150 middle fix-header">สถานะ</th>					
 				</tr>
 			</thead>
 			<tbody>
@@ -247,16 +213,6 @@
 						<?php $cus_ref = empty($rs->customer_ref) ? '' : ' ['.$rs->customer_ref.']'; ?>
 						<?php $cn_text = $rs->state != 9 && $rs->is_cancled == 1 ? '<span class="badge badge-danger font-size-10 margin-left-5">ยกเลิก</span>' : ''; ?>
             <tr class="font-size-12 <?php echo $rs->is_backorder && $rs->state < 5 ? 'backorder': ''; ?>" id="row-<?php echo $rs->code; ?>" style="<?php echo state_color($rs->state, $rs->status, $rs->is_expired); ?>">
-					<?php if($this->sokoApi OR $this->wmsApi) : ?>
-							<td class="middle text-center">
-								<?php if($rs->state == 3 && $rs->is_wms != 0 && $rs->wms_export != 1) : ?>
-									<label>
-										<input type="checkbox" class="ace chk-wms" data-code="<?php echo $rs->code; ?>"/>
-										<span class="lbl"></span>
-									</label>
-								<?php endif; ?>
-							</td>
-					<?php endif; ?>
               <td class="middle text-center"><?php echo $no; ?></td>
               <td class="middle text-center pointer" onclick="editOrder('<?php echo $rs->code; ?>')"><?php echo thai_date($rs->date_add); ?></td>
               <td class="middle pointer" onclick="editOrder('<?php echo $rs->code; ?>')"><?php echo $rs->code . $cn_text; ?></td>
@@ -285,9 +241,6 @@
 									<?php echo get_state_name($rs->state); ?>
 								<?php endif; ?>
 							</td>
-              <?php if($this->_SuperAdmin && $instant_export) : ?>
-							<td class="middle text-right"><button type="button" class="btn btn-minier btn-primary" onclick="sendToWms('<?php echo $rs->code; ?>')">Wms</button></td>
-							<?php endif; ?>
             </tr>
             <?php $no++; ?>
           <?php endforeach; ?>

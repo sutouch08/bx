@@ -10,8 +10,6 @@ class Transform_stock extends PS_Controller
   public $filter;
   public $role = 'Q';
   public $isClosed = FALSE;
-	public $wmsApi;
-  public $sokoApi;
   public $require_remark = 1;
 
   public function __construct()
@@ -34,9 +32,6 @@ class Transform_stock extends PS_Controller
     $this->load->helper('product_images');
     $this->load->helper('transform');
     $this->load->helper('warehouse');
-
-		$this->wmsApi = is_true(getConfig('WMS_API'));
-    $this->sokoApi = is_true(getConfig('SOKOJUNG_API'));
   }
 
 
@@ -55,7 +50,6 @@ class Transform_stock extends PS_Controller
       'to_date'   => get_filter('toDate', 'transform_toDate', ''),
       'isApprove' => get_filter('isApprove', 'transform_isApprove', 'all'),
 			'warehouse' => get_filter('warehouse', 'transform_warehouse', ''),
-			'wms_export' => get_filter('wms_export', 'transform_wms_export', 'all'),
       'is_backorder' => get_filter('is_backorder', 'transform_is_backorder', 'all'),
       'sap_status' => get_filter('sap_status', 'transform_sap_status', 'all')
     );
@@ -146,9 +140,6 @@ class Transform_stock extends PS_Controller
     {
 			$this->load->model('masters/warehouse_model');
 
-      $wmsWh = getConfig('WMS_WAREHOUSE');
-      $sokoWh = getConfig('SOKOJUNG_WAREHOUSE');
-
       $book_code = getConfig('BOOK_CODE_TRANSFORM');
 
       $date_add = db_date($data->date_add);
@@ -163,11 +154,6 @@ class Transform_stock extends PS_Controller
 
       if( ! empty($wh))
       {
-        $isSoko = $wh->code == $sokoWh ? TRUE : FALSE;
-        $isWms = $wh->code == $wmsWh ? TRUE : FALSE;
-
-        $is_wms = $isWms ? 1 : ($isSoko ? 2 : 0);
-
         $ds = array(
           'code' => $code,
           'date_add' => $date_add,
@@ -181,8 +167,7 @@ class Transform_stock extends PS_Controller
           'remark' => get_null($data->remark),
           'user_ref' => $data->empName,
           'zone_code' => $data->zone_code,
-          'warehouse_code' => $wh->code,
-          'is_wms' => $is_wms
+          'warehouse_code' => $wh->code
         );
 
         if( ! $this->orders_model->add($ds))
@@ -274,7 +259,6 @@ class Transform_stock extends PS_Controller
 		$ds['cancle_reason'] = ($rs->state == 9 ? $this->orders_model->get_cancle_reason($code) : NULL);
     $ds['approve_logs'] = $this->approve_logs_model->get($code);
     $ds['approve_view'] = $approve_view;
-    $ds['is_api'] = is_api($rs->is_wms, $this->wmsApi, $this->sokoApi);
     $ds['tracking'] = $this->orders_model->get_order_tracking($code);
     $ds['backlogs'] = $rs->is_backorder == 1 ? $this->orders_model->get_backlog_details($rs->code) : NULL;
     $this->isClosed = $this->transform_model->is_closed($code);
@@ -293,20 +277,12 @@ class Transform_stock extends PS_Controller
     {
 			$this->load->model('masters/warehouse_model');
 
-      $wmsWh = getConfig('WMS_WAREHOUSE');
-      $sokoWh = getConfig('SOKOJUNG_WAREHOUSE');
-
       $code = $data->code;
 
       $wh = $this->warehouse_model->get($data->warehouse_code);
 
       if( ! empty($wh))
       {
-        $isSoko = $wh->code == $sokoWh ? TRUE : FALSE;
-        $isWms = $wh->code == $wmsWh ? TRUE : FALSE;
-
-        $is_wms = $isWms ? 1 : ($isSoko ? 2 : 0);
-
         $ds = array(
           'customer_code' => $data->customer_code,
           'reference' => get_null($data->reference),
@@ -318,8 +294,7 @@ class Transform_stock extends PS_Controller
           'zone_code' => $data->zone_code,
           'warehouse_code' => $wh->code,
           'id_address' => NULL,
-          'id_sender' => NULL,
-          'is_wms' => $is_wms
+          'id_sender' => NULL
         );
 
         if( ! $this->orders_model->update($code, $ds))
@@ -683,8 +658,7 @@ class Transform_stock extends PS_Controller
       'transform_fromDate',
       'transform_toDate',
       'transform_isApprove',
-			'transform_warehouse',
-			'transform_wms_export',
+			'transform_warehouse',		
       'transform_is_backorder',
       'transform_sap_status',
       'transform_notSave',

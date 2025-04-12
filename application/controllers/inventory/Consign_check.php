@@ -8,10 +8,6 @@ class Consign_check extends PS_Controller
 	public $title = 'กระทบยอดสินค้า';
   public $filter;
   public $error;
-	public $wms;
-  public $isAPI;
-  public $wmsApi = FALSE;
-  public $sokoApi = FALSE;
 
   public function __construct()
   {
@@ -22,9 +18,6 @@ class Consign_check extends PS_Controller
     $this->load->model('masters/zone_model');
     $this->load->model('masters/warehouse_model');
     $this->load->model('stock/stock_model');
-
-    $this->wmsApi = is_true(getConfig('WMS_API'));
-    $this->sokoApi = is_true(getConfig('SOKOJUNG_API'));
   }
 
   public function index()
@@ -89,18 +82,15 @@ class Consign_check extends PS_Controller
     {
       $date_add = db_date($data->date_add, TRUE);
       $zone = $this->zone_model->get($data->zone_code);
-      $is_wms = $data->is_wms;
 
-      if($is_wms != 0 && $this->consign_check_model->is_not_close_exists($zone->code))
+      if( empty($zone))
 			{
 				$sc = FALSE;
-				$this->error = "เพิ่มเอกสารไม่สำเร็จ เนื่องจากพบเอกสารกระทบยอดของโซนนี้ที่ยังไม่ปิด";
+				$this->error = "Invalid zone";
 			}
 			else
 			{
 				$code = $this->get_new_code($date_add);
-
-        $status = $is_wms == 0 ? 0 : ($is_wms == 2 && $this->sokoApi ? 3 : ($is_wms == 1 && $this->wmsApi ? 3 : 0));
 
         $arr = array(
           'code' => $code,
@@ -110,9 +100,7 @@ class Consign_check extends PS_Controller
           'warehouse_code' => $zone->warehouse_code,
           'user' => $this->_user->uname,
           'date_add' => $date_add,
-          'remark' => $data->remark,
-          'is_wms' => $is_wms,
-          'status' => $status
+          'remark' => $data->remark
         );
 
 	      $this->db->trans_begin();
@@ -178,40 +166,6 @@ class Consign_check extends PS_Controller
 	      {
 	        $this->db->trans_commit();
 	      }
-
-				if($sc === TRUE)
-				{
-					if($is_wms == 1 && $this->wmsApi)
-					{
-						//--- send to wms
-						$this->wms = $this->load->database('wms', TRUE);
-						$this->load->library('wms_receive_api');
-
-						$doc = $this->consign_check_model->get($code);
-						$details = $this->consign_check_model->get_details($code);
-
-						if( ! $this->wms_receive_api->export_consign_check($doc, $details))
-						{
-              $ex = 0;
-							$this->error = "บันทึกรายการสำเร็จแต่ส่งข้อมูลไป WMS ไม่สำเร็จ กรุณากดส่งข้อมูลอีกครั้ง";
-						}
-					}
-
-          if($is_wms == 2 && $this->sokoApi)
-          {
-            $this->wms = $this->load->database('wms', TRUE);
-            $this->load->library('soko_receive_api');
-
-            $doc = $this->consign_check_model->get($code);
-						$details = $this->consign_check_model->get_details($code);
-
-            if( ! $this->soko_receive_api->create_consign_check($doc, $details))
-            {
-              $ex = 0;
-              $this->error = "บันทึกเอกสารสำเร็จ แต่ส่งข้อมูลไป Soko ไม่สำเร็จ <br/> ".$this->soko_receive_api->error;
-            }
-          }
-				}
 			}
     }
     else
@@ -752,24 +706,6 @@ class Consign_check extends PS_Controller
       {
         if($doc->valid == 0)
         {
-          if($doc->is_wms == 2 && $this->sokoApi)
-          {
-            if($doc->wms_export == 1 && $doc->soko_code)
-            {
-              $this->wms = $this->load->database('wms', TRUE);
-              $this->load->library('soko_receive_api');
-
-              if( ! $this->soko_receive_api->cancel_consign_check($doc))
-              {
-                if( ! $force)
-                {
-                  $sc = FALSE;
-                  $this->error = "ยกเลิกเอกสารที่ Soko ไม่สำเร็จ กรุณาติดต่อเจ้าหน้าที่ <br/>{$this->soko_receive_api->error}";
-                }
-              }
-            }
-          }
-
           //--- change status = 2 (cancle)
           if($sc === TRUE)
           {
@@ -830,71 +766,6 @@ class Consign_check extends PS_Controller
 
     $this->load->view('print/print_consign_box', $ds);
   }
-
-
-	public function send_to_wms($code)
-	{
-		$sc = TRUE;
-
-		$doc = $this->consign_check_model->get($code);
-
-		if( ! empty($doc))
-		{
-      if($doc->is_wms == 2 && $this->sokoApi && ($doc->status == 3 OR $doc->status == 0))
-      {
-        $this->wms = $this->load->database('wms', TRUE);
-        $this->load->library('soko_receive_api');
-
-        $details = $this->consign_check_model->get_details($code);
-
-        if( ! empty($details))
-        {
-          if( ! $this->soko_receive_api->create_consign_check($doc, $details))
-          {
-            $sc = FALSE;
-            $this->error = "ส่งข้อมูลไป SOKOCHAN ไม่สำเร็จ <br/> {$this->soko_receive_api->error}";
-          }
-        }
-        else
-        {
-          $sc = FALSE;
-          $this->error = "ไม่พบรายการตั้งรับ กรุณาตรวจสอบ";
-        }
-      }
-
-			if($doc->is_wms == 1 && $this->wmsApi && ($doc->status == 3 OR $doc->status == 0))
-			{
-				$details = $this->consign_check_model->get_details($code);
-
-				if( ! empty($details))
-				{
-					$this->wms = $this->load->database('wms', TRUE);
-					$this->load->library('wms_receive_api');
-
-					$rs = $this->wms_receive_api->export_consign_check($doc, $details);
-
-					if(! $rs)
-					{
-						$sc = FALSE;
-						$this->error = "ส่งข้อมูลไป WMS ไม่สำเร็จ <br/>({$this->wms_receive_api->error})";
-					}
-				}
-				else
-				{
-					$sc = FALSE;
-					$this->error = "ไม่พบรายการตั้งรับ กรุณาตรวจสอบ";
-				}
-			}
-		}
-		else
-		{
-			$sc = FALSE;
-			$this->error = "Invalid document code";
-		}
-
-		echo $sc === TRUE ? 'success' : $this->error;
-	}
-
 
   public function get_new_code($date)
   {

@@ -258,114 +258,6 @@ class Consignment_order_model extends CI_Model
   }
 
 
-  //--- add new doc
-  public function add_sap_doc($ds = array())
-  {
-    if(!empty($ds))
-    {
-      $rs = $this->mc->insert('CNODLN', $ds);
-      if($rs)
-      {
-        return $this->mc->insert_id();
-      }
-    }
-
-    return FALSE;
-  }
-
-
-  //--- update doc head
-  public function update_sap_doc($code, $ds = array())
-  {
-    if(!empty($ds))
-    {
-      return  $this->mc->where('U_ECOMNO', $code)->update('CNODLN', $ds);
-    }
-
-    return FALSE;
-  }
-
-
-
-  public function get_sap_consignment_order_doc($code)
-  {
-    $rs = $this->cn
-    ->select('DocEntry, DocStatus')
-    ->where('U_ECOMNO', $code)
-    ->where('CANCELED', 'N')
-    ->get('ODLN');
-    if($rs->num_rows() === 1)
-    {
-      return $rs->row();
-    }
-
-    return FALSE;
-  }
-
-
-  public function sap_exists_details($code)
-  {
-    $rs = $this->mc->select('LineNum')->where('U_ECOMNO', $code)->get('CNDLN1');
-    if($rs->num_rows() > 0)
-    {
-      return TRUE;
-    }
-
-    return FALSE;
-  }
-
-
-  public function get_middle_consignment_order_doc($code)
-  {
-    $rs = $this->mc
-    ->select('DocEntry')
-    ->where('U_ECOMNO', $code)
-    ->group_start()
-    ->where('F_Sap', 'N')
-    ->or_where('F_Sap IS NULL', NULL, FALSE)
-    ->group_end()
-    ->get('CNODLN');
-
-    if($rs->num_rows() > 0)
-    {
-      return $rs->result();
-    }
-
-    return NULL;
-  }
-
-
-
-  public function add_sap_detail_row($ds = array())
-  {
-    if(!empty($ds))
-    {
-      return $this->mc->insert('CNDLN1', $ds);
-    }
-
-    return FALSE;
-  }
-
-
-
-  public function drop_sap_exists_details($code)
-  {
-    return $this->mc->where('U_ECOMNO', $code)->delete('CNDLN1');
-  }
-
-
-
-  public function drop_middle_exits_data($docEntry)
-  {
-    $this->mc->trans_start();
-    $this->mc->where('DocEntry', $docEntry)->delete('CNDLN1');
-    $this->mc->where('DocEntry', $docEntry)->delete('CNODLN');
-    $this->mc->trans_complete();
-
-    return $this->mc->trans_status();
-  }
-
-
 
   public function get_list(array $ds = array(), $perpage = NULL, $offset = NULL)
   {
@@ -527,22 +419,6 @@ class Consignment_order_model extends CI_Model
     return NULL;
 	}
 
-
-	public function get_sap_doc_num($code)
-  {
-    $rs = $this->cn
-    ->select('DocNum')
-    ->where('U_ECOMNO', $code)
-    ->where('CANCELED', 'N')
-    ->get('ODLN');
-
-    if($rs->num_rows() > 0)
-    {
-      return $rs->row()->DocNum;
-    }
-
-    return NULL;
-  }
 
 	public function update_inv($code, $doc_num)
   {

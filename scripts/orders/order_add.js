@@ -654,7 +654,6 @@ function recalDiscount(){
 function changeState(){
   var order_code = $("#order_code").val();
   var state = $("#stateList").val();
-  var is_wms = parseDefault(parseInt($('#is_wms').val()), 0);
   var trackingNo = $('#trackingNo').val();
   var tracking = $('#tracking').val();
   var id_address = $('#address_id').val();
@@ -662,31 +661,6 @@ function changeState(){
   var reason_id = $('#reason-id').val();
   var cancle_reason = $.trim($('#cancle-reason').val());
   let force_cancel = $('#force-cancel').is(':checked') ? 1 : 0;
-
-
-  if(is_wms != '0') {
-    if(state == 3 && id_address == "") {
-      swal("กรุณาระบุที่อยู่จัดส่ง");
-      return false;
-    }
-
-    if(state == 3 && id_sender == "") {
-      swal("กรุณาระบุผู้จัดส่ง");
-      return false;
-    }
-
-    if($('#sender option:selected').data('tracking') == 1) {
-      if(trackingNo != tracking) {
-        swal("กรุณากดบันทึก Tracking No");
-        return false;
-      }
-
-      if(trackingNo.length === 0) {
-        swal("กรุณาระบุ Tracking No");
-        return false;
-      }
-    }
-  }
 
   if(state == 9 && cancle_reason.length < 10) {
     showCancleModal();

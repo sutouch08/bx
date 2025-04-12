@@ -28,13 +28,6 @@ class Order_state_model extends CI_Model
   }
 
 
-
-	public function add_wms_state(array $ds=array())
-	{
-		return $this->db->insert('order_state_change', $ds);
-	}
-
-
 	public function is_exists_state($order_code, $state)
 	{
 		$rs = $this->db->where('order_code', $order_code)->where('state', $state)->count_all_results('order_state_change');

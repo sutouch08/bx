@@ -3,11 +3,7 @@ class Import_order extends CI_Controller
 {
   public $ms;
   public $mc;
-	public $wms;
   public $_user;
-  public $sokoApi;
-  public $wmsApi;
-  public $isAPI;
 	public $sync_chatbot_stock = FALSE;
   public $error;
   public $message;
@@ -18,7 +14,6 @@ class Import_order extends CI_Controller
     parent::__construct();
     $this->ms = $this->load->database('ms', TRUE); //--- SAP database
     $this->mc = $this->load->database('mc', TRUE); //--- Temp Database
-		$this->wms = $this->load->database('wms', TRUE);
 
     $uid = get_cookie('uid');
 
@@ -146,7 +141,6 @@ class Import_order extends CI_Controller
                   'user' => $order->user,
                   'is_import' => $order->is_import,
                   'remark' => $order->remark,
-                  'is_wms' => $order->is_wms,
                   'id_address' => $order->id_address,
                   'id_sender' => $order->id_sender,
                   'tax_status' => $order->tax_status,
@@ -321,11 +315,6 @@ class Import_order extends CI_Controller
                 );
 
                 $this->order_import_logs_model->add($logs);
-
-                if($order->is_wms == 2 && $this->sokoApi && ! $order->hold)
-      					{
-                  $this->soko_order_api->export_order($order_code);
-      					}
               }
               else
               {
@@ -355,7 +344,6 @@ class Import_order extends CI_Controller
                       'user' => $order->user,
                       'is_import' => $order->is_import,
                       'remark' => $order->remark,
-                      'is_wms' => $order->is_wms,
                       'id_address' => $order->id_address,
                       'id_sender' => $order->id_sender,
                       'tax_status' => $order->tax_status,
@@ -542,10 +530,6 @@ class Import_order extends CI_Controller
 
                     $this->order_import_logs_model->add($logs);
 
-                    if($order->is_wms == 2 && $this->sokoApi && ! $order->hold)
-          					{
-                      $this->soko_order_api->export_order($order_code);
-          					}
                   }
                   else
                   {
@@ -776,8 +760,6 @@ class Import_order extends CI_Controller
                   $this->error .= "Invalid warehouse_code at Line{$i} <br/>";
                 }
               }
-
-              $is_wms = $warehouse_code == $sokoWh ? 2 : 0;
 
               $hold = $rs['U'] == 1 ? TRUE : FALSE;
 
@@ -1033,8 +1015,7 @@ class Import_order extends CI_Controller
                   'warehouse_code' => $warehouse_code,
                   'user' => $this->_user->uname,
                   'is_import' => 1,
-                  'remark' => $remark,
-                  'is_wms' => $is_wms,
+                  'remark' => $remark,                  
                   'id_address' => $id_address,
                   'id_sender' => empty(trim($rs['W'])) ? NULL : $this->sender_model->get_id(trim($rs['W'])),
                   'force_update' => $rs['S'] == 1 ? TRUE : FALSE,
