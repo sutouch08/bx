@@ -1,6 +1,8 @@
 <?php
 class Purchase_grid
 {
+  public $error;
+
   public function __construct()
   {
     // Assign the CodeIgniter super-object
@@ -12,33 +14,57 @@ class Purchase_grid
 
   public function getProductGrid($style_code)
 	{
-		$sc = '';
+		$sc = TRUE;
+    $grid = NULL;
+    $width = 600;
 
     $style = $this->ci->product_style_model->get($style_code);
 
-    if(!empty($style))
+    if( ! empty($style))
     {
       $attrs = $this->getAttribute($style->code);
 
       if( count($attrs) == 1  )
       {
-        $sc .= $this->orderGridOneAttribute($style, $attrs[0]);
+        $grid = $this->orderGridOneAttribute($style, $attrs[0]);
       }
       else if( count( $attrs ) == 2 )
       {
-        $sc .= $this->orderGridTwoAttribute($style);
+        $grid = $this->orderGridTwoAttribute($style);
+        $width = $this->getTableWidth($style_code);
       }
-
     }
     else
     {
-      $sc = 'notfound';
+      $sc = FALSE;
+      $this->error = "{$style_code} not found";
     }
 
-		return $sc;
+    $arr = array(
+      'status' => $sc === TRUE ? 'success' : 'failed',
+      'message' => $this->error,
+      'data' => $grid,
+      'width' => $width
+    );
+
+		return (object)$arr;
 	}
 
 
+  public function getTableWidth($style_code)
+  {
+    $width = 600; //--- ชั้นต่ำ
+    $tdWidth = 80;  //----- แต่ละช่อง
+    $padding = 80; //----- สำหรับช่องแสดงไซส์
+    $color = $this->ci->products_model->count_color($style_code);
+
+    if($color > 0)
+    {
+      $width = $color * $tdWidth + $padding;
+    }
+
+    return $width;
+  }
 
 
   public function orderGridOneAttribute($style, $attr)
@@ -70,6 +96,7 @@ class Purchase_grid
       $sc .= 'data-name="'.$item->name.'" ';
       $sc .= 'data-cost="'.$item->cost.'" ';
       $sc .= 'data-price="'.$item->price.'" ';
+      $sc .= 'data-unit="'.$item->unit_code.'" ';
       $sc .= 'data-row="'.$r.'" data-col="'.$c.'" ';
       $sc .= 'data-limit="-1"/>';
 			$sc .= '</td>';
@@ -116,7 +143,8 @@ class Purchase_grid
           $sc .= 'data-code="'.$item->code.'" ';
           $sc .= 'data-name="'.$item->name.'" ';
           $sc .= 'data-cost="'.$item->cost.'" ';
-          $sc .= 'data-price="'.$item->price.'" ';          
+          $sc .= 'data-price="'.$item->price.'" ';
+          $sc .= 'data-unit="'.$item->unit_code.'" ';
           $sc .= 'data-limit="-1" ';
           $sc .= 'data-row="'.$r.'" data-col="'.$c.'" ';
           $sc .= 'placeholder="'.$color_code.'-'.$size_code.'" />';
@@ -129,7 +157,7 @@ class Purchase_grid
           $sc .= 'class="form-control text-center item-grid r-'.$r.' c-'.$c.'" ';
           $sc .= 'id="qty-'.$r.$c.'" ';
           $sc .= 'data-row="'.$r.'" data-col="'.$c.'" ';
-          $sc .= 'placeholder="'.$color_code.'-'.$size_code.'" value="N/A" readonly />';
+          $sc .= 'placeholder="'.$color_code.'-'.$size_code.'" value="N/A" disabled />';
 					$sc .= '</td>';
 				}
 

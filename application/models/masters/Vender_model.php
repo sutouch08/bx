@@ -1,7 +1,7 @@
 <?php
-class Supplier_model extends CI_Model
+class Vender_model extends CI_Model
 {
-	public $tb = 'supplier';
+	public $tb = 'vender';
 
 	public function __construct()
 	{
@@ -72,7 +72,7 @@ class Supplier_model extends CI_Model
 			$this->db->where('status', $ds['status']);
 		}
 
-		$this->db->order_by('code', 'ASC')->limit($perpage, $offset);
+		$this->db->order_by('code', 'DESC')->limit($perpage, $offset);
 
 		$rs = $this->db->get($this->tb);
 
@@ -112,21 +112,48 @@ class Supplier_model extends CI_Model
 	}
 
 
-
 	public function is_exists_code($code)
 	{
-		$rs = $this->db->where('code', $code)->count_all_results($this->tb);
+		$count = $this->db->where('code', $code)->count_all_results($this->tb);
 
-		if($rs > 0)
-		{
-			return TRUE;
-		}
-
-		return FALSE;
+		return $count > 0 ? TRUE : FALSE;
 	}
 
 
+	public function is_exists_name($name, $code = NULL)
+	{
+		if( ! empty($code))
+		{
+			$this->db->where('code !=', $code);
+		}
 
+		$count = $this->db->where('name', $name)->count_all_results($this->tb);
+
+		return $count > 0 ? TRUE : FALSE;
+	}
+
+
+	public function has_transection($code)
+	{
+		$count = $this->db->where('vender_code', $code)->count_all_results('po');
+
+		return $count > 0 ? TRUE : FALSE;
+	}
+
+	
+	public function get_max_no()
+  {
+    $rs = $this->db
+    ->select_max('run_no')
+    ->get($this->tb);
+
+    if($rs->num_rows() === 1)
+    {
+      return $rs->row()->run_no;
+    }
+
+    return 0;
+  }
 
 } //--- end class
 

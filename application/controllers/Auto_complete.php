@@ -8,6 +8,35 @@ class Auto_complete extends CI_Controller
     parent::__construct();
   }
 
+  public function get_vender_code_and_name()
+  {
+    $sc = array();
+    $this->db->select('code, name')->where('status', 1);
+
+    if(trim($_REQUEST['term']) != '*')
+    {
+      $this->db->group_start();
+      $this->db->like('code', $_REQUEST['term'])->or_like('name', $_REQUEST['term']);
+      $this->db->group_end();
+    }
+
+    $vender = $this->db->limit(20)->get('vender');
+
+    if($vender->num_rows() > 0)
+    {
+      foreach($vender->result() as $rs)
+      {
+        $sc[] = $rs->code.' | '.$rs->name;
+      }
+    }
+    else
+    {
+      $sc[] = 'Not found';
+    }
+
+    echo json_encode($sc);
+  }
+
 	public function get_wx_code()
 	{
 		$txt = trim($_REQUEST['term']);
@@ -171,87 +200,122 @@ class Auto_complete extends CI_Controller
   }
 
 
-
-
-public function get_style_code()
-{
-  $sc = array();
-  $this->db
-  ->select('code, old_code')
-  ->where('active', 1)
-  ->where('can_sell', 1)
-  ->where('is_deleted', 0)
-  ->group_start()
-  ->like('code', $_REQUEST['term'])
-  ->or_like('old_code', $_REQUEST['term'])
-  ->group_end()
-  ->order_by('code', 'ASC')
-  ->limit(20);
-  $qs = $this->db->get('product_style');
-
-  if($qs->num_rows() > 0)
+  public function get_style_code()
   {
-    foreach($qs->result() as $rs)
-    $sc[] = $rs->code .' | '.$rs->old_code;
+    $sc = array();
+    $this->db
+    ->select('code, old_code')
+    ->where('active', 1)
+    ->where('can_sell', 1)
+    ->where('is_deleted', 0)
+    ->group_start()
+    ->like('code', $_REQUEST['term'])
+    ->or_like('old_code', $_REQUEST['term'])
+    ->group_end()
+    ->order_by('code', 'ASC')
+    ->limit(20);
+    $qs = $this->db->get('product_style');
+
+    if($qs->num_rows() > 0)
+    {
+      foreach($qs->result() as $rs)
+      $sc[] = $rs->code .' | '.$rs->old_code;
+    }
+
+    echo json_encode($sc);
   }
 
-	echo json_encode($sc);
-}
 
-
-
-public function get_prepare_style_code()
-{
-  $sc = array();
-  $this->db
-  ->select('code, old_code')
-  ->where('active', 1)
-  ->where('can_sell', 1)
-  ->where('is_deleted', 0)
-  ->group_start()
-  ->like('code', $_REQUEST['term'])
-  ->or_like('old_code', $_REQUEST['term'])
-  ->group_end()
-  ->order_by('code', 'ASC')
-  ->limit(20);
-  $qs = $this->db->get('product_style');
-
-  if($qs->num_rows() > 0)
+  public function get_style_code_and_name()
   {
-    foreach($qs->result() as $rs)
-    $sc[] = $rs->code .' | '.$rs->old_code;
+    $sc = array();
+
+    $txt = trim($_REQUEST['term']);
+
+    $this->db->select('code, name');
+
+    if($txt != '*')
+    {
+      $this->db
+      ->group_start()
+      ->like('code', $txt)
+      ->or_like('name', $txt)
+      ->group_end();
+    }
+
+    $this->db
+    ->where('is_deleted', 0)
+    ->order_by('code', 'ASC')
+    ->limit(20);
+
+    $qs = $this->db->get('product_style');
+
+    if($qs->num_rows() > 0)
+    {
+      foreach($qs->result() as $rs)
+      {
+        $sc[] = $rs->code.' | '.$rs->name;
+      }
+    }
+    else
+    {
+      $sc[] = "not found";
+    }
+
+    echo json_encode($sc);
   }
 
-	echo json_encode($sc);
-}
 
-
-public function get_prepare_item_code()
-{
-  $sc = array();
-  $this->db
-  ->select('code, old_code')
-  ->where('active', 1)
-  ->where('can_sell', 1)
-  ->where('is_deleted', 0)
-  ->group_start()
-  ->like('code', $_REQUEST['term'])
-  ->or_like('old_code', $_REQUEST['term'])
-  ->group_end()
-  ->order_by('code', 'ASC')
-  ->limit(50);
-  $qs = $this->db->get('products');
-
-  if($qs->num_rows() > 0)
+  public function get_prepare_style_code()
   {
-    foreach($qs->result() as $rs)
-    $sc[] = $rs->code .' | '.$rs->old_code;
+    $sc = array();
+    $this->db
+    ->select('code, old_code')
+    ->where('active', 1)
+    ->where('can_sell', 1)
+    ->where('is_deleted', 0)
+    ->group_start()
+    ->like('code', $_REQUEST['term'])
+    ->or_like('old_code', $_REQUEST['term'])
+    ->group_end()
+    ->order_by('code', 'ASC')
+    ->limit(20);
+    $qs = $this->db->get('product_style');
+
+    if($qs->num_rows() > 0)
+    {
+      foreach($qs->result() as $rs)
+      $sc[] = $rs->code .' | '.$rs->old_code;
+    }
+
+    echo json_encode($sc);
   }
 
-	echo json_encode($sc);
-}
 
+  public function get_prepare_item_code()
+  {
+    $sc = array();
+    $this->db
+    ->select('code, old_code')
+    ->where('active', 1)
+    ->where('can_sell', 1)
+    ->where('is_deleted', 0)
+    ->group_start()
+    ->like('code', $_REQUEST['term'])
+    ->or_like('old_code', $_REQUEST['term'])
+    ->group_end()
+    ->order_by('code', 'ASC')
+    ->limit(50);
+    $qs = $this->db->get('products');
 
+    if($qs->num_rows() > 0)
+    {
+      foreach($qs->result() as $rs)
+      $sc[] = $rs->code .' | '.$rs->old_code;
+    }
+
+    echo json_encode($sc);
+  }
 
 
   public function sub_district()
@@ -361,7 +425,6 @@ public function get_prepare_item_code()
   }
 
 
-
   public function get_request_receive_po_code($vendor = NULL)
   {
     $sc = array();
@@ -399,7 +462,6 @@ public function get_prepare_item_code()
 
     echo json_encode($sc);
   }
-
 
 
   public function get_valid_lend_code($empID = NULL)
@@ -477,7 +539,6 @@ public function get_prepare_item_code()
   }
 
 
-
 	public function get_common_zone_code_and_name($warehouse = NULL)
   {
     $sc = array();
@@ -528,7 +589,6 @@ public function get_prepare_item_code()
 
     echo json_encode($sc);
   }
-
 
 
   public function get_zone_code()
@@ -595,8 +655,6 @@ public function get_prepare_item_code()
 
     echo json_encode($sc);
   }
-
-
 
 
   public function get_lend_zone($empID)
@@ -871,6 +929,38 @@ public function get_prepare_item_code()
   }
 
 
+  public function get_item_code_and_name()
+  {
+    $sc = array();
+  	$txt = trim($_REQUEST['term']);
+
+  	$this->db->select('code, name');
+
+  	if($txt !== '*')
+  	{
+  		$this->db->like('code', $txt);
+  		$this->db->or_like('name', $txt);
+  	}
+
+  	$this->db->order_by('code', 'ASC');
+  	$this->db->limit(50);
+
+    $qs = $this->db->get('products');
+
+    if($qs->num_rows() > 0)
+    {
+      foreach($qs->result() as $rs)
+      {
+        $sc[] = $rs->code.' | '.$rs->name;
+      }
+    }
+    else
+    {
+      $sc[] = "not found";
+    }
+
+    echo json_encode($sc);
+  }
 
 
   public function get_item_code()

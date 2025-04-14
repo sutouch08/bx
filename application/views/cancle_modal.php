@@ -21,7 +21,6 @@
               <span class="lbl">&nbsp;&nbsp; Force cancel</span>
             </label>
           </div>
-
         </div>
        </div>
       <div class="modal-footer">

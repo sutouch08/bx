@@ -402,11 +402,28 @@ $('.filter').change(function() {
 })
 
 
-$('.search').keyup(function(e){
-  if(e.keyCode == 13){
-    getSearch();
-  }
-})
+function getSearch() {
+  $('#searchForm').submit();
+}
+
+
+$('.search-box').keyup(function(e){
+	if(e.keyCode === 13) {
+		getSearch();
+	}
+});
+
+
+function goBack() {
+	window.location.href = HOME;
+}
+
+
+function clearFilter() {
+	let url = HOME + 'clear_filter';
+	$.get(url, function(rs){ goBack(); });
+}
+
 
 function generateUID() {
     return Math.random().toString(36).substring(2, 15) +
@@ -449,22 +466,6 @@ function clearErrorByClass(className) {
     $('#'+name+'-error').text('');
     $(this).removeClass('has-error');
   })
-}
-
-
-function addMetaTag(name,content){
-  let meta = document.createElement('meta');
-  meta.httpEquiv = name;
-  meta.content = content;
-  document.getElementsByTagName('head')[0].appendChild(meta);
-}
-
-
-function clearCache() {
-  addMetaTag("pragma","no-cache")
-  addMetaTag("expires","0")
-  addMetaTag("cache-control","no-cache")
-  window.location.reload(true);
 }
 
 function refresh() {

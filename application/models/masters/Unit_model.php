@@ -1,6 +1,8 @@
 <?php
 class Unit_model extends CI_Model
 {
+  private $tb = "unit";
+
   public function __construct()
   {
     parent::__construct();
@@ -9,18 +11,14 @@ class Unit_model extends CI_Model
 
   public function get_data()
   {
-    $rs = $this->ms
-    ->select('UomCode AS code')
-    ->select('UomName AS name')
-    ->order_by('UomCode', 'ASC')
-    ->get('OUOM');
+    $rs = $this->db->get($this->tb);
 
     if($rs->num_rows() > 0)
     {
       return $rs->result();
     }
 
-    return FALSE;
+    return NULL;
   }
 } //--- end class
 

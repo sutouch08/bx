@@ -88,8 +88,6 @@ function profile_name_in($text)
 }
 
 
-
-
 function user_in($txt)
 {
   $sc = array('0');
@@ -126,6 +124,7 @@ function select_user_id($user_id = NULL)
   return $sc;
 }
 
+
 function select_uname($uname = NULL)
 {
   $sc = "";
@@ -142,6 +141,7 @@ function select_uname($uname = NULL)
 
   return $sc;
 }
+
 
 function select_user($uname = NULL)
 {
