@@ -1,11 +1,11 @@
 <?php
-function po_status_color($status = 'P')
+function receive_status_color($status = 'P')
 {
   $default = '#FFFFFF';
 
   $colors = array(
     'P' => '#FFFFFF',
-    'O' => '#bae3ff',
+    'O' => '#fbe4ff',
     'C' => '#f4ffe7',
     'D' => '#d3d3d3'
   );
@@ -13,7 +13,7 @@ function po_status_color($status = 'P')
   return ! empty($colors[$status]) ? $colors[$status] : $default;
 }
 
-function po_status_text($status = 'P')
+function receive_status_text($status = 'P')
 {
   $default = 'Draft';
 

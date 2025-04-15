@@ -25,14 +25,10 @@
         						data-id="<?php echo $rs->id; ?>"
         						data-limit="<?php echo $rs->qty; ?>"
         						data-price="<?php echo $rs->price; ?>"
-        						data-baseentry="<?php echo $rs->baseEntry; ?>"
-        						data-baseline="<?php echo $rs->baseLine; ?>"
+        						data-basecocd="<?php echo $rs->po_code; ?>"
+        						data-baseline="<?php echo $rs->po_detail_id; ?>"
         						data-code="<?php echo $rs->product_code; ?>"
-        						data-name="<?php echo $rs->product_name; ?>"
-        						data-vatcode="<?php echo $rs->vatGroup; ?>"
-        						data-vatrate="<?php echo $rs->vatRate; ?>"
-        						data-currency="<?php echo $rs->currency; ?>"
-        						data-rate="<?php echo $rs->rate; ?>"
+        						data-name="<?php echo $rs->product_name; ?>"        						
         						value="<?php echo number($rs->receive_qty); ?>" readonly/>
                 </td>
                 <td style="width:33%;">

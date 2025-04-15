@@ -37,6 +37,45 @@ class Auto_complete extends CI_Controller
     echo json_encode($sc);
   }
 
+
+  public function get_po_code($vendor = NULL)
+  {
+    $sc = array();
+    $txt = trim($_REQUEST['term']);
+
+    //---- receive product if over due date or not
+    $receive_due = getConfig('RECEIVE_OVER_DUE'); //--- 1 = receive , 0 = not receive
+
+    $this->db->select('code, vender_code, vender_name')->where('status', 'O');
+
+    if( ! empty($vendor))
+    {
+      $this->db->where('vender_code', $vendor);
+    }
+
+    if($txt != '*')
+    {
+      $this->db->like('code', $txt);
+    }
+
+    $po = $this->db->get('po');
+
+    if($po->num_rows() > 0)
+    {
+      foreach($po->result() as $rs)
+      {
+        $sc[] = $rs->code ." | ".$rs->vender_name;
+      }
+    }
+		else
+		{
+			$sc[] = "not found";
+		}
+
+    echo json_encode($sc);
+  }
+
+
 	public function get_wx_code()
 	{
 		$txt = trim($_REQUEST['term']);
@@ -373,7 +412,7 @@ class Auto_complete extends CI_Controller
   }
 
 
-	public function postcode()
+  public function postcode()
   {
     $sc = array();
     $adr = $this->db->like('zipcode', $_REQUEST['term'])->limit(20)->get('address_info');
@@ -539,17 +578,17 @@ class Auto_complete extends CI_Controller
   }
 
 
-	public function get_common_zone_code_and_name($warehouse = NULL)
+  public function get_common_zone_code_and_name($warehouse = NULL)
   {
     $sc = array();
     $txt = $_REQUEST['term'];
     $this->db
-		->select('zone.code AS code, zone.name AS name')
-		->from('zone')
-		->join('warehouse', 'zone.warehouse_code = warehouse.code', 'left')
-		->where_in('warehouse.role', array(1, 3, 4, 5))
+    ->select('zone.code AS code, zone.name AS name')
+    ->from('zone')
+    ->join('warehouse', 'zone.warehouse_code = warehouse.code', 'left')
+    ->where_in('warehouse.role', array(1, 3, 4, 5))
     ->where('zone.active', 1)
-		->where('warehouse.active', 1);
+    ->where('warehouse.active', 1);
 
     if(!empty($warehouse))
     {
@@ -615,7 +654,6 @@ class Auto_complete extends CI_Controller
 
     echo json_encode($sc);
   }
-
 
 
   public function get_transform_zone()

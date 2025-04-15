@@ -1,6 +1,3 @@
-// JavaScript Document
-var HOME = BASE_URL + 'inventory/receive_po/';
-
 function goDelete(code){
 	swal({
 		title: "คุณแน่ใจ ?",
@@ -23,7 +20,6 @@ function goDelete(code){
 
 function cancle_received(code){
 	let reason = $.trim($('#cancle-reason').val());
-	let force_cancel = $('#force-cancel').is(':checked') ? 1 : 0;
 
 	if(reason.length < 10)
 	{
@@ -34,19 +30,17 @@ function cancle_received(code){
 	load_in();
 
 	$.ajax({
-		url: HOME + 'cancle_received',
+		url: HOME + 'cancle',
 		type:"POST",
 		cache:"false",
 		data:{
-			"receive_code" : code,
-			"reason" : reason,
-			"force_cancel" : force_cancel
+			"code" : code,
+			"reason" : reason
 		},
 		success: function(rs){
 			load_out();
 
-			var rs = $.trim(rs);
-			if( rs == 'success' ){
+			if( rs.trim() == 'success' ) {
 				swal({
 					title: 'Cancled',
 					type: 'success',
@@ -56,16 +50,15 @@ function cancle_received(code){
 				setTimeout(function(){
 					window.location.reload();
 				}, 1200);
-
 			}
 			else {
-				swal({
-					title:'Error!',
-					text:rs,
-					type:'error',
-					html:true
-				});
+				beep();
+				showError(rs);
 			}
+		},
+		error:function(rs) {
+			beep();
+			showError(rs);
 		}
 	});
 }
@@ -91,32 +84,17 @@ $('#cancle-modal').on('shown.bs.modal', function() {
 });
 
 
-function addNew(){
-	$('.e').removeClass('has-error');
+function add(){
+	clearErrorByClass('e');
 
   let date_add = $('#doc-date').val();
-	let due_date = $('#due-date').val();
-	let posting_date = $('#posting-date').val();
-  let remark = $.trim($('#remark').val());
-	let reqRemark = $('#required_remark').val();
+  let remark = $('#remark').val().trim();
 
   if( ! isDate(date_add)) {
 		$('#doc-date').addClass('has-error');
     swal('วันที่ไม่ถูกต้อง');
     return false;
   }
-
-	if( ! isDate(due_date)) {
-		$('#due-date').addClass('has-error');
-		swal('กรุณาระบุวันที่สินค้าเข้า');
-		return false;
-	}
-
-	if(reqRemark == 1 && remark.length < 5) {
-		$('#remark').addClass('has-error');
-		swal('กรุณาใส่หมายเหตุ');
-		return false;
-	}
 
 	load_in();
 
@@ -126,8 +104,6 @@ function addNew(){
 		cache:false,
 		data: {
 			'date_add' : date_add,
-			'due_date' : due_date,
-			'posting_date' : posting_date,
 			'remark' : remark
 		},
 		success:function(rs) {
@@ -160,7 +136,7 @@ function addNew(){
 }
 
 
-function goAdd(){
+function addNew(){
   window.location.href = HOME + 'add_new';
 }
 
@@ -185,30 +161,12 @@ function viewDetail(code){
 }
 
 
-function goBack(){
-	window.location.href = HOME;
-}
-
-function getSearch(){
-	$("#searchForm").submit();
-}
-
-
-$(".search").keyup(function(e){
-	if( e.keyCode == 13 ){
-		getSearch();
-	}
-});
-
-
-
 $("#fromDate").datepicker({
 	dateFormat: 'dd-mm-yy',
 	onClose: function(ds){
 		$("#toDate").datepicker("option", "minDate", ds);
 	}
 });
-
 
 
 $("#toDate").datepicker({
@@ -219,8 +177,6 @@ $("#toDate").datepicker({
 });
 
 
-
-// JavaScript Document
 function printReceived(){
 	var code = $("#receive_code").val();
 	var center = ($(document).width() - 800) /2;
@@ -228,43 +184,6 @@ function printReceived(){
   window.open(target, "_blank", "width=800, height=900, left="+center+", scrollbars=yes");
 }
 
-
-
-function doExport(){
-	var code = $('#receive_code').val();
-	load_in();
-	$.ajax({
-		url: HOME + 'do_export/'+code,
-		type:'POST',
-		cache:false,
-		success:function(rs){
-			load_out();
-			if(rs == 'success'){
-				swal({
-					title:'Success',
-					text:'Send data successfully',
-					type:'success',
-					timer:1000
-				});
-			}else{
-				swal({
-					title:'Errow!',
-					text: rs,
-					type:'error',
-					html:true
-				});
-			}
-		}
-	})
-}
-
-
-function clearFilter(){
-  var url = HOME + 'clear_filter';
-  $.get(url, function(rs){
-    goBack();
-  });
-}
 
 function pullBack(code) {
 	swal({

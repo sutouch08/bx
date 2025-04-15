@@ -80,7 +80,7 @@
           <th class="fix-width-100 text-center">ราคา</th>
           <th class="fix-width-100 text-center">จำนวน</th>
 					<th class="fix-width-100 text-center">ค้างรับ</th>
-          <th class="fix-width-100 text-center">มูลค่า (ค้างรับ)</th>
+          <th class="fix-width-100 text-center">มูลค่า</th>
         </tr>
       </thead>
       <tbody id="detail-table">
@@ -90,7 +90,7 @@
 				<?php $total_open = 0; ?>
         <?php $total_amount = 0; ?>
         <?php foreach($details as $rs) : ?>
-					<?php $line_total = $rs->open_qty * $rs->price; ?>
+					<?php $line_total = $rs->qty * $rs->price; ?>
         <tr class="font-size-11" id="row-<?php echo $rs->id; ?>">
           <td class="middle text-center no"><?php echo $no; ?></td>
           <td class="middle"><?php echo $rs->product_code; ?></td>

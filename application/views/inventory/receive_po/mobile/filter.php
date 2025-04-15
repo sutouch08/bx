@@ -21,15 +21,17 @@
 	    <input type="text" class="form-control input-sm search" name="invoice" value="<?php echo $invoice; ?>" />
 	  </div>
 
-
 		<div class="col-xs-6 padding-5 fi">
 	    <label>ผู้จำหน่าย</label>
-			<input type="text" class="form-control input-sm search" name="vendor" value="<?php echo $vendor; ?>" />
+			<input type="text" class="form-control input-sm search" name="vender" value="<?php echo $vender; ?>" />
 	  </div>
 
 		<div class="col-xs-6 padding-5 fi">
-	    <label>พนักงาน</label>
-			<input type="text" class="form-control input-sm search" name="user" value="<?php echo $user; ?>" />
+	    <label>User</label>
+			<select class="width-100 filter" name="user" id="user">
+				<option value="all">ทั้งหมด</option>
+				<?php echo select_user($user); ?>
+			</select>
 	  </div>
 
 		<div class="col-xs-6 padding-5 fi">
@@ -40,27 +42,7 @@
 			</select>
 		</div>
 
-		<div class="col-xs-6 padding-5 fi hide">
-			<label>การรับ</label>
-			<select name="is_wms" class="form-control input-sm" onchange="getSearch()">
-				<option value="all">ทั้งหมด</option>
-			</select>
-		</div>
-
-		<div class="col-xs-6 padding-5 fi">
-			<label>สถานะ</label>
-			<select name="status" class="form-control input-sm" onchange="getSearch()">
-				<option value="all">ทั้งหมด</option>
-				<option value="0" <?php echo is_selected('0', $status); ?>>ยังไม่บันทึก</option>
-				<option value="1" <?php echo is_selected('1', $status); ?>>บันทึกแล้ว</option>
-				<option value="2" <?php echo is_selected('2', $status); ?>>ยกเลิก</option>
-				<option value="3" <?php echo is_selected('3', $status); ?>>WMS Process</option>
-				<option value="4" <?php echo is_selected('4', $status); ?>>รอการยืนยัน</option>
-				<option value="5" <?php echo is_selected('5', $status); ?>>หมดอายุ</option>
-			</select>
-		</div>
-
-		<div class="col-xs-6 padding-5 fi">
+		<div class="col-xs-12 padding-5 fi">
 			<label>วันที่</label>
 			<div class="input-group width-100">
 				<input type="text" class="form-control input-sm text-center width-50 from-date" inputmode="none" name="from_date" id="fromDate" value="<?php echo $from_date; ?>" />
@@ -68,20 +50,21 @@
 			</div>
 		</div>
 
-		<div class="col-xs-12 padding-5 fi" style="position:absolute; bottom:0px; left:0px;">
-			<div class="col-xs-9 padding-5 fi">
+		<div class="col-xs-12 padding-5 fi" style="position:absolute; bottom:80px; left:0px;">
+			<div class="col-xs-6 padding-5 fi">
 				<label class="display-block not-show">buton</label>
-				<button type="submit" class="btn btn-xs btn-primary btn-block"><i class="fa fa-search"></i> Search</button>
+				<button type="submit" class="btn btn-primary btn-block"><i class="fa fa-search"></i> Search</button>
 			</div>
-			<div class="col-xs-3 padding-5 fi">
+			<div class="col-xs-6 padding-5 fi">
 				<label class="display-block not-show">buton</label>
-				<button type="button" class="btn btn-xs btn-warning btn-block" onclick="clearFilter()"><i class="fa fa-retweet"></i> Reset</button>
+				<button type="button" class="btn btn-warning btn-block" onclick="clearFilter()"><i class="fa fa-retweet"></i> Reset</button>
 			</div>
 		</div>
 	</div>
 	<input type="hidden" name="search" value="1" />
 </form>
 <script>
+	$('#user').select2();
 	$('#warehouse').select2();
 </script>
 <?php echo $this->pagination->create_links(); ?>

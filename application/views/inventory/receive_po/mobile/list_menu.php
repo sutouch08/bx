@@ -8,7 +8,7 @@
 			</div>
 			<div class="footer-menu width-33">
 				<span class="width-100" onclick="clearFilter()">
-					<i class="fa fa-plus-circle fa-2x white"></i><span class="fon-size-12">Clear Filter</span>
+					<i class="fa fa-retweet fa-2x white"></i><span class="fon-size-12">Clear Filter</span>
 				</span>
 			</div>
 			<div class="footer-menu width-33">

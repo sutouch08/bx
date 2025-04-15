@@ -79,7 +79,7 @@ li {
     height:100vh;
     width:100vw;
     box-shadow: #333 1px 0px 5px 1px;
-    z-index: 101;
+    z-index: 10;
     padding-bottom: 80px;
     padding-right: 15px;
     padding-left: 15px;

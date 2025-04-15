@@ -22,28 +22,14 @@
     	<label>วันที่เอกสาร</label>
       <input type="text" class="form-control input-sm text-center e" id="doc-date" value="<?php echo date('d-m-Y'); ?>" readonly/>
     </div>
-		<div class="col-lg-1-harf col-md-2 col-sm-2 col-xs-6 padding-5">
-    	<label>วันที่สินค้าเข้า</label>
-      <input type="text" class="form-control input-sm text-center e" id="due-date" value="" />
-    </div>
-		<div class="col-lg-1-harf col-md-2 col-sm-2 col-xs-6 padding-5">
-    	<label>Posting date</label>
-      <input type="text" class="form-control input-sm text-center e" id="posting-date" value="" />
-    </div>
-		<div class="col-lg-1-harf col-md-2 col-sm-2 col-xs-6 padding-5 hide">
-			<label>ช่องทางการรับ</label>
-			<select class="form-control input-sm e" name="is_wms" id="is_wms">
-				<option value="0">Warrix</option>
-			</select>
-		</div>
-    <div class="col-lg-5 col-md-10-harf col-sm-10-harf col-xs-8 padding-5">
+    <div class="col-lg-8 col-md-7 col-sm-6-harf col-xs-12 padding-5">
     	<label>หมายเหตุ</label>
         <input type="text" class="form-control input-sm e" name="remark" id="remark" placeholder="ระบุหมายเหตุเอกสาร (ถ้ามี)" />
     </div>
-		<div class="col-lg-1 col-md-1-harf col-sm-1-harf col-xs-4 padding-5">
+		<div class="col-lg-1 col-md-1-harf col-sm-1-harf col-xs-12 padding-5">
 			<label class="display-block not-show">save</label>
 			<?php if($this->pm->can_add) : ?>
-				<button type="button" class="btn btn-xs btn-success btn-block" onclick="addNew()"><i class="fa fa-plus"></i> เพิ่ม</button>
+				<button type="button" class="btn btn-xs btn-success btn-block" onclick="add()"><i class="fa fa-plus"></i> เพิ่ม</button>
 			<?php	endif; ?>
 		</div>
 </div>

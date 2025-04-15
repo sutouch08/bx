@@ -1,3 +1,5 @@
+var click = 0;
+
 window.addEventListener('load', () => {
 	poInit();
 	zone_init();
@@ -17,93 +19,20 @@ function getSample(){
 }
 
 
-function editHeader(){
-	$('.h').removeAttr('disabled');
-	$('#btn-edit').addClass('hide');
-	$('#btn-update').removeClass('hide');
-}
-
-
-function updateHeader() {
-	$('.h').removeClass('has-error');
-
-	let code = $('#receive_code').val();
-	let date_add = $('#doc-date').val();
-	let due_date = $('#due-date').val();
-	let posting_date = $('#posting-date').val();
-	let remark = $('#remark').val();
-
-	if( ! isDate(date_add)) {
-		$('#doc-date').addClass('has-error');
-		swal('วันที่ไม่ถูกต้อง');
-		return false;
-	}
-
-	if( ! isDate(due_date)) {
-		$('#due-date').addClass('has-error');
-		swal("กรุณาระบุวันที่สินค้าเข้า");
-		return false;
-	}
-
-
-	load_in();
-
-	$.ajax({
-		url:HOME + 'update_header',
-		type:'POST',
-		cache:false,
-		data:{
-			'code' : code,
-			'date_add' : date_add,
-			'due_date' : due_date,
-			'posting_date' : posting_date,
-			'remark' : remark
-		},
-		success:function(rs) {
-			load_out();
-			if(rs === 'success'){
-				swal({
-					title:'Updated',
-					text:'Update successfully',
-					type:'success',
-					timer:1000
-				});
-
-				$('.h').attr('disabled', 'disabled');
-				$('#btn-update').addClass('hide');
-				$('#btn-edit').removeClass('hide');
-			}else{
-				swal({
-					title:'Error!',
-					text: rs,
-					type:'error',
-					html:true
-				});
-			}
-		}
-	})
-}
-
-
 function save() {
-
 	clearErrorByClass('h');
 
 	let  h = {
 		'code' : $('#receive_code').val(),
 		'save_type' : $('#save-type').val(), //--- 0 = draft,  1 = บันทึกรับทันที , 3 = บันทึกรอรับ
 		'doc_date' : $('#doc-date').val(),
-		'due_date' : $('#due-date').val(),
-		'posting_date' : $('#posting-date').val(),
-		'vendor_code' : $('#vendor_code').val(),
-		'vendor_name' : $('#vendorName').val(),
+		'vender_code' : $('#vender_code').val(),
+		'vender_name' : $('#venderName').val(),
 		'po_code' : $('#poCode').val().trim(),
 		'invoice' : $('#invoice').val().trim(),
 		'warehouse_code' : $('#warehouse').val(),
 		'zone_code' : $('#zone_code').val(),
 		'approver' : $('#approver').val(),
-		'DocCur' : $('#DocCur').val(),
-		'DocRate' : parseDefault(parseFloat($('#DocRate').val()), 1),
 		'remark' : $('#remark').val().trim(),
 		'rows' : []
 	};
@@ -115,15 +44,9 @@ function save() {
 		return false;
 	}
 
-	if( ! isDate(h.due_date)) {
-		$('#due-date').hasError();
-		swal("กรุณาระบุวันที่สินค้าเข้า");
-		return false;
-	}
-
-	if(h.vendor_code == '' || h.vendor_name == '') {
-		$('#vendor_code').hasError();
-		$('#vendorName').hasError();
+	if(h.vender_code == '' || h.vender_name == '') {
+		$('#vender_code').hasError();
+		$('#venderName').hasError();
 		swal('กรุณาระบุผู้จำหน่าย');
 		return false;
 	}
@@ -154,12 +77,6 @@ function save() {
 		return false;
 	}
 
-	if(h.DocRate <= 0) {
-		$('#DocRate').hasError();
-		swal('กรุณาระบุอัตราแลกเปลี่ยน');
-		return false;
-	}
-
 	//--- มีรายการในใบสั่งซื้อหรือไม่
 	if($(".receive-qty").length = 0) {
 		showError('ไม่พบรายการรับเข้า');
@@ -174,17 +91,14 @@ function save() {
 			uid = el.data('uid');
 
 			let row = {
-				'baseEntry' : el.data('baseentry'),
-				'baseLine' : el.data('baseline'),
+				'po_code' : el.data('basecode'),
+				'po_detail_id' : el.data('baseline'),
 				'product_code' : el.data('code'),
 				'product_name' : el.data('name'),
 				'qty' : qty,
 				'price' : el.data('price'),
 				'backlogs' : el.data('backlogs'),
-				'currency' : el.data('currency'),
-				'rate' : h.DocRate,
-				'vatGroup' : el.data('vatcode'),
-				'vatRate' : el.data('vatrate')
+				'currency' : el.data('currency')
 			}
 
 			h.rows.push(row);
@@ -208,49 +122,24 @@ function save() {
 		success: function(rs) {
 			load_out();
 
-			if(isJson(rs)) {
-				let ds = JSON.parse(rs);
-				if(ds.status == 'success') {
-					swal({
-						title:'Success',
-						text:'บันทึกรายการเรียบร้อยแล้ว',
-						type:'success',
-						timer:1000
-					});
+			if(rs.trim() === 'success') {
+				swal({
+					title:'Success',
+					type:'success',
+					timer:1000
+				});
 
-					setTimeout(function() {
-						viewDetail(h.code);
-					}, 1200);
-				}
-				else if(ds.status == 'warning') {
-					swal({
-						title:'Warning',
-						text: ds.message,
-						type:'warning',
-						html:true
-					}, () => {
-						viewDetail(h.code);
-					});
-				}
-				else {
-					swal({
-						title:'Error!',
-						text:ds.message,
-						type:'error',
-						html:true
-					});
-				}
+				setTimeout(() => {
+					viewDetail(h.code);
+				},1200);
 			}
 			else {
-				swal({
-					title:'Error!',
-					text:ds.message,
-					type:'error',
-					html:true
-				});
+				beep();
+				showError(rs);
 			}
 		},
 		error:function(rs) {
+			beep();
 			showError(rs);
 		}
 	});
@@ -270,45 +159,30 @@ function finish(h) {
 				},
 				success:function(rs) {
 					load_out();
-					if(isJson(rs)) {
-						let ds = JSON.parse(rs);
 
-						if(ds.status === 'success') {
-							swal({
-								title:'Success',
-								text:'บันทึกรายการเรียบร้อยแล้ว',
-								type:'success',
-								timer:1000
-							});
+					if(rs.trim() === 'success') {
+						swal({
+							title:'Success',
+							text:'บันทึกรายการเรียบร้อยแล้ว',
+							type:'success',
+							timer:1000
+						});
 
-							setTimeout(function() {
-								viewDetail(h.code);
-							}, 1200);
-						}
-						else if(ds.status === 'warning') {
-							swal({
-								title:'Warning',
-								text: ds.message,
-								type:'warning',
-								html:true
-							}, () => {
-								viewDetail(h.code);
-							});
-						}
-						else {
-							showError(ds.message);
-						}
+						setTimeout(function() {
+							viewDetail(h.code);
+						}, 1200);
 					}
 					else {
+						beep();
 						showError(rs);
 					}
 				},
 				error:function(rs) {
+					beep();
 					showError(rs);
 				}
 			})
 		}, 100);
-
 	}
 	else {
 		beep();
@@ -318,66 +192,70 @@ function finish(h) {
 
 
 function validateReceive() {
-	clearErrorByClass('receive-qty');
+	if(click == 0) {
+		click = 1;
 
-	let code = $('#receive_code').val();
-	let totalQty = parseDefault(parseFloat(removeCommas($('#total-qty').val())), 0);
-	let totalReceive = 0;
-	let err = 0;
+		clearErrorByClass('receive-qty');
 
-	let h = {
-		'code' : $('#receive_code').val(),
-		'rows' : []
-	}
-
-	$('.receive-qty').each(function() {
-		let el = $(this);
-		let qty = parseDefault(parseFloat(el.val()), 0);
-		let limit = parseDefault(parseFloat(el.data('limit')), 0);
-
-		if(qty > 0) {
-			if(qty > limit) {
-				el.hasError();
-				err++;
-			}
-			else {
-				h.rows.push({
-					'id' : el.data('id'),
-					'product_code' : el.data('code'),
-					'product_name' : el.data('name'),
-					'baseEntry' : el.data('baseentry'),
-					'baseLine' : el.data('baseline'),
-					'backlogs' : limit,
-					'receive_qty' : qty
-				});
-
-				totalReceive += qty;
-			}
+		let code = $('#receive_code').val();
+		let totalQty = parseDefault(parseFloat(removeCommas($('#total-qty').val())), 0);
+		let totalReceive = 0;
+		let err = 0;
+		let h = {
+			'code' : $('#receive_code').val(),
+			'rows' : []
 		}
-	});
 
-	if(err > 0) {
-		beep();
-		swal('จำนวนรับไม่ถูกต้อง');
-		return false;
-	}
+		$('.receive-qty').each(function() {
+			let el = $(this);
+			let qty = parseDefault(parseFloat(el.val()), 0);
+			let limit = parseDefault(parseFloat(el.data('limit')), 0);
 
-	if(totalReceive < totalQty) {
-		swal({
-			title:'สินค้าไม่ครบ',
-			text:'จำนวนที่รับไม่ครบตามจำนวนที่ส่ง คุณต้องการบันทึกรับเพื่อปิดจบหรือไม่ ?',
-			type:'warning',
-			html:true,
-			showCancelButton:true,
-			cancelButtonText:'ยกเลิก',
-			confirmButtonText:'ยืนยัน',
-			closeOnConfirm:true
-		}, function() {
+			if(qty > 0) {
+				if(qty > limit) {
+					el.hasError();
+					err++;
+				}
+				else {
+					h.rows.push({
+						'id' : el.data('id'),
+						'product_code' : el.data('code'),
+						'product_name' : el.data('name'),
+						'po_code' : el.data('basecode'),
+						'po_detail_id' : el.data('baseline'),
+						'backlogs' : limit,
+						'receive_qty' : qty
+					});
+
+					totalReceive += qty;
+				}
+			}
+		});
+
+		if(err > 0) {
+			click = 0;
+			beep();
+			swal('จำนวนรับไม่ถูกต้อง');
+			return false;
+		}
+
+		if(totalReceive < totalQty) {
+			swal({
+				title:'สินค้าไม่ครบ',
+				text:'จำนวนที่รับไม่ครบตามจำนวนที่ส่ง คุณต้องการบันทึกรับเพื่อปิดจบหรือไม่ ?',
+				type:'warning',
+				html:true,
+				showCancelButton:true,
+				cancelButtonText:'ยกเลิก',
+				confirmButtonText:'ยืนยัน',
+				closeOnConfirm:true
+			}, function() {
+				return finish(h);
+			})
+		}
+		else {
 			return finish(h);
-		})
-	}
-	else {
-		return finish(h);
+		}
 	}
 }
 
@@ -520,75 +398,6 @@ function leave(){
 	}, function(){
 		goBack();
 	});
-
-}
-
-
-function changeRate() {
-	if($('#DocCur').val() == 'THB') {
-		$('#DocRate').val('1.00');
-	}
-	else {
-		$('#DocRate').val("");
-	}
-
-}
-
-
-function changePo(){
-	swal({
-		title: 'ยกเลิกข้อมูลนี้ ?',
-		type: 'warning',
-		showCancelButton: true,
-		cancelButtonText: 'No',
-		confirmButtonText: 'Yes',
-		closeOnConfirm: false
-	}, function(){
-		$("#receiveTable").html('');
-		$('#btn-change-po').attr('disabled', 'disabled').addClass('hide');
-		$('#btn-get-po').removeAttr('disabled', 'disabled').removeClass('hide');
-		$('#poCode').val('');
-		$('#poCode').removeAttr('disabled');
-		$('#requestCode').val('');
-		$('#requestCode').removeAttr('disabled');
-		$('#btn-change-request').addClass('hide');
-		$('#btn-get-request').removeClass('hide');
-		$('#DocCur').val('THB');
-		$('#DocRate').val('1.00');
-
-		swal({
-			title:'Success',
-			text:'ยกเลิกข้อมูลเรียบร้อยแล้ว',
-			type:'success',
-			timer:1000
-		});
-		setTimeout(function(){
-			$('#poCode').focus();
-		}, 1200);
-	});
-}
-
-
-function getPoCurrency(poCode) {
-	$.ajax({
-		url:HOME + 'get_po_currency',
-		type:'GET',
-		cache:false,
-		data:{
-			'po_code' : poCode
-		},
-		success:function(rs) {
-			if(isJson(rs)) {
-				var ds = $.parseJSON(rs);
-				$('#DocCur').val(ds.DocCur);
-				$('#DocRate').val(ds.DocRate);
-
-				if(ds.DocCur == 'THB') {
-					$('#DocRate').val(1.00);
-				}
-			}
-		}
-	})
 }
 
 
@@ -599,9 +408,8 @@ function getData() {
 		return false;
 	}
 
-	getPoCurrency(po);
-
 	load_in();
+
 	$.ajax({
 		url: HOME + 'get_po_detail',
 		type:"GET",
@@ -640,61 +448,61 @@ function getData() {
 }
 
 
-$("#vendorName").autocomplete({
-	source: BASE_URL + 'auto_complete/get_vendor_code_and_name',
+$("#venderName").autocomplete({
+	source: BASE_URL + 'auto_complete/get_vender_code_and_name',
 	autoFocus: true,
 	close: function(){
 		var rs = $(this).val();
 		var arr = rs.split(' | ');
 		if( arr.length == 2 ){
 			$(this).val(arr[1]);
-			$("#vendor_code").val(arr[0]);
+			$("#vender_code").val(arr[0]);
 			$('#poCode').focus();
 		}else{
 			$(this).val('');
-			$("#vendor_code").val('');
+			$("#vender_code").val('');
 		}
 	}
 });
 
 
-$("#vendor_code").autocomplete({
-	source: BASE_URL + 'auto_complete/get_vendor_code_and_name',
+$("#vender_code").autocomplete({
+	source: BASE_URL + 'auto_complete/get_vender_code_and_name',
 	autoFocus: true,
 	close: function(){
 		var rs = $(this).val();
 		var arr = rs.split(' | ');
 		if( arr.length == 2 ) {
-			$('#vendor_code').val(arr[0]);
-			$("#vendorName").val(arr[1]);
+			$('#vender_code').val(arr[0]);
+			$("#venderName").val(arr[1]);
 			$('#poCode').focus();
 		}else{
-			$('#vendorName').val('');
-			$("#vendor_code").val('');
+			$('#venderName').val('');
+			$("#vender_code").val('');
 		}
 	}
 });
 
 
-$('#vendorName').focusout(function(event) {
+$('#venderName').focusout(function(event) {
 	if($(this).val() == ''){
-		$('#vendor_code').val('');
+		$('#vender_code').val('');
 	}
 	poInit();
 });
 
 
-$('#vendor_code').focusout(function(event) {
+$('#vender_code').focusout(function(event) {
 	if($(this).val() == ''){
-		$('#vendorName').val('');
+		$('#venderName').val('');
 	}
 	poInit();
 });
 
 
 function poInit() {
-	var vendor_code = $('#vendor_code').val();
-	if(vendor_code == ''){
+	var vender_code = $('#vender_code').val();
+	if(vender_code == ''){
 		$("#poCode").autocomplete({
 			source: BASE_URL + 'auto_complete/get_po_code',
 			autoFocus: true,
@@ -702,22 +510,23 @@ function poInit() {
 				var code = $(this).val();
 				var arr = code.split(' | ');
 				if(arr.length == 2){
-					$(this).val(arr[1]);
+					$(this).val(arr[0]);
 				}
 				else {
 					$(this).val('');
 				}
 			}
 		});
-	}else{
+	}
+	else {
 		$("#poCode").autocomplete({
-			source: BASE_URL + 'auto_complete/get_po_code/'+vendor_code,
+			source: BASE_URL + 'auto_complete/get_po_code/'+vender_code,
 			autoFocus: true,
 			close:function(){
 				var code = $(this).val();
 				var arr = code.split(' | ');
 				if(arr.length == 2){
-					$(this).val(arr[1]);
+					$(this).val(arr[0]);
 				}
 				else {
 					$(this).val('');
@@ -736,8 +545,8 @@ function update_vender(po_code){
 		success:function(rs){
 			if(isJson(rs)){
 				var ds = $.parseJSON(rs);
-				$('#vendor_code').val(ds.code);
-				$('#vendorName').val(ds.name);
+				$('#vender_code').val(ds.code);
+				$('#venderName').val(ds.name);
 			}
 		}
 	});
@@ -894,162 +703,9 @@ function sumReceive() {
 			el.hasError();
 		}
 
-		$('#line-total-'+no).val(addCommas(amount.toFixed(4)));
+		$('#line-total-'+no).val(addCommas(amount.toFixed(2)));
   });
 
 	$("#total-receive").val( addCommas(totalQty) );
-	$('#total-amount').val(addCommas(totalAmount.toFixed(4)));
-}
-
-
-function getUploadFile(){
-  $('#upload-modal').modal('show');
-}
-
-
-function getFile(){
-  $('#uploadFile').click();
-}
-
-
-$("#uploadFile").change(function(){
-	if($(this).val() != '')
-	{
-		var file 		= this.files[0];
-		var name		= file.name;
-		var type 		= file.type;
-		var size		= file.size;
-
-		if( size > 5000000 )
-		{
-			swal("ขนาดไฟล์ใหญ่เกินไป", "ไฟล์แนบต้องมีขนาดไม่เกิน 5 MB", "error");
-			$(this).val('');
-			return false;
-		}
-		//readURL(this);
-    $('#show-file-name').text(name);
-	}
-});
-
-
-function uploadfile() {
-	$('#upload-modal').modal('hide');
-
-	var file	= $("#uploadFile")[0].files[0];
-	var fd = new FormData();
-	fd.append('uploadFile', $('input[type=file]')[0].files[0]);
-	if( file !== '')
-	{
-		load_in();
-		$.ajax({
-			url:HOME + 'import_data',
-			type:"POST",
-			cache:"false",
-			data: fd,
-			processData:false,
-			contentType: false,
-			success: function(rs){
-				load_out();
-				if( isJson(rs) ){
-					data = $.parseJSON(rs);
-
-					$('#vendor_code').val(data.vendor_code);
-					$('#vendorName').val(data.vendor_name);
-					$('#poCode').val(data.po_code);
-					$('#invoice').val(data.invoice_code);
-					$('#poCode').attr('disabled', 'disabled');
-					$('#DocCur').val(data.DocCur);
-					$('#DocRate').val(data.DocRate);
-
-					var ds = data.details;
-					var source = $("#receive-template").html();
-					var output = $("#receive-table");
-					render(source, ds, output);
-
-					$('#btn-confirm-po').addClass('hide');
-					$('#btn-get-po').removeClass('hide');
-
-					sumReceive();
-				}
-				else{
-					showError(rs);
-					$("#receive-table").html('');
-					sumReceive();
-				}
-			}
-		});
-	}
-}
-
-
-function accept() {
-	$('#accept-modal').on('shown.bs.modal', () => $('#accept-note').focus());
-	$('#accept-modal').modal('show');
-}
-
-
-function acceptConfirm(save_type) {
-	let code = $('#receive_code').val();
-	let note = $.trim($('#accept-note').val());
-
-	if(note.length < 10) {
-		$('#accept-error').text('กรุณาระบุหมายเหตุอย่างนี้อย 10 ตัวอักษร');
-		return false;
-	}
-	else {
-		$('#accept-error').text('');
-	}
-
-	$('#accept-modal').modal('hide');
-
-	load_in();
-
-	$.ajax({
-		url:HOME + 'accept_confirm',
-		type:'POST',
-		cache:false,
-		data:{
-			"code" : code,
-			"save_type" : save_type,
-			"accept_remark" : note
-		},
-		success:function(rs) {
-			load_out();
-			if(isJson(rs))
-			{
-				let ds = JSON.parse(rs);
-				if(ds.status === 'success') {
-					swal({
-						title:'Success',
-						type:'success',
-						timer:1000
-					});
-
-					setTimeout(() => {
-						window.location.reload();
-					}, 1200);
-				}
-				else if(ds.status === 'warning') {
-
-					swal({
-						title:'Warning',
-						text:ds.message,
-						type:'warning',
-						html:true
-					}, () => {
-						window.location.reload();
-					});
-				}
-				else {
-					swal({
-						title:'Error!',
-						text: rs,
-						type:'error',
-						html:true
-					});
-				}
-			}
-		}
-	});
-
+	$('#total-amount').val(addCommas(totalAmount.toFixed(2)));
 }

@@ -13,39 +13,17 @@
 		<?php $no = $this->uri->segment(4) + 1; ?>
 		<?php foreach($document as $rs) : ?>
 			<div class="move-list-item">
-				<div class="col-xs-1-harf text-center bold padding-5 move-list-status">
-					<?php if($rs->is_expire OR $rs->status == 2) : ?>
-						<?php if($rs->status == 2) : ?>
-							<span class="red"><strong>CN</strong></span>
-						<?php else : ?>
-							<span class="dark">EXP</span>
-						<?php endif; ?>
-					<?php else : ?>
-						<?php if($rs->status == 0 ) : ?>
-							<span class="blue"><strong>DF</strong></span>
-						<?php endif; ?>
-						<?php if($rs->status == 3 ) : ?>
-							<span class="purple"><strong>OP</strong></span>
-						<?php endif; ?>
-						<?php if($rs->status == 4) : ?>
-							<span class="orange"><strong>WC</strong></span>
-						<?php endif; ?>
-						<?php if($rs->status == 1) : ?>
-							<span class="green"><strong>OK</strong></span>
-						<?php endif; ?>
-					<?php endif; ?>
-				</div>
 				<div class="col-xs-9 padding-5" style="overflow:auto;">
 					<p class="move-list-line bold">
 						<?php echo $rs->code; ?>
 						<?php echo (empty($rs->po_code) ? "" : "&nbsp;&nbsp;[PO".$rs->po_code."]"); ?>
 					</p>
-					<p class="move-list-line bold"><?php echo $rs->vendor_name; ?></p>
+					<p class="move-list-line bold"><?php echo $rs->vender_name; ?></p>
 					<p class="move-list-line bold">วันที่ : <?php echo thai_date($rs->date_add, FALSE,'/'); ?>&nbsp;&nbsp;Invoice : <?php echo $rs->invoice_code; ?></p>
 					<p class="move-list-line bold">โซน : <?php echo $rs->zone_code; ?></p>
 				</div>
 				<?php if($this->pm->can_add OR $this->pm->can_edit) : ?>
-					<?php if($rs->status == 3) : ?>
+					<?php if($rs->status == 'O') : ?>
 						<a class="move-list-link font-size-24" href="javascript:processMobile('<?php echo $rs->code; ?>')"><i class="fa fa-angle-right"></i></a>
 					<?php else : ?>
 						<a class="move-list-link font-size-24" href="javascript:viewDetail('<?php echo $rs->code; ?>')"><i class="fa fa-angle-right"></i></a>

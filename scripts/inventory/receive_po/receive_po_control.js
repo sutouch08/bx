@@ -26,24 +26,19 @@ function addPoItems() {
 
 					let itemCode = el.data('code'); //--- product code;
 					let itemName = el.data('name');
-					let baseEntry = el.data('baseentry');
+					let baseCode = el.data('basecode');
 					let baseLine = el.data('baseline');
 					let price = parseDefault(parseFloat(el.data('price')), 0.00); //--- price Af discount
 					let limit = parseDefault(parseFloat(el.data('limit')), 0.00);
 					let backlogs = parseDefault(parseFloat(el.data('backlogs')), 0);
 					let amount = roundNumber(qty * price, 2);
-					let vatCode = el.data('vatcode');
-					let vatRate = parseDefault(parseFloat(el.data('vatrate')), 7);
-					let vatAmount = roundNumber(amount * (vatRate * 0.01), 2);
 
 					let item = {
 						'uid' : no,
 						'pdCode' : itemCode,
 						'pdName' : itemName,
-						'baseEntry' : baseEntry,
+						'baseCode' : baseCode,
 						'baseLine' : baseLine,
-						'vatCode' : vatCode,
-						'vatRate' : vatRate,
 						'price' : price,
 						'priceLabel' : addCommas(price.toFixed(3)),
 						'qty' : qty,
@@ -118,7 +113,6 @@ function recalTotal() {
 	$('#total-receive').val(addCommas(totalQty.toFixed(2)));
 	$('#total-amount').val(addCommas(totalAmount.toFixed(2)));
 }
-
 
 
 function toggleCheckAll(el) {
@@ -216,11 +210,9 @@ function getPoDetail(poCode) {
 				let ds = JSON.parse(rs);
 
 				if(ds.status === 'success') {
-					$('#po-code').val(ds.DocNum);
-					$('#DocCur').val(ds.DocCur);
-					$('#DocRate').val(ds.DocRate);
-					$('#vendor_code').val(ds.CardCode);
-					$('#vendorName').val(ds.CardName);
+					$('#po-code').val(ds.po_code);
+					$('#vender_code').val(ds.vender_code);
+					$('#venderName').val(ds.vender_name);
 
 					let source = $('#po-template').html();
 					let data = ds.details;
@@ -283,8 +275,8 @@ function getPoItems() {
 					$('#po-code').val(ds.DocNum);
 					$('#DocCur').val(ds.DocCur);
 					$('#DocRate').val(ds.DocRate);
-					$('#vendor_code').val(ds.CardCode);
-					$('#vendorName').val(ds.CardName);
+					$('#vender_code').val(ds.CardCode);
+					$('#venderName').val(ds.CardName);
 
 					let source = $('#po-template').html();
 					let data = ds.details;

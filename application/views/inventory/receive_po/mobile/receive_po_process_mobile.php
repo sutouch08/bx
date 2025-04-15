@@ -5,11 +5,7 @@
 <?php $this->load->view('inventory/receive_po/mobile/detail_mobile'); ?>
 <?php $this->load->view('inventory/receive_po/mobile/process_menu'); ?>
 
-<script src="<?php echo base_url(); ?>scripts/beep.js"></script>
-
 <script>
-	var HOME = BASE_URL + 'inventory/receive_po/';
-
 	window.addEventListener('load', () => {
 		focus_init();
 		bclick_init();
@@ -320,39 +316,25 @@
 			},
 			success:function(rs) {
 				load_out();
-				if(isJson(rs)) {
-					let ds = JSON.parse(rs);
 
-					if(ds.status === 'success') {
-						swal({
-							title:'Success',
-							type:'success',
-							timer:1000
-						});
+				if(rs.trim() === 'success') {
+					swal({
+						title:'Success',
+						type:'success',
+						timer:1000
+					});
 
-						setTimeout(() => {
-							viewDetail(h.code);
-						}, 1200);
-					}
-					else if(ds.status === 'warning') {
-						swal({
-							title:'Warning',
-							text: ds.message,
-							type:'warning',
-							html:true
-						}, () => {
-							viewDetail(h.code);
-						});
-					}
-					else {
-						showError(ds.message);
-					}
+					setTimeout(() => {
+						viewDetail(h.code);
+					}, 1200);
 				}
 				else {
+					beep();
 					showError(rs);
 				}
 			},
 			error:function(rs) {
+				beep();
 				showError(rs);
 			}
 		});
@@ -360,6 +342,8 @@
 
 
 	function forceClose() {
+		beep();
+		
 		swal({
 			title:'Force Close',
 			text:'สินค้าไม่ครบตามยอดส่ง ต้องการบังคับปิดเอกสารนี้หรือไม่ ?',
