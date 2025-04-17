@@ -27,9 +27,10 @@ class Invoice extends PS_Controller
 
     $filter = array(
       'code' => get_filter('code', 'ic_code', ''),
+      'reference' => get_filter('reference', 'ic_reference', ''),
       'customer' => get_filter('customer', 'ic_customer', ''),
-      'user' => get_filter('user', 'ic_user', ''),
-      'role' => get_filter('role', 'ic_role', ''),
+      'user' => get_filter('user', 'ic_user', 'all'),
+      'role' => get_filter('role', 'ic_role', 'all'),
       'channels' => get_filter('channels', 'ic_channels', ''),
       'from_date' => get_filter('from_date', 'ic_from_date', ''),
       'to_date' => get_filter('to_date', 'ic_to_date', ''),
@@ -38,18 +39,11 @@ class Invoice extends PS_Controller
       'order_by'   => get_filter('order_by', 'ic_order_by', ''),
       'sort_by' => get_filter('sort_by', 'ic_sort_by', ''),
       'is_valid' => get_filter('is_valid', 'ic_valid', 'all'),
-      'warehouse' => get_filter('warehouse', 'ic_warehouse', 'all'),
-			'is_exported' => get_filter('is_exported', 'ic_is_exported', 'all'),
-      'sap_status' => get_filter('sap_status', 'ic_sap_status', 'all')
+      'warehouse' => get_filter('warehouse', 'ic_warehouse', 'all')
     );
 
 		//--- แสดงผลกี่รายการต่อหน้า
 		$perpage = get_rows();
-		//--- หาก user กำหนดการแสดงผลมามากเกินไป จำกัดไว้แค่ 300
-		if($perpage > 300)
-		{
-			$perpage = 20;
-		}
 
 		$segment  = 4; //-- url segment
 		$rows     = $this->delivery_order_model->count_rows($filter, 8);
@@ -69,6 +63,7 @@ class Invoice extends PS_Controller
   {
     $this->load->model('inventory/qc_model');
     $this->load->helper('order');
+    $this->load->helper('channels');
     $this->load->helper('discount');
 
     $approve_view = isset($_GET['approve_view']) ? TRUE : NULL;
@@ -81,12 +76,7 @@ class Invoice extends PS_Controller
     {
       $this->load->model('masters/zone_model');
 
-      $order->zone_name = $this->zone_model->get_name($order->zone_code);
-
-      if($order->role == 'N')
-      {
-        $order->is_received = $this->invoice_model->is_received($order->code);
-      }
+      $order->zone_name = $this->zone_model->get_name($order->zone_code);      
     }
 
     $details = $this->invoice_model->get_billed_detail($code);
@@ -129,6 +119,7 @@ class Invoice extends PS_Controller
   {
     $filter = array(
       'ic_code',
+      'ic_reference',
       'ic_customer',
       'ic_user',
       'ic_role',
@@ -140,11 +131,10 @@ class Invoice extends PS_Controller
       'ic_order_by',
       'ic_sort_by',
       'ic_valid',
-      'ic_warehouse',
-			'ic_is_exported',
-      'ic_sap_status'
+      'ic_warehouse'
     );
-    clear_filter($filter);
+
+    return clear_filter($filter);
   }
 
 

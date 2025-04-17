@@ -31,12 +31,16 @@ class Delivery_order_model extends CI_Model
     else
     {
       $this->db->where('id >', $this->get_max_id());
-      // $this->db->where('date_add >=', from_date($this->_dataDate));
     }
 
     if( ! empty($ds['code']))
     {
       $this->db->like('code', $ds['code']);
+    }
+
+    if( ! empty($ds['reference']))
+    {
+      $this->db->like('reference', $ds['reference']);
     }
 
     if(! empty($ds['customer']))
@@ -49,15 +53,12 @@ class Delivery_order_model extends CI_Model
       ->group_end();
     }
 
-    //---- user name / display name
-    if( ! empty($ds['user']))
+    if(isset($ds['user']) && $ds['user'] != 'all')
     {
-      $users = user_in($ds['user']);
-      $this->db->where_in('user', $users);
+      $this->db->where('user', $ds['user']);
     }
 
-
-    if(!empty($ds['role']))
+    if(isset($ds['role']) && $ds['role'] != 'all')
     {
       $this->db->where('role', $ds['role']);
     }
@@ -67,40 +68,14 @@ class Delivery_order_model extends CI_Model
       $this->db->where('channels_code', $ds['channels']);
     }
 
-
     if(!empty($ds['warehouse']) && $ds['warehouse'] != 'all')
     {
       $this->db->where('warehouse_code', $ds['warehouse']);
     }
 
-
     if(isset($ds['is_valid']) && $ds['is_valid'] != 'all')
     {
       $this->db->where('is_valid', $ds['is_valid']);
-    }
-
-		if(isset($ds['is_exported']) && $ds['is_exported'] != 'all')
-		{
-      if($ds['is_exported'] == '3')
-      {
-        $this->db->where('inv_code IS NULL');
-      }
-
-			$this->db->where('is_exported', $ds['is_exported']);
-		}
-
-
-    if(isset($ds['sap_status']) && $ds['sap_status'] != 'all')
-    {
-      if($ds['sap_status'] == 'Y')
-      {
-        $this->db->where('inv_code IS NOT NULL', NULL, FALSE);
-      }
-
-      if($ds['sap_status'] == 'N')
-      {
-        $this->db->where('inv_code IS NULL', NULL, FALSE);
-      }
     }
 
     if(isset($ds['ship_from_date']) && $ds['ship_from_date'] != '')
@@ -137,12 +112,16 @@ class Delivery_order_model extends CI_Model
     else
     {
       $this->db->where('id >', $this->get_max_id());
-      // $this->db->where('date_add >=', from_date($this->_dataDate));
     }
 
     if( ! empty($ds['code']))
     {
       $this->db->like('code', $ds['code']);
+    }
+
+    if( ! empty($ds['reference']))
+    {
+      $this->db->like('reference', $ds['reference']);
     }
 
     if(! empty($ds['customer']))
@@ -155,15 +134,12 @@ class Delivery_order_model extends CI_Model
       ->group_end();
     }
 
-    //---- user name / display name
-    if( ! empty($ds['user']))
+    if(isset($ds['user']) && $ds['user'] != 'all')
     {
-      $users = user_in($ds['user']);
-      $this->db->where_in('user', $users);
+      $this->db->where('user', $ds['user']);
     }
 
-
-    if(!empty($ds['role']))
+    if(isset($ds['role']) && $ds['role'] != 'all')
     {
       $this->db->where('role', $ds['role']);
     }
@@ -173,39 +149,14 @@ class Delivery_order_model extends CI_Model
       $this->db->where('channels_code', $ds['channels']);
     }
 
-
     if(!empty($ds['warehouse']) && $ds['warehouse'] != 'all')
     {
       $this->db->where('warehouse_code', $ds['warehouse']);
     }
 
-
     if(isset($ds['is_valid']) && $ds['is_valid'] != 'all')
     {
       $this->db->where('is_valid', $ds['is_valid']);
-    }
-
-		if(isset($ds['is_exported']) && $ds['is_exported'] != 'all')
-		{
-      if($ds['is_exported'] == '3')
-      {
-        $this->db->where('inv_code IS NULL');
-      }
-
-			$this->db->where('is_exported', $ds['is_exported']);
-		}
-
-    if(isset($ds['sap_status']) && $ds['sap_status'] != 'all')
-    {
-      if($ds['sap_status'] == 'Y')
-      {
-        $this->db->where('inv_code IS NOT NULL', NULL, FALSE);
-      }
-
-      if($ds['sap_status'] == 'N')
-      {
-        $this->db->where('inv_code IS NULL', NULL, FALSE);
-      }
     }
 
     if(isset($ds['ship_from_date']) && $ds['ship_from_date'] != '')
@@ -323,14 +274,11 @@ class Delivery_order_model extends CI_Model
     }
 
 
-
-
     //------------- สำหรับใช้ในการบันทึกขาย ---------//
     //--- รายการสั้งซื้อ รายการจัดสินค้า รายการตรวจสินค้า
     //--- เปรียบเทียบยอดที่มีการสั่งซื้อ และมีการตรวจสอนค้า
     //--- เพื่อให้ได้ยอดที่ต้องเปิดบิล บันทึกขายจริงๆ
     //--- ผลลัพธ์จะไม่ได้ยอดที่มีการสั่งซื้อแต่ไม่มียอดตรวจ หรือ มียอดตรวจแต่ไม่มียอดสั่งซื้อ (กรณีมีการแก้ไขออเดอร์)
-
     public function get_bill_detail($code)
     {
       $qr = "SELECT o.id, o.style_code, o.product_code, o.product_name, o.qty AS order_qty, ";
@@ -396,7 +344,7 @@ class Delivery_order_model extends CI_Model
         return $rs->row()->id - 200000;
       }
 
-      return 2000000;
+      return 200000;
     }
 }
 

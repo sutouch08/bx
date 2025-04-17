@@ -206,9 +206,7 @@ class Consign_tr extends PS_Controller
     $data = json_decode($this->input->post('data'));
 
     if( ! empty($data))
-    {
-      $book_code = getConfig('BOOK_CODE_CONSIGN_TR');
-
+    {      
       $date_add = db_date($data->date_add);
 
       $code = $this->get_new_code($date_add);
@@ -233,7 +231,6 @@ class Consign_tr extends PS_Controller
               'date_add' => $date_add,
               'code' => $code,
               'role' => $role,
-              'bookcode' => $book_code,
               'customer_code' => $customer->code,
               'customer_name' => $customer->name,
               'gp' => $gp,
@@ -850,7 +847,7 @@ class Consign_tr extends PS_Controller
       'consign_toDate',
       'consign_isApprove',
       'consign_isValid',
-			'consign_warehouse',		
+			'consign_warehouse',
       'consign_is_backorder',
       'consign_sap_status',
       'consign_notSave',

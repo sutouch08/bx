@@ -120,17 +120,24 @@ function get_summary($order, $details, $banks)
 }
 
 
-function select_order_role($role = '')
+function select_order_role($role = NULL)
 {
+	$roles = array(
+		'S' => 'ขาย',
+		'C' => 'ฝากขายเทียม',
+		'N' => 'ฝากขายแท้',
+		'P' => 'สปอนเซอร์',
+		//'U' => 'อภินันท์',
+		'T' => 'แปรสภาพเพื่อขาย',
+		//'Q' => 'แปรสภาพเพื่อสต็อก',
+		'L' => 'ยืมสินค้า'
+	);
+
 	$sc = '';
-	$CI =& get_instance();
-	$rs = $CI->db->query("SELECT * FROM order_role");
-	if($rs->num_rows() > 0)
+
+	foreach($roles as $key => $name)
 	{
-		foreach($rs->result() as $rd)
-		{
-			$sc .= '<option value="'.$rd->code.'" '.is_selected($role, $rd->code).'>'.$rd->name.'</option>';
-		}
+		$sc .= '<option value="'.$key.'" '.is_selected($role, $key).'>'.$name.'</option>';
 	}
 
 	return $sc;

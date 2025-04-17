@@ -17,7 +17,8 @@ class Prepare extends PS_Controller
     $this->load->model('inventory/prepare_model');
     $this->load->model('orders/orders_model');
     $this->load->model('orders/order_state_model');
-    $this->load->model('masters/warehouse_model');    
+    $this->load->model('masters/warehouse_model');
+    $this->load->model('stock/stock_model');
   }
 
 
@@ -215,18 +216,19 @@ class Prepare extends PS_Controller
   public function get_inline_stock_in_zone($item_code, $warehouse = NULL)
   {
     $sc = "ไม่มีสินค้า";
-    $this->load->model('stock/stock_model');
+
     $stock = $this->stock_model->get_stock_in_zone($item_code, $warehouse);
-    if(!empty($stock))
+
+    if( ! empty($stock))
     {
       $sc = "";
+      $i = 1;
       foreach($stock as $rs)
       {
-        $prepared = $this->prepare_model->get_buffer_zone($item_code, $rs->code);
-        $qty = $rs->qty - $prepared;
-        if($qty > 0)
+        if($rs->qty > 0)
         {
-          $sc .= $rs->name.' : '.($rs->qty - $prepared).' | ';
+          $sc .= $i == 1 ? ($rs->name.' : '.$rs->qty) : (' | '.$rs->name.' : '.$rs->qty);
+          $i++;
         }
       }
     }
@@ -255,7 +257,6 @@ class Prepare extends PS_Controller
   }
 
 
-
   public function process($code, $view = NULL)
   {
     $this->load->model('masters/customers_model');
@@ -269,12 +270,12 @@ class Prepare extends PS_Controller
     if( ! empty($order))
     {
       //--- check cancel request
-      $is_cancel = $this->orders_model->is_cancel_request($order->code);
-
-      if( ! $is_cancel && ! empty($order->reference) && ($order->channels_code == '0009'))
-      {
-        $is_cancel = $this->is_cancel($order->reference, $order->channels_code);
-      }
+      // $is_cancel = $this->orders_model->is_cancel_request($order->code);
+      //
+      // if( ! $is_cancel && ! empty($order->reference) && ($order->channels_code == '0009'))
+      // {
+      //   $is_cancel = $this->is_cancel($order->reference, $order->channels_code);
+      // }
 
       if( ! $is_cancel)
       {
@@ -309,7 +310,7 @@ class Prepare extends PS_Controller
 
         $uncomplete = $this->orders_model->get_unvalid_details($code);
 
-        if(!empty($uncomplete))
+        if( ! empty($uncomplete))
         {
           foreach($uncomplete as $rs)
           {
@@ -322,7 +323,7 @@ class Prepare extends PS_Controller
 
         $complete = $this->orders_model->get_valid_details($code);
 
-        if(!empty($complete))
+        if( ! empty($complete))
         {
           foreach($complete as $rs)
           {
@@ -460,9 +461,9 @@ class Prepare extends PS_Controller
       $this->load->model('masters/products_model');
 
       $order_code = $this->input->post('order_code');
-      $zone_code  = $this->input->post('zone_code');
-      $barcode    = $this->input->post('barcode');
-      $qty        = $this->input->post('qty');
+      $zone_code = $this->input->post('zone_code');
+      $barcode = $this->input->post('barcode');
+      $qty = $this->input->post('qty');
 
       $state = $this->orders_model->get_state($order_code);
       //--- ตรวจสอบสถานะออเดอร์ 4 == กำลังจัดสินค้า
@@ -476,18 +477,16 @@ class Prepare extends PS_Controller
         }
 
         //--- ตรวจสอบบาร์โค้ดที่ยิงมา
-        if(!empty($item))
+        if( ! empty($item))
         {
           if($item->count_stock == 1)
           {
-            //---- มีสินค้านี้อยู่ในออเดอร์หรือไม่ ถ้ามี รวมยอดมา อาจมีมาก
+            //---- มีสินค้านี้อยู่ในออเดอร์หรือไม่ ถ้ามี รวมยอดมา
             $ds = $this->orders_model->get_unvalid_order_detail($order_code, $item->code);
-            //$orderQty = $this->orders_model->get_sum_item_qty($order_code, $item->code);
 
             if( ! empty($ds))
             {
               //--- ดึงยอดที่จัดแล้ว
-              // $prepared = $this->get_prepared($order_code, $item->code);
               $prepared = $this->prepare_model->get_prepared($order_code, $item->code, $ds->id);
 
               //--- ยอดคงเหลือค้างจัด
@@ -499,23 +498,34 @@ class Prepare extends PS_Controller
                 $sc = FALSE;
                 $this->error = "สินค้าเกิน กรุณาคืนสินค้าแล้วจัดสินค้าใหม่อีกครั้ง";
               }
-              else
+
+              if($sc === TRUE)
               {
-                $stock = $this->get_stock_zone($zone_code, $item->code); //1000;
+                $stock = $this->stock_model->get_stock_zone($zone_code, $item->code);
 
                 if($stock < $qty)
                 {
                   $sc = FALSE;
                   $this->error = "สินค้าไม่เพียงพอ กรุณากำหนดจำนวนสินค้าใหม่";
                 }
-                else
+
+                if($sc === TRUE)
                 {
                   $this->db->trans_begin();
 
-                  if( ! $this->prepare_model->update_buffer($order_code, $item->code, $zone_code, $qty, $ds->id))
+                  if( ! $this->stock_model->update_stock_zone($zone_code, $item->code, ($qty * -1)))
                   {
                     $sc = FALSE;
-                    $this->error = "Failed to update buffer";
+                    $this->error = "Failed to update stock qty";
+                  }
+
+                  if($sc === TRUE)
+                  {
+                    if( ! $this->prepare_model->update_buffer($order_code, $item->code, $zone_code, $qty, $ds->id))
+                    {
+                      $sc = FALSE;
+                      $this->error = "Failed to update buffer";
+                    }
                   }
 
                   if($sc === TRUE)
@@ -548,7 +558,6 @@ class Prepare extends PS_Controller
                   }
                 }
               }
-
             }
             else
             {
@@ -671,20 +680,19 @@ class Prepare extends PS_Controller
   public function get_stock_in_zone($item_code, $warehouse = NULL)
   {
     $sc = "ไม่มีสินค้า";
-    $this->load->model('stock/stock_model');
+
     $stock = $this->stock_model->get_stock_in_zone($item_code, $warehouse);
-    if(!empty($stock))
+
+    if( ! empty($stock))
     {
       $sc = "";
+
       foreach($stock as $rs)
       {
-        $prepared = $this->prepare_model->get_buffer_zone($item_code, $rs->code);
-        $qty = $rs->qty - $prepared;
-        if($qty > 0)
+        if($rs->qty > 0)
         {
-          $sc .= $rs->name.' : '.($rs->qty - $prepared).'<br/>';
+          $sc .= $rs->name.' : '.$rs->qty.'<br/>';
         }
-
       }
     }
 
@@ -709,33 +717,33 @@ class Prepare extends PS_Controller
     echo json_encode($arr);
   }
 
-  //---- สินค้าคงเหลือในโซน ลบด้วย สินค้าที่จัดไปแล้ว
-  public function get_stock_zone($zone_code, $item_code)
-  {
-    $this->load->model('stock/stock_model');
-    $this->load->model('masters/warehouse_model');
-    $this->load->model('masters/zone_model');
-
-    $zone = $this->zone_model->get($zone_code);
-    $wh = $this->warehouse_model->get($zone->warehouse_code);
-    $gb_auz = getConfig('ALLOW_UNDER_ZERO');
-    $wh_auz = $wh->auz == 1 ? TRUE : FALSE;
-    $auz = $gb_auz == 1 ? TRUE : $wh_auz;
-
-    if($auz === TRUE)
-    {
-      return 1000000;
-    }
-
-    //---- สินค้าคงเหลือในโซน
-    $stock = $this->stock_model->get_stock_zone($zone_code, $item_code);
-
-    //--- ยอดจัดสินค้าที่จัดออกจากโซนนี้ไปแล้ว แต่ยังไม่ได้ตัด
-    $prepared = $this->prepare_model->get_prepared_zone($zone_code, $item_code);
-
-
-    return $stock - $prepared;
-  }
+  // //---- สินค้าคงเหลือในโซน ลบด้วย สินค้าที่จัดไปแล้ว
+  // public function get_stock_zone($zone_code, $item_code)
+  // {
+  //   $this->load->model('stock/stock_model');
+  //   $this->load->model('masters/warehouse_model');
+  //   $this->load->model('masters/zone_model');
+  //
+  //   $zone = $this->zone_model->get($zone_code);
+  //   $wh = $this->warehouse_model->get($zone->warehouse_code);
+  //   $gb_auz = getConfig('ALLOW_UNDER_ZERO');
+  //   $wh_auz = $wh->auz == 1 ? TRUE : FALSE;
+  //   $auz = $gb_auz == 1 ? TRUE : $wh_auz;
+  //
+  //   if($auz === TRUE)
+  //   {
+  //     return 1000000;
+  //   }
+  //
+  //   //---- สินค้าคงเหลือในโซน
+  //   $stock = $this->stock_model->get_stock_zone($zone_code, $item_code);
+  //
+  //   //--- ยอดจัดสินค้าที่จัดออกจากโซนนี้ไปแล้ว แต่ยังไม่ได้ตัด
+  //   $prepared = $this->prepare_model->get_prepared_zone($zone_code, $item_code);
+  //
+  //
+  //   return $stock - $prepared;
+  // }
 
 
   public function set_zone_label($value)

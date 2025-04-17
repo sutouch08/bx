@@ -279,5 +279,22 @@ class Buffer_model extends CI_Model
 
     return $this->db->delete('buffer');
   }
+
+
+  public function get_product_buffer_zone($zone_code, $product_code)
+  {
+    $rs = $this->db
+    ->select_sum('qty')
+    ->where('zone_code', $zone_code)
+    ->where('product_code', $product_code)
+    ->get('buffer');
+
+    if($rs->num_rows() === 1)
+    {
+      return $rs->row()->qty > 0 ? $rs->row()->qty : 0;
+    }
+
+    return 0;
+  }
 }
  ?>

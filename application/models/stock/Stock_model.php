@@ -71,9 +71,9 @@ class stock_model extends CI_Model
     ->where('zone_code', $zone_code)
     ->get($this->tb);
 
-    if($rs->num_rows() === 1)
+    if($rs->num_rows() == 1)
     {
-      return intval($rs->row()->qty);
+      return get_zero($rs->row()->qty);
     }
 
     return 0;

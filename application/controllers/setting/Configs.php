@@ -19,7 +19,7 @@ class Configs extends PS_Controller
 
 
 
-  public function index($tab = 'general')
+  public function index($tab = 'company')
   {
     $groups = $this->config_model->get_group();
     $ps = get_permission('SCSYSC');
@@ -42,7 +42,6 @@ class Configs extends PS_Controller
 
     $this->load->view('setting/configs', $ds);
   }
-
 
 
   public function update_config()

@@ -30,6 +30,24 @@ function get_state_name($state)
 }
 
 
+function state_name($state = 1)
+{
+  $name = array(
+    '1' => 'รอดำเนินการ',
+    '2' => 'รอชำระเงิน',
+    '3' => 'รอจัดสินค้า',
+    '4' => 'กำลังจัดสินค้า',
+    '5' => 'รอตรวจสินค้า',
+    '6' => 'กำลังตรวจสินค้า',
+    '7' => 'รอการจัดส่ง',
+    '8' => 'จัดส่งแล้ว',
+    '9' => 'ยกเลิก'
+  );
+
+  return $name[$state];
+}
+
+
 function state_color($state, $is_saved = 1, $is_expired = 0)
 {
   if($is_saved == 0 && $is_expired == 0)
@@ -70,28 +88,5 @@ function state_color($state, $is_saved = 1, $is_expired = 0)
     return $color[$state];
   }
 }
-
-function soko_state_list_array()
-{
-  $stateList = array(
-    'Pending' => 30,
-    'Processing' => 31,
-    'Processed' => 32,
-    'Picked' => 33,
-    'Packed' => 34,
-    'Shipped' => 35,
-    'Cancelled' => 36,
-    'pending' => 30,
-    'processing' => 31,
-    'processed' => 32,
-    'picked' => 33,
-    'packed' => 34,
-    'shipped' => 35,
-    'cancelled' => 36
-  );
-
-  return $stateList;
-}
-
 
 ?>

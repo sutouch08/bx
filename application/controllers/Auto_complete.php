@@ -8,6 +8,44 @@ class Auto_complete extends CI_Controller
     parent::__construct();
   }
 
+  public function get_sponsor()
+  {
+    $ds = array();
+    $txt = trim($_REQUEST['term']);
+
+    $this->db
+    ->select('cs.code, cs.name')
+    ->from('sponsor AS sp')
+    ->join('customers AS cs', 'sp.customer_code = cs.code', 'left')
+    ->where('sp.active', 1);
+
+    if($txt != '*')
+    {
+      $this->db
+      ->group_start()
+      ->like('cs.code', $txt)
+      ->or_like('cs.name', $txt)
+      ->group_end();
+    }
+
+    $sp = $this->db->order_by('cs.name', 'DESC')->limit(50)->get();
+
+    if($sp->num_rows() > 0)
+    {
+      foreach($sp->result() as $rs)
+      {
+        $sc[] = $rs->code.' | '.$rs->name;
+      }
+    }
+    else
+    {
+      $sc[] = 'notfound';
+    }
+
+    echo json_encode($sc);
+  }
+  
+
   public function get_vender_code_and_name()
   {
     $sc = array();
@@ -393,7 +431,7 @@ class Auto_complete extends CI_Controller
   }
 
 
-	public function province()
+  public function province()
   {
     $sc = array();
     $adr = $this->db->select("province")

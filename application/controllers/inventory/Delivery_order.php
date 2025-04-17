@@ -26,12 +26,15 @@ class Delivery_order extends PS_Controller
   {
     $filter = array(
       'code' => get_filter('code', 'ic_code', ''),
+      'reference' => get_filter('reference', 'ic_reference', ''),
       'customer' => get_filter('customer', 'ic_customer', ''),
-      'user' => get_filter('user', 'ic_user', ''),
-      'role' => get_filter('role', 'ic_role', ''),
+      'user' => get_filter('user', 'ic_user', 'all'),
+      'role' => get_filter('role', 'ic_role', 'all'),
       'channels' => get_filter('channels', 'ic_channels', ''),
       'from_date' => get_filter('from_date', 'ic_from_date', ''),
       'to_date' => get_filter('to_date', 'ic_to_date', ''),
+      'ship_from_date' => get_filter('ship_from_date', 'ic_ship_from_date', ''),
+      'ship_to_date' => get_filter('ship_to_date', 'ic_ship_to_date', ''),
       'sort_by' => get_filter('sort_by', 'ic_sort_by', ''),
       'order_by' => get_filter('order_by', 'ic_order_by', ''),
       'warehouse' => get_filter('warehouse', 'ic_warehouse', 'all'),
@@ -91,37 +94,18 @@ class Delivery_order extends PS_Controller
     $sc = TRUE;
 
     $this->load->model('masters/products_model');
+    $this->load->model('masters/zone_model');
     $this->load->model('inventory/buffer_model');
     $this->load->model('inventory/qc_model');
     $this->load->model('inventory/cancle_model');
     $this->load->model('inventory/movement_model');
+    $this->load->model('stock/stock_model');
     $this->load->helper('discount');
 
     $code = $this->input->post('order_code');
     $order = $this->orders_model->get($code);
 
-    if( ! empty($order))
-    {
-      //--- check cancel request
-      if($this->orders_model->is_cancel_request($order->code))
-      {
-        $sc = FALSE;
-        $this->error = "ออเดอร์ถูกยกเลิกบน Platform แล้ว";
-      }
-
-      if($sc === TRUE)
-      {
-        if( ! empty($order->reference) && ($order->channels_code == '0009'))
-        {
-          if($this->is_cancel($order->reference, $order->channels_code))
-          {
-            $sc = FALSE;
-            $this->error = "ออเดอร์ถูกยกเลิกบน Platform แล้ว";
-          }
-        }
-      }
-    }
-    else
+    if(empty($order))
     {
       $sc = FALSE;
       $this->error = "Order Not Found";
@@ -130,15 +114,31 @@ class Delivery_order extends PS_Controller
     if($sc === TRUE)
     {
 			$date_add = getConfig('ORDER_SOLD_DATE') == 'D' ? $order->date_add : now();
+      $toWhsCode = NULL;
 
       if($order->role == 'T' OR $order->role == 'Q')
       {
         $this->load->model('inventory/transform_model');
+        $toWhsCode = $this->zone_model->get_warehouse_code($order->zone_code);
       }
 
       if($order->role == 'L')
       {
         $this->load->model('inventory/lend_model');
+        $toWhsCode = $this->zone_model->get_warehouse_code($order->zone_code);
+      }
+
+      //---- กรณีฝากขาย (โอนคลัง)
+      if($order->role == 'N' OR $order->role == 'C')
+      {
+        $this->load->model('orders/consign_model');
+        $toWhsCode = $this->zone_model->get_warehouse_code($order->zone_code);
+      }
+
+      //-- กรณี สปอนเซอร์
+      if($order->role == 'P')
+      {
+        $this->load->model('masters/sponsor_budget_model');
       }
 
       if($order->state == 7)
@@ -146,24 +146,26 @@ class Delivery_order extends PS_Controller
         $this->db->trans_begin();
 
         //--- change state
-       $this->orders_model->change_state($code, 8);
+        $this->orders_model->change_state($code, 8);
 
-			 if(empty($order->shipped_date))
-			 {
-				 $this->orders_model->update($code, array('shipped_date' => now())); //--- update shipped date
-			 }
+        if(empty($order->shipped_date))
+        {
+          $this->orders_model->update($code, array('shipped_date' => now())); //--- update shipped date
+        }
 
         //--- add state event
         $arr = array(
           'order_code' => $code,
           'state' => 8,
-          'update_user' => get_cookie('uname')
+          'update_user' => $this->_user->uname
         );
 
         $this->order_state_model->add_state($arr);
 
         //---- รายการทีรอการเปิดบิล
         $bill = $this->delivery_order_model->get_bill_detail($code);
+
+        $docTotal = 0;
 
         if( ! empty($bill))
         {
@@ -225,43 +227,75 @@ class Delivery_order extends PS_Controller
                       'date_add' => $date_add
                     );
 
-                    if($this->movement_model->add($arr) === FALSE)
+                    if( ! $this->movement_model->add($arr))
                     {
                       $sc = FALSE;
-                      $message = 'บันทึก movement ขาออกไม่สำเร็จ';
+                      $this->error = 'บันทึก movement ขาออกไม่สำเร็จ';
                       break;
                     }
 
-                    $item = $this->products_model->get($rs->product_code);
+                    //--- กรณีที่ต้องมีการโอนสินค้าเข้าปลายทาง
+                    if($order->role === 'N' OR $order->role === 'C' OR $order->role === 'T' OR $order->role === 'Q' OR $order->role === 'L')
+                    {
+                      //--- 1. เพิ่มสต็อกเข้าโซนปลายทาง
+                      if( ! $this->stock_model->update_stock_zone($order->zone_code, $rm->product_code, $buffer_qty))
+                      {
+                        $sc = FALSE;
+                        $this->error = 'โอนสินค้าเข้าโซนปลายทางไม่สำเร็จ';
+                      }
+
+                      //--- 2. เพิ่ม movement เข้าปลายทาง
+                      $arr = array(
+                        'reference' => $order->code,
+                        'warehouse_code' => $toWhsCode,
+                        'zone_code' => $order->zone_code,
+                        'product_code' => $rm->product_code,
+                        'move_in' => $buffer_qty,
+                        'move_out' => 0,
+                        'date_add' => $date_add
+                      );
+
+                      if( ! $this->movement_model->add($arr))
+                      {
+                        $sc = FALSE;
+                        $this->error = 'บันทึก movement ขาเข้าไม่สำเร็จ';
+                        break;
+                      }
+                    }
+
+                    $total_amount = $rs->final_price * $buffer_qty;
+                    $total_cost = $rs->cost * $buffer_qty;
+                    $docTotal += $total_amount;
 
                     //--- ข้อมูลสำหรับบันทึกยอดขาย
                     $arr = array(
                       'reference' => $order->code,
-                      'role'   => $order->role,
-                      'payment_code'   => $order->payment_code,
-                      'channels_code'  => $order->channels_code,
-                      'product_code'  => $rs->product_code,
-                      'product_name'  => $item->name,
-                      'product_style' => $item->style_code,
-                      'cost'  => $rs->cost,
-                      'price'  => $rs->price,
-                      'sell'  => $rs->final_price,
-                      'qty'   => $buffer_qty,
-                      'discount_label'  => discountLabel($rs->discount1, $rs->discount2, $rs->discount3),
+                      'role' => $order->role,
+                      'payment_code' => $order->payment_code,
+                      'channels_code' => $order->channels_code,
+                      'product_code' => $rs->product_code,
+                      'product_name' => $rs->product_name,
+                      'product_style' => $rs->style_code,
+                      'cost' => $rs->cost,
+                      'price' => $rs->price,
+                      'sell' => $rs->final_price,
+                      'qty' => $buffer_qty,
+                      'discount_label' => discountLabel($rs->discount1, $rs->discount2, $rs->discount3),
                       'discount_amount' => ($rs->discount_amount * $buffer_qty),
-                      'total_amount'   => $rs->final_price * $buffer_qty,
-                      'total_cost'   => $rs->cost * $buffer_qty,
-                      'margin'  =>  ($rs->final_price * $buffer_qty) - ($rs->cost * $buffer_qty),
-                      'id_policy'   => $rs->id_policy,
-                      'id_rule'     => $rs->id_rule,
+                      'total_amount' => $total_amount,
+                      'total_cost' => $total_cost,
+                      'margin' => $total_amount - $total_cost,
+                      'id_policy' => $rs->id_policy,
+                      'id_rule' => $rs->id_rule,
                       'customer_code' => $order->customer_code,
                       'customer_ref' => $order->customer_ref,
-                      'sale_code'   => $order->sale_code,
+                      'sale_code' => $order->sale_code,
                       'user' => $order->user,
-                      'date_add'  => $date_add, //---- เปลี่ยนไปตาม config ORDER_SOLD_DATE
+                      'date_add' => $date_add,
                       'zone_code' => $rm->zone_code,
-                      'warehouse_code'  => $rm->warehouse_code,
+                      'warehouse_code' => $rm->warehouse_code,
                       'update_user' => get_cookie('uname'),
+                      'budget_id' => $order->budget_id,
                       'budget_code' => $order->budget_code,
                       'empID' => $order->empID,
                       'empName' => $order->empName,
@@ -276,10 +310,8 @@ class Delivery_order extends PS_Controller
                       $this->error = 'บันทึกขายไม่สำเร็จ';
                       break;
                     }
-
                   } //--- end if sell_qty > 0
                 } //--- end foreach $buffers
-
               } //--- end if wmpty ($buffers)
 
 
@@ -294,7 +326,7 @@ class Delivery_order extends PS_Controller
                 //--- ถ้ามีการเชื่อมโยงไว้ ยอดต้องมากกว่า 0 ถ้ายอดเป็น 0 แสดงว่าไม่ได้เชื่อมโยงไว้
                 $trans_list = $this->transform_model->get_transform_product($rs->id);
 
-                if(!empty($trans_list))
+                if( ! empty($trans_list))
                 {
                   //--- ถ้าไม่มีการเชื่อมโยงไว้
                   foreach($trans_list as $ts)
@@ -329,11 +361,11 @@ class Delivery_order extends PS_Controller
                 $sold_qty = ($rs->order_qty >= $rs->qc) ? $rs->qc : $rs->order_qty;
 
                 $arr = array(
-                'order_code' => $code,
-                'product_code' => $rs->product_code,
-                'product_name' => $rs->product_name,
-                'qty' => $sold_qty,
-                'empID' => $order->empID
+                  'order_code' => $code,
+                  'product_code' => $rs->product_code,
+                  'product_name' => $rs->product_name,
+                  'qty' => $sold_qty,
+                  'empID' => $order->empID
                 );
 
                 if($this->lend_model->add_detail($arr) === FALSE)
@@ -343,18 +375,13 @@ class Delivery_order extends PS_Controller
                 }
               }
             }
-
           } //--- end foreach $bill
-
         } //--- end if empty($bill)
-
-
-
 
         //--- เคลียร์ยอดค้างที่จัดเกินมาไปที่ cancle หรือ เคลียร์ยอดที่เป็น 0
         $buffer = $this->buffer_model->get_all_details($code);
         //--- ถ้ายังมีรายการที่ค้างอยู่ใน buffer เคลียร์เข้า cancle
-        if(!empty($buffer))
+        if( ! empty($buffer))
         {
           foreach($buffer as $rs)
           {
@@ -391,38 +418,43 @@ class Delivery_order extends PS_Controller
         //--- บันทึกขายรายการที่ไม่นับสต็อก
         $bill = $this->delivery_order_model->get_non_count_bill_detail($order->code);
 
-        if(!empty($bill))
+        if( ! empty($bill))
         {
           foreach($bill as $rs)
           {
+            $total_amount = $rs->final_price * $rs->qty;
+            $total_cost = $rs->cost * $rs->qty;
+            $docTotal += $total_amount;
+
             //--- ข้อมูลสำหรับบันทึกยอดขาย
             $arr = array(
               'reference' => $order->code,
-              'role'   => $order->role,
-              'payment_code'   => $order->payment_code,
-              'channels_code'  => $order->channels_code,
-              'product_code'  => $rs->product_code,
-              'product_name'  => $rs->product_name,
+              'role' => $order->role,
+              'payment_code' => $order->payment_code,
+              'channels_code' => $order->channels_code,
+              'product_code' => $rs->product_code,
+              'product_name' => $rs->product_name,
               'product_style' => $rs->style_code,
-              'cost'  => $rs->cost,
-              'price'  => $rs->price,
-              'sell'  => $rs->final_price,
-              'qty'   => $rs->qty,
-              'discount_label'  => discountLabel($rs->discount1, $rs->discount2, $rs->discount3),
+              'cost' => $rs->cost,
+              'price' => $rs->price,
+              'sell' => $rs->final_price,
+              'qty' => $rs->qty,
+              'discount_label' => discountLabel($rs->discount1, $rs->discount2, $rs->discount3),
               'discount_amount' => ($rs->discount_amount * $rs->qty),
-              'total_amount'   => $rs->final_price * $rs->qty,
-              'total_cost'   => $rs->cost * $rs->qty,
-              'margin'  => ($rs->final_price * $rs->qty) - ($rs->cost * $rs->qty),
-              'id_policy'   => $rs->id_policy,
-              'id_rule'     => $rs->id_rule,
+              'total_amount' => $total_amount,
+              'total_cost' => $total_cost,
+              'margin' => $total_amount - $total_cost,
+              'id_policy' => $rs->id_policy,
+              'id_rule' => $rs->id_rule,
               'customer_code' => $order->customer_code,
               'customer_ref' => $order->customer_ref,
-              'sale_code'   => $order->sale_code,
+              'sale_code' => $order->sale_code,
               'user' => $order->user,
-              'date_add'  => $date_add, //--- เปลี่ยนตาม Config ORDER_SOLD_DATE
+              'date_add' => $date_add,
               'zone_code' => NULL,
-              'warehouse_code'  => NULL,
+              'warehouse_code' => NULL,
               'update_user' => get_cookie('uname'),
+              'budget_id' => $order->budget_id,
               'budget_code' => $order->budget_code,
               'is_count' => 0,
               'empID' => $order->empID,
@@ -442,13 +474,44 @@ class Delivery_order extends PS_Controller
 
         if($sc === TRUE)
         {
-          $doc_total = $this->delivery_order_model->get_billed_amount($code);
-
-          if( ! $this->orders_model->update($code, array('doc_total' => $doc_total)))
+          if( ! $this->orders_model->update($code, array('doc_total' => $docTotal)))
           {
             $sc = FALSE;
             $this->error = "Failed to update doc total";
           }
+        }
+
+        if($sc === TRUE && $order->role == 'P')
+        {
+          $bd = $this->sponsor_budget_model->get_valid_budget($order->budget_id);
+
+          if( ! empty($bd))
+          {
+            if($bd->balance < $docTotal)
+            {
+              $sc = FALSE;
+              $this->error = "งบประมาณคงเหลือไม่พอ <br/>คงเหลือ : ".number($bd->balance, 2);
+            }
+
+            if($sc === TRUE)
+            {
+              if( ! $this->sponsor_budget_model->update_used($bd->id, $docTotal))
+              {
+                $sc = FALSE;
+                $this->error = "Failed to update outstanding budget";
+              }
+            }
+          }
+          else
+          {
+            $sc = FALSE;
+            $this->error = "ไม่พบงบประมาณที่ใช้";
+          }
+        }
+
+        if($sc === TRUE)
+        {
+          $this->orders_model->set_complete($code);
         }
 
         if($sc === TRUE)
@@ -467,17 +530,7 @@ class Delivery_order extends PS_Controller
       }
     }
 
-    if($sc === TRUE)
-    {
-      $this->do_export($code);
-    }
-    else
-    {
-      //--- ถ้า error
-      $this->orders_model->set_exported($code, 3, $this->error);
-    }
-
-    echo $sc === TRUE ? 'success' : $this->error;
+    $this->_response($sc);
   }
 
 
@@ -514,7 +567,6 @@ class Delivery_order extends PS_Controller
   }
 
 
-
 	public function update_shipped_date()
 	{
 		$sc = TRUE;
@@ -543,149 +595,26 @@ class Delivery_order extends PS_Controller
     echo $state;
   }
 
-
-  private function export_order($code)
-  {
-    $sc = TRUE;
-    $this->load->library('export');
-    if(! $this->export->export_order($code))
-    {
-      $sc = FALSE;
-      $this->error = trim($this->export->error);
-    }
-
-    return $sc;
-  }
-
-
-  private function export_transfer_order($code)
-  {
-    $sc = TRUE;
-    $this->load->library('export');
-    if(! $this->export->export_transfer_order($code))
-    {
-      $sc = FALSE;
-      $this->error = trim($this->export->error);
-    }
-
-    return $sc;
-  }
-
-
-  private function export_transfer_draft($code)
-  {
-    $sc = TRUE;
-    $this->load->library('export');
-    if(! $this->export->export_transfer_draft($code))
-    {
-      $sc = FALSE;
-      $this->error = trim($this->export->error);
-    }
-
-    return $sc;
-  }
-
-
-  private function export_transform($code)
-  {
-    $sc = TRUE;
-    $this->load->library('export');
-    if(! $this->export->export_transform($code))
-    {
-      $sc = FALSE;
-      $this->error = trim($this->export->error);
-    }
-
-    return $sc;
-  }
-
-
-  //--- manual export by client
-  public function do_export($code)
-  {
-    $order = $this->orders_model->get($code);
-
-    $sc = TRUE;
-
-    if(!empty($order))
-    {
-      switch($order->role)
-      {
-        case 'C' : //--- Consign (SO)
-          $sc = $this->export_order($code);
-          break;
-
-        case 'L' : //--- Lend
-          $sc = $this->export_transfer_order($code);
-          break;
-
-        case 'N' : //--- Consign (TR)
-          $sc = $this->export_transfer_draft($code);
-          break;
-
-        case 'P' : //--- Sponsor
-          $sc = $this->export_order($code);
-          break;
-
-        case 'Q' : //--- Transform for stock
-          $sc = $this->export_transform($code);
-          break;
-
-        case 'S' : //--- Sale order
-          $sc = $this->export_order($code);
-          break;
-
-        case 'T' : //--- Transform for sell
-          $sc = $this->export_transform($code);
-          break;
-
-        case 'U' : //--- Support
-          $sc = $this->export_order($code);
-          break;
-
-        default : ///--- sale order
-          $sc = $this->export_order($code);
-          break;
-      }
-
-    }
-    else
-    {
-      $sc = FALSE;
-      $this->error = "ไม่พบเลขที่เอกสาร {$code}";
-    }
-
-    return $sc;
-  }
-
-
-
-  public function manual_export($code)
-  {
-    $rs = $this->do_export($code);
-
-    echo $rs === TRUE ? 'success' : $this->error;
-  }
-
-
-
   public function clear_filter()
   {
     $filter = array(
       'ic_code',
+      'ic_reference',
       'ic_customer',
       'ic_user',
       'ic_role',
       'ic_channels',
       'ic_from_date',
       'ic_to_date',
+      'ic_ship_from_date',
+      'ic_ship_to_date',
       'ic_sort_by',
       'ic_order_by',
       'ic_warehouse',
       'ic_is_hold'
     );
 
-    clear_filter($filter);
+    return clear_filter($filter);
   }
 
 } //--- end class

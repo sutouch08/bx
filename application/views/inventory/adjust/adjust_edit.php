@@ -1,27 +1,21 @@
 <?php $this->load->view('include/header'); ?>
 <div class="row">
-	<div class="col-lg-6 col-md-6 col-sm-6 hidden-xs padding-5">
+	<div class="col-lg-6 col-md-6 col-sm-6 col-xs-12 padding-5 padding-top-5">
 		<h3 class="title" ><?php echo $this->title; ?></h3>
 	</div>
-	<div class="col-xs-12 visible-xs padding-5">
-		<h3 class="title-xs" ><?php echo $this->title; ?></h3>
-	</div>
-	<div class="col-lg-6 col-md-6 col-sm-6 col-xs-12 padding-5">
-		<p class="pull-right top-p">
-			<button type="button" class="btn btn-sm btn-warning" onclick="goBack()"><i class="fa fa-arrow-left"></i> กลับ</button>
-			<?php if(($this->pm->can_add OR $this->pm->can_edit) && $doc->status == 0) : ?>
-				<button type="button" class="btn btn-sm btn-primary" onclick="getDiffList()"><i class="fa fa-archive"></i> ยอดต่าง</button>
-				<button type="button" class="btn btn-sm btn-success" onclick="saveAdjust()"><i class="fa fa-save"></i> บันทึก</button>
-			<?php endif; ?>
-		</p>
+	<div class="col-lg-6 col-md-6 col-sm-6 col-xs-12 padding-5 text-right">
+		<button type="button" class="btn btn-sm btn-warning" onclick="goBack()"><i class="fa fa-arrow-left"></i> กลับ</button>
+		<?php if(($this->pm->can_add OR $this->pm->can_edit) && $doc->status == 0) : ?>
+			<!-- <button type="button" class="btn btn-sm btn-primary" onclick="getDiffList()"><i class="fa fa-archive"></i> ยอดต่าง</button> -->
+			<button type="button" class="btn btn-sm btn-success" onclick="saveAdjust()"><i class="fa fa-save"></i> บันทึก</button>
+		<?php endif; ?>
 	</div>
 </div>
 <hr />
-
 <div class="row">
 	<div class="col-lg-1-harf col-md-1-harf col-sm-2 col-xs-4 padding-5">
 		<label>เลขที่เอกสาร</label>
-		<input type="text" class="form-control input-sm text-center" value="<?php echo $doc->code; ?>" disabled />
+		<input type="text" class="form-control input-sm text-center" id="code" value="<?php echo $doc->code; ?>" disabled />
 	</div>
 	<div class="col-lg-1-harf col-md-1-harf col-sm-2 col-xs-4 padding-5">
 		<label>วันที่</label>
@@ -42,45 +36,45 @@
 			<button type="button" class="btn btn-xs btn-success btn-block hide" id="btn-update" onclick="updateHeader()"><i class="fa fa-save"></i> บันทึก</button>
 		</div>
 	<?php endif; ?>
-
-	<input type="hidden" id="code" value="<?php echo $doc->code; ?>" />
-	<input type="hidden" id="zone_code" value="" />
 </div>
 
 <?php if($doc->status == 0) : ?>
 <hr class="margin-top-15 margin-bottom-15"/>
 <div class="row">
+	<div class="col-lg-2 col-md-3 col-sm-3 col-xs-4 padding-5">
+		<label>โซน</label>
+		<input type="text" class="form-control input-sm c" id="zone-code" value="" autofocus />
+	</div>
   <div class="col-lg-3 col-md-6 col-sm-6 col-xs-9 padding-5">
-    <label>โซน</label>
-    <input type="text" class="form-control input-sm text-center" id="zone" value="" autofocus />
+    <label class="not-show">โซน</label>
+    <input type="text" class="form-control input-sm c" id="zone-name" value="" readonly />
   </div>
-  <div class="col-lg-1-harf col-md-2 col-sm-2 col-xs-3 padding-5">
+  <div class="col-lg-1 col-md-2 col-sm-2 col-xs-3 padding-5">
     <label class="display-block not-show">change</label>
-    <button type="button" class="btn btn-xs btn-yellow btn-block hide" id="btn-change-zone" onclick="changeZone()">เปลี่ยนโซน</button>
-    <button type="button" class="btn btn-xs btn-info btn-block" id="btn-set-zone" onclick="set_zone()">ตกลง</button>
+    <button type="button" class="btn btn-xs btn-yellow btn-block" id="btn-change-zone" onclick="changeZone()">เปลี่ยนโซน</button>
   </div>
 
 	<div class="divider hidden-lg"></div>
 
-  <div class="col-lg-3 col-md-3 col-sm-3 col-xs-12 padding-5">
+  <div class="col-lg-2 col-md-3 col-sm-3 col-xs-12 padding-5">
     <label>รหัสสินค้า</label>
-    <input type="text" class="form-control input-sm text-center" id="pd-code" value="" disabled />
+    <input type="text" class="form-control input-sm text-center c" id="pd-code" value="" />
   </div>
 	<div class="col-lg-1 col-md-1-harf col-sm-1-harf col-xs-3 padding-5">
 		<label>สต็อก</label>
-		<input type="number" class="form-control input-sm text-center" id="stock-qty" value="" disabled />
+		<input type="number" class="form-control input-sm text-center" id="stock-qty" value="" readonly />
 	</div>
   <div class="col-lg-1 col-md-1-harf col-sm-1-harf col-xs-3 padding-5">
     <label>เพิ่ม</label>
-    <input type="number" class="form-control input-sm text-center" id="qty-up" value="" disabled />
+    <input type="number" class="form-control input-sm text-center c" id="qty-up" value="" />
   </div>
   <div class="col-lg-1 col-md-1-harf col-sm-1-harf col-xs-3 padding-5">
     <label>ลด</label>
-    <input type="number" class="form-control input-sm text-center" id="qty-down" value="" disabled />
+    <input type="number" class="form-control input-sm text-center c" id="qty-down" value="" />
   </div>
   <div class="col-lg-1 col-md-1-harf col-sm-1-harf col-xs-3 padding-5">
     <label class="display-block not-show">OK</label>
-    <button type="button" class="btn btn-xs btn-primary btn-block" id="btn-add" onclick="add_detail()" disabled>เพิ่มรายการ</button>
+    <button type="button" class="btn btn-xs btn-primary btn-block" id="btn-add" onclick="add_detail()">เพิ่มรายการ</button>
   </div>
 </div>
 <?php endif; ?>
@@ -95,11 +89,11 @@
   <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 padding-5 table-responsive">
     <table class="table table-striped border-1" style="min-width:1040px;">
       <thead>
-        <tr>
+        <tr class="font-size-11">
           <th class="fix-width-40 text-center">ลำดับ</th>
           <th class="fix-width-200">รหัสสินค้า</th>
           <th class="min-width-250">สินค้า</th>
-          <th class="fix-width-250 text-center">โซน</th>
+          <th class="fix-width-200">โซน</th>
           <th class="fix-width-100 text-center">เพิ่ม</th>
           <th class="fix-width-100 text-center">ลด</th>
           <th class="fix-width-50 text-center">สถานะ</th>
@@ -110,7 +104,7 @@
 <?php if(!empty($details)) : ?>
 <?php   $no = 1;    ?>
 <?php   foreach($details as $rs) : ?>
-      <tr class="font-size-12 rox" id="row-<?php echo $rs->id; ?>">
+      <tr class="font-size-11 rox" id="row-<?php echo $rs->id; ?>">
         <td class="middle text-center no">
           <?php echo $no; ?>
         </td>
@@ -120,7 +114,7 @@
         <td class="middle">
           <?php echo $rs->product_name; ?>
         </td>
-        <td class="middle text-center">
+        <td class="middle">
           <?php echo $rs->zone_name; ?>
         </td>
         <td class="middle text-center" id="qty-up-<?php echo $rs->id; ?>">
@@ -134,7 +128,7 @@
         </td>
         <td class="middle text-right">
         <?php if(($this->pm->can_add OR $this->pm->can_edit) && $doc->status == 0) : ?>
-          <button type="button" class="btn btn-xs btn-danger" onclick="deleteDetail(<?php echo $rs->id; ?>, '<?php echo $rs->product_code; ?>')">
+          <button type="button" class="btn btn-minier btn-danger" onclick="deleteDetail(<?php echo $rs->id; ?>, '<?php echo $rs->product_code; ?>')">
             <i class="fa fa-trash"></i>
           </button>
         <?php endif; ?>
@@ -153,11 +147,11 @@
 </form>
 
 <script id="detail-template" type="text/x-handlebars-template">
-<tr class="font-size-12 rox" id="row-{{id}}">
+<tr class="font-size-11 rox" id="row-{{id}}">
   <td class="middle text-center no">{{no}}</td>
   <td class="middle">{{ pdCode }}</td>
   <td class="middle">{{ pdName }}</td>
-  <td class="middle text-center">{{ zoneName }}</td>
+  <td class="middle">{{ zoneName }}</td>
   <td class="middle text-center" id="qty-up-{{id}}">{{ up }}</td>
   <td class="middle text-center" id="qty-down-{{id}}">{{ down }}</td>
   <td class="middle text-center">
@@ -169,7 +163,7 @@
   </td>
   <td class="middle text-right">
   <?php if(($this->pm->can_add OR $this->pm->can_edit) && $doc->status == 0) : ?>
-    <button type="button" class="btn btn-xs btn-danger" onclick="deleteDetail({{ id }}, '{{ pdCode }}')">
+    <button type="button" class="btn btn-minier btn-danger" onclick="deleteDetail({{ id }}, '{{ pdCode }}')">
       <i class="fa fa-trash"></i>
     </button>
   <?php endif; ?>

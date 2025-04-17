@@ -1,36 +1,8 @@
+var click = 0;
+
 $('#date_add').datepicker({
   dateFormat:'dd-mm-yy'
 });
-
-
-function send_to_sap(){
-  var code = $('#code').val();
-  $.ajax({
-    url:HOME + 'manual_export',
-    type:'POST',
-    cache:false,
-    data:{
-      'code' : code
-    },
-    success:function(rs){
-      var rs = $.trim(rs);
-      if(rs === 'success'){
-        swal({
-          title:'Success',
-          type:'success',
-          timer:1000
-        });
-      }else{
-        swal({
-          title:'Error!',
-          text:rs,
-          type:'error'
-        });
-      }
-    }
-  })
-}
-
 
 
 function getDiffList(){
@@ -39,10 +11,11 @@ function getDiffList(){
 }
 
 
-
-function saveAdjust(){
+function saveAdjust() {
   let code = $('#code').val();
+
   load_in();
+
   $.ajax({
     url:HOME + 'save',
     type:'POST',
@@ -50,9 +23,10 @@ function saveAdjust(){
     data:{
       'code' : code
     },
-    success:function(rs){
+    success:function(rs) {
       load_out();
-      if(rs === 'success'){
+
+      if(rs.trim() === 'success'){
         swal({
           title:'Saved',
           text:'บันทึกรายการเรียบร้อยแล้ว',
@@ -63,17 +37,25 @@ function saveAdjust(){
         setTimeout(function(){
           goDetail(code);
         }, 1200);
-      }else{
-        swal("Error", rs, 'error');
       }
+      else {
+        beep();
+        showError(rs);
+      }
+    },
+    error:function(rs) {
+      beep();
+      showError(rs);
     }
   })
 }
 
 
-function unsave(){
-  var code = $('#code').val();
+function unsave() {
+  let code = $('#code').val();
+
   load_in();
+
   $.ajax({
     url:HOME + 'unsave',
     type:'POST',
@@ -83,8 +65,8 @@ function unsave(){
     },
     success:function(rs){
       load_out();
-      rs = $.trim(rs);
-      if(rs === 'success'){
+
+      if(rs.trim() === 'success'){
         swal({
           title:'Success',
           text:'Unsaved successfull',
@@ -96,17 +78,18 @@ function unsave(){
           goEdit(code);
         }, 1200);
 
-      }else{
-        swal({
-          title:'Error!!',
-          text: rs,
-          type:'error'
-        });
       }
+      else {
+        beep();
+        showError(rs);
+      }
+    },
+    error:function(rs) {
+      beep();
+      showError(rs);
     }
   })
 }
-
 
 
 function getEdit(){
@@ -116,7 +99,6 @@ function getEdit(){
   $('#btn-edit').addClass('hide');
   $('#btn-update').removeClass('hide');
 }
-
 
 
 function updateHeader(){
@@ -136,7 +118,8 @@ function updateHeader(){
       'remark' : remark
     },
     success:function(rs){
-      if(rs == 'success'){
+
+      if(rs.trim() == 'success'){
         swal({
           title:'Updated',
           text:'ปรับปรุงข้อมูลเรียบร้อยแล้ว',
@@ -149,59 +132,76 @@ function updateHeader(){
         $('#remark').attr('disabled', 'disabled');
         $('#btn-edit').removeClass('hide');
         $('#btn-update').addClass('hide');
-      }else{
-        swal({
-          title:'Error!',
-          text:rs,
-          type:'error'
-        });
       }
+      else {
+        beep();
+        showError(rs);
+      }
+    },
+    error:function(rs) {
+      beep();
+      showError(rs);
     }
   })
 }
 
 
+function add() {
+  if(click == 0) {
+    click = 1;
 
-function add(){
-  var date_add = $('#date_add').val();
-  var reference = $('#reference').val();
-  var remark = $('#remark').val();
+    let h = {
+      'date_add' : $('#date_add').val(),
+      'reference' : $('#reference').val().trim(),
+      'remark' : $('#remark').val().trim()
+    };
 
-  if(!isDate(date_add)){
-    swal("วันที่ไม่ถูกต้อง");
-    return false;
-  }
-
-  load_in();
-
-  $.ajax({
-    url:HOME + 'add',
-    type:'POST',
-    cache:false,
-    data:{
-      'date_add' : date_add,
-      'reference' : reference,
-      'remark' : remark
-    },
-    success:function(rs){
-      load_out();
-      var rs = $.trim(rs);
-      var arr = rs.split('|');
-      if(arr.length === 2){
-        goEdit(arr[1]);
-      }else{
-        swal({
-          title:'Error!',
-          text: rs,
-          type:'error'
-        });
-      }
+    if( ! isDate(h.date_add)){
+      swal("วันที่ไม่ถูกต้อง");
+      click = 0;
+      return false;
     }
-  });
+
+    load_in();
+
+    $.ajax({
+      url:HOME + 'add',
+      type:'POST',
+      cache:false,
+      data:{
+        'data':JSON.stringify(h)
+      },
+      success:function(rs){
+        load_out();
+
+        if(isJson(rs)) {
+          let ds = JSON.parse(rs);
+
+          if(ds.status === 'success') {
+            goEdit(ds.code);
+          }
+          else {
+            beep();
+            showError(ds.message);
+          }
+        }
+        else {
+          click = 0;
+          beep();
+          showError(rs);
+        }
+      },
+      error:function(rs) {
+        beep();
+        showError(rs);
+        click = 0;
+      }
+    });
+  }
 }
 
 
-$('#zone').autocomplete({
+$('#zone-code').autocomplete({
   source: BASE_URL + 'auto_complete/get_zone_code_and_name',
   autoFocus:true,
   close:function(){
@@ -210,37 +210,24 @@ $('#zone').autocomplete({
     if(arr.length == 2){
       let code = arr[0];
       let name = arr[1];
-      $('#zone').val(name);
-      $('#zone_code').val(code);
-    }else{
-      $('#zone').val('');
-      $('#zone_code').val('');
+      $('#zone-code').val(code);
+      $('#zone-name').val(name);
+    }
+    else {
+      $('#zone-code').val('');
+      $('#zone-name').val('');
     }
   }
 })
 
 
-$('#zone').keyup(function(e){
-  if(e.keyCode === 13){
-    set_zone();
+$('#zone-code').keyup(function(e){
+  if(e.keyCode === 13) {
+    if($(this).val().length) {
+      $('#pd-code').val('').focus();
+    }
   }
 })
-
-
-function set_zone(){
-  let zone = $('#zone_code').val();
-  if(zone.length > 0){
-    $('#zone').attr('disabled', 'disabled');
-    $('#btn-set-zone').addClass('hide');
-    $('#btn-change-zone').removeClass('hide');
-
-    $('#pd-code').removeAttr('disabled');
-    $('#qty-up').removeAttr('disabled');
-    $('#qty-down').removeAttr('disabled');
-    $('#btn-add').removeAttr('disabled');
-    $('#pd-code').focus();
-  }
-}
 
 
 $('#pd-code').autocomplete({
@@ -253,21 +240,26 @@ $('#pd-code').autocomplete({
   }
 });
 
+
 $('#pd-code').keyup(function(e){
   if(e.keyCode === 13){
-    let code = $(this).val();
-    let zone = $('#zone_code').val();
-    if(code.length === 0 || code === 'not found'){
-      $(this).val('');
+    clearErrorByClass('c');
+
+    let code = $(this).val().trim();
+    let zone = $('#zone-code').val().trim();
+
+    if(code.length == 0 || code == 'not found') {
+      $('#pd-code').val('').hasError();
       return false;
     }
 
-    if(zone.length === 0){
+    if(zone.length == 0 || zone == 'not found') {
+      $('#zone-code').val('').hasError();
       return false;
     }
 
     $.ajax({
-      url:HOME + '/get_stock_zone',
+      url:HOME + 'get_stock_zone',
       type:'GET',
       cache:false,
       data:{
@@ -275,12 +267,8 @@ $('#pd-code').keyup(function(e){
         'product_code' : code
       },
       success:function(rs){
-        var stock = parseInt(rs);
-        if(isNaN(stock)){
-          swal(rs);
-        }else{
-          $('#stock-qty').val(stock);
-        }
+        let stock = parseDefault(parseFloat(rs), 0);
+        $('#stock-qty').val(stock);
       }
     })
 
@@ -290,145 +278,159 @@ $('#pd-code').keyup(function(e){
 
 
 $('#qty-up').keyup(function(e){
-  let down_qty = parseFloat($('#qty-down').val());
-  let up_qty = parseFloat($(this).val());
-
-  if(isNaN(up_qty) || up_qty < 0){
-    $(this).val(0);
-  }else{
-    $(this).val(up_qty);
-  }
-
-  if(up_qty > 0 && down_qty != 0){
-    $('#qty-down').val(0);
-  }
+  let down_qty = parseDefault(parseFloat($('#qty-down').val()), 0);
+  let up_qty = parseDefault(parseFloat($('#qty-up').val()), 0);
 
   if(e.keyCode === 13){
-    $('#qty-down').focus();
-  }
+    if(up_qty <= 0) {
+      $(this).val(0);
+    }
 
+    $('#qty-down').focus().select();
+  }
 });
 
 
 $('#qty-down').keyup(function(e){
-  let down_qty = parseFloat($(this).val());
-  let up_qty = parseFloat($('#qty-up').val());
+  let down_qty = parseDefault(parseFloat($('#qty-down').val()), 0);
+  let up_qty = parseDefault(parseFloat($('#qty-up').val()), 0);
   let stock_qty = parseDefault(parseFloat($('#stock-qty').val()), 0);
 
+  if(e.keyCode === 13) {
+    if(up_qty < 0 || down_qty < 0) {
+      $('#qty-up').hasError();
+      $('#qty-down').hasError();
+      return false;
+    }
 
-  if(isNaN(down_qty) || down_qty < 0){
-    $(this).val(0);
-  }else{
-    $(this).val(down_qty);
-  }
+    if((up_qty > 0 && down_qty > 0) || (down_qty == 0 && up_qty == 0) || (up_qty == down_qty)) {
+      $('#qty-up').hasError();
+      $('#qty-down').hasError();
+      return false;
+    }
 
-  if(down_qty > stock_qty){
-    $(this).val(stock_qty);
-  }
+    if(down_qty > 0 && down_qty > stock_qty) {
+      $('#qty-down').hasError();
+      return false;
+    }
 
-  if(down_qty > 0 && up_qty != 0){
-    $('#qty-up').val(0);
-  }
-
-  if(e.keyCode === 13){
     add_detail();
   }
 })
 
 
+function add_detail() {
+  if(click == 0) {
+    click = 1;
+    clearErrorByClass('c');
 
-function add_detail(){
-  let code = $('#code').val();
-  let pd_code = $('#pd-code').val();
-  let zone_code = $('#zone_code').val();
-  let qty_up = $('#qty-up').val();
-  let qty_down = $('#qty-down').val();
-
-  if(code.length == 0){
-    swal('ไม่พบเลขที่เอกสาร');
-    return false;
-  }
-
-  if(pd_code.length == 0){
-    swal('กรุณาระบุรหัสสินค้า');
-    return false;
-  }
-
-  if(zone_code.length == 0){
-    swal('กรุณาระบุโซน');
-    return false;
-  }
-
-  if(qty_up == 0 && qty_down == 0){
-    swal('กรุณาระบุจำนวนที่จะปรับยอด');
-    return false;
-  }
-
-  $('#btn-add').attr('disabled');
-
-  load_in();
-  $.ajax({
-    url:HOME + 'add_detail',
-    type:'POST',
-    cache:false,
-    data:{
-      'code' : code,
-      'zone_code' : zone_code,
-      'pd_code' : pd_code,
-      'qty_up' : qty_up,
-      'qty_down' : qty_down
-    },
-    success:function(rs){
-      load_out();
-      if(isJson(rs)){
-        //--- แปลง json ให้เป็น object
-        var ds = $.parseJSON(rs);
-
-        //--  ตรวจสอบว่ามีรายการปรับยอดอยู่แล้วหรือไม่
-        //--- ถ้ามีจะ update ยอด
-        if( $('#row-' + ds.id ).length == 1){
-          //--- update ยอดในรายการ
-          $('#qty-up-'+ ds.id).text(ds.up);
-          $('#qty-down-'+ ds.id).text(ds.down);
-
-          //--- เติมสีน้ำเงินในแถวที่มีการเปลี่ยนแปลง
-          setColor(ds.id);
-
-          //--- Reset Input control พร้อมสำหรับรายการต่อไป
-          getReady();
-
-        }else{
-          //--- ถ้ายังไม่มีรายการในตารางดำเนินการเพิ่มใหม่
-          //--- ลำดับล่าสุด
-          var no = getMaxNo() + 1;
-
-          //--- เพิ่มจำนวนล่าสุดเข้าไปเพื่อใช้ render แถวใหม่
-          ds.no = no;
-
-          var source = $('#detail-template').html();
-          var output = $('#detail-table');
-
-          //--- เพิ่มแถวใหม่ต่อท้ายตาราง
-          render_append(source, ds, output);
-
-          //--- เติมสีน้ำเงินในแถวที่มีการเปลี่ยนแปลง
-          setColor(ds.id);
-
-          //--- Reset Input control พร้อมสำหรับรายการต่อไป
-          getReady();
-        }
-      }else{
-        swal({
-          title:'Error!',
-          text:rs,
-          type:'error'
-        });
-      }
+    let h = {
+      'code' : $('#code').val().trim(),
+      'product_code' : $('#pd-code').val().trim(),
+      'zone_code' : $('#zone-code').val().trim(),
+      'qty_up' : parseDefault(parseFloat($('#qty-up').val()), 0),
+      'qty_down' : parseDefault(parseFloat($('#qty-down').val()), 0)
     }
-  })
+
+    if(h.code.length == 0) {
+      beep();
+      swal('ไม่พบเลขที่เอกสาร');
+      click = 0;
+      return false;
+    }
+
+    if(h.product_code.length == 0) {
+      beep();
+      $('#pd-code').hasError();
+      click = 0;
+      swal('กรุณาระบุรหัสสินค้า');
+      return false;
+    }
+
+    if(h.zone_code.length == 0) {
+      beep();
+      $('#zone-code').hasError();
+      click = 0;
+      swal('กรุณาระบุโซน');
+      return false;
+    }
+
+    if((h.qty_up <= 0 && h.qty_down <= 0) || (h.qty_up == h.qty_down) || (h.qty_up > 0 && h.qty_down != 0) || (h.qty_down > 0 && h.qty_up != 0)) {
+      beep();
+      $('#qty-up').hasError();
+      $('#qty-down').hasError();
+      swal('กรุณาระบุจำนวนที่จะปรับยอด');
+      click = 0;
+      return false;
+    }
+
+    load_in();
+
+    $.ajax({
+      url:HOME + 'add_detail',
+      type:'POST',
+      cache:false,
+      data:{
+        'data' : JSON.stringify(h)
+      },
+      success:function(rs) {
+        load_out();
+        click = 0;
+        if(isJson(rs)) {
+          //--- แปลง json ให้เป็น object
+          let ds = JSON.parse(rs);
+
+          if(ds.status === 'success') {
+            //--  ตรวจสอบว่ามีรายการปรับยอดอยู่แล้วหรือไม่
+            //--- ถ้ามีจะ update ยอด
+            if( $('#row-' + ds.row.id ).length == 1){
+              //--- update ยอดในรายการ
+              $('#qty-up-'+ ds.row.id).text(ds.row.up);
+              $('#qty-down-'+ ds.row.id).text(ds.row.down);
+
+              //--- เติมสีน้ำเงินในแถวที่มีการเปลี่ยนแปลง
+              setColor(ds.row.id);
+
+              //--- Reset Input control พร้อมสำหรับรายการต่อไป
+              getReady();
+            }
+            else {
+              //--- ถ้ายังไม่มีรายการในตารางดำเนินการเพิ่มใหม่
+              //--- ลำดับล่าสุด
+
+              var source = $('#detail-template').html();
+              var output = $('#detail-table');
+
+              //--- เพิ่มแถวใหม่ต่อท้ายตาราง
+              render_append(source, ds.row, output);
+
+              //--- เติมสีน้ำเงินในแถวที่มีการเปลี่ยนแปลง
+              setColor(ds.row.id);
+
+              reIndex('no');
+
+              //--- Reset Input control พร้อมสำหรับรายการต่อไป
+              getReady();
+            }
+          }
+          else {
+            beep();
+            showError(ds.message);
+          }
+        }
+        else {
+          beep();
+          showError(rs);
+        }
+      },
+      error:function(rs) {
+        beep();
+        showError(rs);
+        click = 0;
+      }
+    })
+  }
 }
-
-
 
 
 //--- Reset Input control พร้อมสำหรับรายการต่อไป
@@ -438,8 +440,6 @@ function getReady(){
   $('#qty-down').val('');
   $('#pd-code').focus();
 }
-
-
 
 //--- ไอไลท์แถวที่มีการเปลี่ยนแปลงล่าสุด
 function setColor(id){
@@ -451,33 +451,14 @@ function setColor(id){
 }
 
 
-//--- หาลำดับสูงสุดเพื่อเพิ่มแถวต่อไป
-function getMaxNo(){
-  var no = 0;
-  $('.no').each(function(index, el) {
-    var cno = parseInt($(this).text());
-    if( cno > no ){
-      no = cno;
-    }
-  });
-
-  return no;
-}
-
-
-
-
 //--- เปลียนโซนใหม่
 function changeZone(){
   //--- clear ค่าต่างๆ
-  $('#zone_code').val('');
-  $('#qty-up').val('').attr('disabled','disabled');
-  $('#qty-down').val('').attr('disabled','disabled');
-  $('#pd-code').val('').attr('disabled','disabled');
-  $('#zone').val('').removeAttr('disabled');
-  $('#btn-change-zone').addClass('hide');
-  $('#btn-set-zone').removeClass('hide');
-  $('#btn-add').attr('disabled', 'disabled');
+  $('#qty-up').val('');
+  $('#qty-down').val('');
+  $('#pd-code').val('');
+  $('#zone-name').val('');
+  $('#zone-code').val('').focus();
 }
 
 
@@ -521,57 +502,3 @@ function deleteDetail(id, pdCode){
 		});
 	});
 }
-
-
-function validateOrder(){
-  var prefix = $('#prefix').val();
-  var runNo = parseInt($('#runNo').val());
-  let code = $('#code').val();
-
-  if(code.length == 0){
-    add();
-  }
-  else
-  {
-    let arr = code.split('-');
-
-    if(arr.length == 2){
-      if(arr[0] !== prefix){
-        swal('Prefix ต้องเป็น '+prefix);
-        return false;
-      }else if(arr[1].length != (4 + runNo)){
-        swal('Run Number ไม่ถูกต้อง');
-        return false;
-      }else{
-        $.ajax({
-          url: HOME + 'is_exists/'+code,
-          type:'GET',
-          cache:false,
-          success:function(rs){
-            if(rs == 'not_exists'){
-              add();
-            }else{
-              swal({
-                title:'Error!!',
-                text: rs,
-                type: 'error'
-              });
-            }
-          }
-        })
-      }
-
-    }else{
-      swal('เลขที่เอกสารไม่ถูกต้อง');
-      return false;
-    }
-  }
-}
-
-
-
-$('#code').keyup(function(e){
-	if(e.keyCode == 13){
-		validateOrder();
-	}
-});

@@ -21,7 +21,6 @@ class Orders_model extends CI_Model
   }
 
 
-
   public function update($code, array $ds = array())
   {
     if(!empty($ds))
@@ -69,7 +68,6 @@ class Orders_model extends CI_Model
 	}
 
 
-
   public function add_detail(array $ds = array())
   {
     if(!empty($ds))
@@ -92,13 +90,10 @@ class Orders_model extends CI_Model
 	}
 
 
-
   public function update_detail($id, array $ds = array())
   {
     return $this->db->where('id', $id)->update($this->td, $ds);
   }
-
-
 
 
   public function remove_detail($id)
@@ -131,7 +126,6 @@ class Orders_model extends CI_Model
 
     return FALSE;
   }
-
 
 
   public function is_exists_order($code, $old_code = NULL)
@@ -311,7 +305,6 @@ class Orders_model extends CI_Model
   }
 
 
-
 	public function get_only_count_stock_details($order_code)
 	{
 		$rs = $this->db
@@ -328,7 +321,6 @@ class Orders_model extends CI_Model
 
 		return NULL;
 	}
-
 
 
   public function get_order_details($code)
@@ -353,7 +345,6 @@ class Orders_model extends CI_Model
   }
 
 
-
   public function get_unvalid_details($code)
   {
     $rs = $this->db
@@ -375,7 +366,6 @@ class Orders_model extends CI_Model
 
     return FALSE;
   }
-
 
 
   public function get_valid_details($code)
@@ -640,15 +630,14 @@ class Orders_model extends CI_Model
   {
     $this->db->where('role', $role);
 
-    if( ! empty($ds['from_date']) && ! empty($ds['to_date']))
+    if( ! empty($ds['from_date']))
     {
       $this->db->where('date_add >=', from_date($ds['from_date']));
-      $this->db->where('date_add <=', to_date($ds['to_date']));
     }
-    else
+
+    if( ! empty($ds['to_date']))
     {
-      $this->db->where('id >', $this->get_max_id());
-      // $this->db->where('date_add >=', from_date($this->_dataDate));
+      $this->db->where('date_add <=', to_date($ds['to_date']));
     }
 
     //---- เลขที่เอกสาร
@@ -657,10 +646,6 @@ class Orders_model extends CI_Model
       $this->db->like('code', $ds['code']);
     }
 
-    if(!empty($ds['qt_no']))
-    {
-      $this->db->like('quotation_no', $ds['qt_no']);
-    }
     //--- รหัส/ชื่อ ลูกค้า
     if( ! empty($ds['customer']))
     {
@@ -670,21 +655,6 @@ class Orders_model extends CI_Model
       ->or_like('customer_name', $ds['customer'])
       ->or_like('customer_ref', $ds['customer'])
       ->group_end();
-    }
-
-    //---- user name / display name
-    if( ! empty($ds['user']))
-    {
-      $user = $this->user_in($ds['user']);
-
-      if( ! empty($user))
-      {
-        $this->db->where_in('user', $user);
-      }
-      else
-      {
-        $this->db->where('user', 'NULL');
-      }
     }
 
     //---- เลขที่อ้างอิงออเดอร์ภายนอก
@@ -699,14 +669,12 @@ class Orders_model extends CI_Model
       $this->db->like('shipping_code', $ds['ship_code']);
     }
 
-    //--- ช่องทางการขาย
-    if( ! empty($ds['channels']))
+    if(isset($ds['channels']) && $ds['channels'] != 'all')
     {
       $this->db->where('channels_code', $ds['channels']);
     }
 
-    //--- ช่องทางการชำระเงิน
-    if( ! empty($ds['payment']))
+    if(isset($ds['payment']) && $ds['payment'] != 'all')
     {
       $this->db->where('payment_code', $ds['payment']);
     }
@@ -735,7 +703,7 @@ class Orders_model extends CI_Model
       $this->db->like('empName', $ds['empName']);
     }
 
-    if(!empty($ds['warehouse']))
+    if(isset($ds['warehouse']) && $ds['warehouse'] != 'all')
     {
       $this->db->where('warehouse_code', $ds['warehouse']);
     }
@@ -798,39 +766,6 @@ class Orders_model extends CI_Model
       $this->db->where('is_pre_order', $ds['is_pre_order']);
     }
 
-		if(isset($ds['sap_status']) && $ds['sap_status'] !== 'all')
-		{
-			if($ds['sap_status'] == 0)
-			{
-				$this->db->where('is_exported',0);
-			}
-			else if($ds['sap_status'] == 1)
-			{
-				$this->db
-				->group_start()
-				->where('is_exported', 1)
-				->where('inv_code IS NULL', NULL, FALSE)
-				->group_end();
-			}
-			else if($ds['sap_status'] == 2)
-			{
-				$this->db
-				->group_start()
-				->where('is_exported', 1)
-				->where('inv_code IS NOT NULL', NULL, FALSE)
-				->group_end();
-			}
-			else if($ds['sap_status'] == 3)
-			{
-				$this->db->where('is_exported', 3);
-			}
-		}
-
-		if(isset($ds['DoNo']) && $ds['DoNo'] != "")
-		{
-			$this->db->like('inv_code', $ds['DoNo']);
-		}
-
 		if(isset($ds['method']) && $ds['method'] != "all")
 		{
 			if($ds['method'] == 0)
@@ -858,309 +793,9 @@ class Orders_model extends CI_Model
 				->group_end();
 			}
 		}
-
-    if( isset($ds['tax_status']) && $ds['tax_status'] != 'all')
-    {
-      $this->db->where('tax_status', $ds['tax_status']);
-    }
-
-    if( isset($ds['is_etax'])  && $ds['is_etax'] != 'all')
-    {
-      $this->db->where('is_etax', $ds['is_etax']);
-    }
 
     return $this->db->count_all_results($this->tb);
   }
-
-
-  public function get_data(array $ds = array(), $perpage = 20, $offset = 0, $role = 'S')
-  {
-    $this->db->where('role', $role);
-
-    //---- เลขที่เอกสาร
-    if( ! empty($ds['code']))
-    {
-      $ds['code'] = preg_replace("/\D/", "", $ds['code']);
-
-      $code = NULL;
-
-      switch($role)
-      {
-        case 'S' :
-          $code = "WO-{$ds['code']}";
-        break;
-        case 'P' :
-          $code = "WS-{$ds['code']}";
-        break;
-        case 'U' :
-          $code = "WU-{$ds['code']}";
-        break;
-        case 'C' :
-          $code = "WC-{$ds['code']}";
-        break;
-        case 'N' :
-          $code = "WT-{$ds['code']}";
-        break;
-        case 'T' :
-          $code = "WQ-{$ds['code']}";
-        break;
-        case 'Q' :
-          $code = "WV-{$ds['code']}";
-        break;
-        case 'L' :
-          $code = "WL-{$ds['code']}";
-        break;
-      }
-
-      $this->db->like('code', $code, 'after');
-    }
-
-    if(!empty($ds['qt_no']))
-    {
-      $this->db->like('quotation_no', $ds['qt_no']);
-    }
-
-    //--- รหัส/ชื่อ ลูกค้า
-    if( ! empty($ds['customer']))
-    {
-      $this->db
-      ->group_start()
-      ->like('customer_code', $ds['customer'])
-      ->or_like('customer_name', $ds['customer'])
-      ->or_like('customer_ref', $ds['customer'])
-      ->group_end();
-    }
-
-    //---- user name / display name
-    if( ! empty($ds['user']))
-    {
-      $user = $this->user_in($ds['user']);
-
-      if( ! empty($user))
-      {
-        $this->db->where_in('user', $user);
-      }
-      else
-      {
-        $this->db->where('user', 'NULL');
-      }
-    }
-
-    //---- เลขที่อ้างอิงออเดอร์ภายนอก
-    if( ! empty($ds['reference']))
-    {
-      $this->db->like('reference', $ds['reference'], 'after');
-    }
-
-    //---เลขที่จัดส่ง
-    if( ! empty($ds['ship_code']))
-    {
-      $this->db->like('shipping_code', $ds['ship_code']);
-    }
-
-    //--- ช่องทางการขาย
-    if( ! empty($ds['channels']))
-    {
-      $this->db->where('channels_code', $ds['channels']);
-    }
-
-    //--- ช่องทางการชำระเงิน
-    if( ! empty($ds['payment']))
-    {
-      $this->db->where('payment_code', $ds['payment']);
-    }
-
-    if( ! empty($ds['zone_code']))
-    {
-      $zone = $this->zone_in($ds['zone_code']);
-
-      if( ! empty($zone))
-      {
-        $this->db->where_in('zone_code', $zone);
-      }
-      else
-      {
-        $this->db->where('zone_code', 'NULL');
-      }
-    }
-
-    if( ! empty($ds['user_ref']))
-    {
-      $this->db->like('user_ref', $ds['user_ref']);
-    }
-
-    if( ! empty($ds['empName']))
-    {
-      $this->db->like('empName', $ds['empName']);
-    }
-
-    if( ! empty($ds['from_date']) && ! empty($ds['to_date']))
-    {
-      $this->db->where('date_add >=', from_date($ds['from_date']));
-      $this->db->where('date_add <=', to_date($ds['to_date']));
-    }
-
-    if(!empty($ds['warehouse']))
-    {
-      $this->db->where('warehouse_code', $ds['warehouse']);
-    }
-
-    if(!empty($ds['notSave']))
-    {
-      $this->db->where('status', 0);
-    }
-    else
-    {
-      if(isset($ds['isApprove']))
-      {
-        if($ds['isApprove'] !== 'all')
-        {
-          $this->db->where('status', 1);
-        }
-      }
-    }
-
-    if(!empty($ds['onlyMe']))
-    {
-      $this->db->where('user', $this->_user->uname);
-    }
-
-    if(!empty($ds['isExpire']))
-    {
-      $this->db->where('is_expired', 1);
-    }
-
-    if(!empty($ds['state_list']))
-    {
-      $this->db->where_in('state', $ds['state_list']);
-    }
-
-    //--- ใช้กับเอกสารที่ต้อง approve เท่านั้น
-    if(isset($ds['isApprove']))
-    {
-      if($ds['isApprove'] !== 'all')
-      {
-        $this->db->where('is_approved', $ds['isApprove']);
-      }
-    }
-
-    //--- ใช้กับเอกสารที่ต้อง ว่ารับสินค้าเข้าปลายทางหรือยัง เท่านั้น
-    if(isset($ds['isValid']))
-    {
-      if($ds['isValid'] !== 'all')
-      {
-        $this->db->where('is_valid', $ds['isValid']);
-      }
-    }
-
-
-    if(isset($ds['is_backorder']) && $ds['is_backorder'] != 'all')
-    {
-      $this->db->where('is_backorder', $ds['is_backorder']);
-    }
-
-    if( isset($ds['is_pre_order']) && $ds['is_pre_order'] !== 'all')
-    {
-      $this->db->where('is_pre_order', $ds['is_pre_order']);
-    }
-
-		if(isset($ds['sap_status']) && $ds['sap_status'] !== 'all')
-		{
-			if($ds['sap_status'] == 0)
-			{
-				$this->db->where('is_exported',0);
-			}
-			else if($ds['sap_status'] == 1)
-			{
-				$this->db
-				->group_start()
-				->where('is_exported', 1)
-				->where('inv_code IS NULL', NULL, FALSE)
-				->group_end();
-			}
-			else if($ds['sap_status'] == 2)
-			{
-				$this->db
-				->group_start()
-				->where('is_exported', 1)
-				->where('inv_code IS NOT NULL', NULL, FALSE)
-				->group_end();
-			}
-			else if($ds['sap_status'] == 3)
-			{
-				$this->db->where('is_exported', 3);
-			}
-		}
-
-		if(isset($ds['DoNo']) && $ds['DoNo'] != "")
-		{
-			$this->db->like('inv_code', $ds['DoNo']);
-		}
-
-		if(isset($ds['method']) && $ds['method'] != "all")
-		{
-			if($ds['method'] == 0)
-			{
-				$this->db
-				->group_start()
-				->where('is_import', 0)
-				->where('is_api', 0)
-				->group_end();
-			}
-			else if($ds['method'] == 1)
-			{
-				$this->db
-				->group_start()
-				->where('is_import', 1)
-				->where('is_api', 0)
-				->group_end();
-			}
-			else if($ds['method'] == 2)
-			{
-				$this->db
-				->group_start()
-				->where('is_import', 0)
-				->where('is_api', 1)
-				->group_end();
-			}
-		}
-
-    if( isset($ds['tax_status']) && $ds['tax_status'] != 'all')
-    {
-      $this->db->where('tax_status', $ds['tax_status']);
-    }
-
-    if( isset($ds['is_etax'])  && $ds['is_etax'] != 'all')
-    {
-      $this->db->where('is_etax', $ds['is_etax']);
-    }
-
-    if(!empty($ds['order_by']))
-    {
-      $order_by = "{$ds['order_by']}";
-      $this->db->order_by($order_by, $ds['sort_by']);
-    }
-    else
-    {
-      $this->db->order_by('code', 'DESC');
-    }
-
-    if($perpage != '')
-    {
-      $offset = $offset === NULL ? 0 : $offset;
-      $this->db->limit($perpage, $offset);
-    }
-
-    $rs = $this->db->get($this->tb);
-    // echo $this->db->get_compiled_select($this->tb);
-    if($rs->num_rows() > 0)
-    {
-      return $rs->result();
-    }
-
-    return NULL;
-  }
-
 
 
   public function get_list(array $ds = array(), $perpage = 20, $offset = 0, $role = 'S')
@@ -1168,18 +803,17 @@ class Orders_model extends CI_Model
     $this->db
     ->select('id, code, role, reference, customer_code, customer_name, customer_ref')
     ->select('channels_code, payment_code, state, status, warehouse_code, zone_code, date_add, is_expired, doc_total')
-    ->select('is_backorder, is_approved, user, empName, is_cancled')
+    ->select('is_backorder, is_approved, user, empName, is_cancled, budget_id, budget_code')
     ->where('role', $role);
 
-    if( ! empty($ds['from_date']) && ! empty($ds['to_date']))
+    if( ! empty($ds['from_date']))
     {
       $this->db->where('date_add >=', from_date($ds['from_date']));
-      $this->db->where('date_add <=', to_date($ds['to_date']));
     }
-    else
+
+    if( ! empty($ds['to_date']))
     {
-      $this->db->where('id >', $this->get_max_id());
-      // $this->db->where('date_add >=', from_date($this->_dataDate));
+      $this->db->where('date_add <=', to_date($ds['to_date']));
     }
 
     //---- เลขที่เอกสาร
@@ -1188,12 +822,6 @@ class Orders_model extends CI_Model
       $this->db->like('code', $ds['code']);
     }
 
-
-    if(!empty($ds['qt_no']))
-    {
-      $this->db->like('quotation_no', $ds['qt_no']);
-    }
-
     //--- รหัส/ชื่อ ลูกค้า
     if( ! empty($ds['customer']))
     {
@@ -1205,19 +833,9 @@ class Orders_model extends CI_Model
       ->group_end();
     }
 
-    //---- user name / display name
-    if( ! empty($ds['user']))
+    if( isset($ds['user']) && $ds['user'] != 'all')
     {
-      $user = $this->user_in($ds['user']);
-
-      if( ! empty($user))
-      {
-        $this->db->where_in('user', $user);
-      }
-      else
-      {
-        $this->db->where('user', 'NULL');
-      }
+      $this->db->where('user', $ds['user']);
     }
 
     //---- เลขที่อ้างอิงออเดอร์ภายนอก
@@ -1232,14 +850,12 @@ class Orders_model extends CI_Model
       $this->db->like('shipping_code', $ds['ship_code']);
     }
 
-    //--- ช่องทางการขาย
-    if( ! empty($ds['channels']))
+    if(isset($ds['channels']) && $ds['channels'] != 'all')
     {
       $this->db->where('channels_code', $ds['channels']);
     }
 
-    //--- ช่องทางการชำระเงิน
-    if( ! empty($ds['payment']))
+    if(isset($ds['payment']) && $ds['payment'] != 'all')
     {
       $this->db->where('payment_code', $ds['payment']);
     }
@@ -1268,7 +884,7 @@ class Orders_model extends CI_Model
       $this->db->like('empName', $ds['empName']);
     }
 
-    if(!empty($ds['warehouse']))
+    if(isset($ds['warehouse']) && $ds['warehouse'] != 'all')
     {
       $this->db->where('warehouse_code', $ds['warehouse']);
     }
@@ -1331,39 +947,6 @@ class Orders_model extends CI_Model
       $this->db->where('is_pre_order', $ds['is_pre_order']);
     }
 
-		if(isset($ds['sap_status']) && $ds['sap_status'] !== 'all')
-		{
-			if($ds['sap_status'] == 0)
-			{
-				$this->db->where('is_exported',0);
-			}
-			else if($ds['sap_status'] == 1)
-			{
-				$this->db
-				->group_start()
-				->where('is_exported', 1)
-				->where('inv_code IS NULL', NULL, FALSE)
-				->group_end();
-			}
-			else if($ds['sap_status'] == 2)
-			{
-				$this->db
-				->group_start()
-				->where('is_exported', 1)
-				->where('inv_code IS NOT NULL', NULL, FALSE)
-				->group_end();
-			}
-			else if($ds['sap_status'] == 3)
-			{
-				$this->db->where('is_exported', 3);
-			}
-		}
-
-		if(isset($ds['DoNo']) && $ds['DoNo'] != "")
-		{
-			$this->db->like('inv_code', $ds['DoNo']);
-		}
-
 		if(isset($ds['method']) && $ds['method'] != "all")
 		{
 			if($ds['method'] == 0)
@@ -1391,16 +974,6 @@ class Orders_model extends CI_Model
 				->group_end();
 			}
 		}
-
-    if( isset($ds['tax_status']) && $ds['tax_status'] != 'all')
-    {
-      $this->db->where('tax_status', $ds['tax_status']);
-    }
-
-    if( isset($ds['is_etax'])  && $ds['is_etax'] != 'all')
-    {
-      $this->db->where('is_etax', $ds['is_etax']);
-    }
 
     if(!empty($ds['order_by']))
     {
@@ -2203,18 +1776,6 @@ class Orders_model extends CI_Model
     ->count_all_results($this->td);
 
     return $count > 0 ? TRUE : FALSE;
-  }
-
-  private function get_max_id()
-  {
-    $rs = $this->db->query("SELECT MAX(id) AS id FROM orders");
-
-    if($rs->num_rows() === 1)
-    {
-      return $rs->row()->id - 200000;
-    }
-
-    return 2000000;
   }
 } //--- End class
 

@@ -1,11 +1,8 @@
-var HOME = BASE_URL + 'inventory/adjust/';
-//--- กลับหน้าหลัก
 function goBack(){
   window.location.href = HOME;
 }
 
-
-function goAdd(){
+function addNew(){
   window.location.href = HOME + 'add_new';
 }
 
@@ -22,7 +19,9 @@ function goDetail(code){
 
 function approve(){
 	var code = $('#code').val();
+
   load_in();
+
 	$.ajax({
 		url:HOME + 'do_approve',
 		type:'POST',
@@ -32,8 +31,8 @@ function approve(){
 		},
 		success:function(rs){
       load_out();
-			var rs = $.trim(rs);
-			if(rs === 'success'){
+
+			if(rs.trim() === 'success'){
 				swal({
 					title:'Approved',
 					type:'success',
@@ -45,15 +44,23 @@ function approve(){
 				}, 1200);
 			}
 			else{
-				swal("Error!!", rs, 'error');
+				beep();
+        showError(rs);
 			}
-		}
+		},
+    error:function(rs) {
+      beep();
+      showError(rs);
+    }
 	})
 }
 
 
 function unapprove(){
-	var code = $('#code').val();
+  var code = $('#code').val();
+
+  load_in();
+
 	$.ajax({
 		url:HOME + 'un_approve',
 		type:'POST',
@@ -62,10 +69,11 @@ function unapprove(){
 			'code' : code
 		},
 		success:function(rs){
-			var rs = $.trim(rs);
-			if(rs === 'success'){
+      load_out();
+
+			if(rs.trim() === 'success'){
 				swal({
-					title:'Success',
+					title:'Approved',
 					type:'success',
 					timer:1000
 				});
@@ -75,8 +83,13 @@ function unapprove(){
 				}, 1200);
 			}
 			else{
-				swal("Error!!", rs, 'error');
+				beep();
+        showError(rs);
 			}
-		}
+		},
+    error:function(rs) {
+      beep();
+      showError(rs);
+    }
 	})
 }

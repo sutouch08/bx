@@ -48,31 +48,26 @@ class Orders extends PS_Controller
   {
     $filter = array(
       'code' => get_filter('code', 'order_code', ''),
-			'qt_no' => get_filter('qt_no', 'qt_no', ''),
       'customer' => get_filter('customer', 'order_customer', ''),
-      'user' => get_filter('user', 'order_user', ''),
+      'user' => get_filter('user', 'order_user', 'all'),
       'reference' => get_filter('reference', 'order_reference', ''),
       'ship_code' => get_filter('shipCode', 'order_shipCode', ''),
-      'channels' => get_filter('channels', 'order_channels', ''),
-      'payment' => get_filter('payment', 'order_payment', ''),
+      'channels' => get_filter('channels', 'order_channels', 'all'),
+      'payment' => get_filter('payment', 'order_payment', 'all'),
       'from_date' => get_filter('fromDate', 'order_fromDate', ''),
       'to_date' => get_filter('toDate', 'order_toDate', ''),
-      'warehouse' => get_filter('warehouse', 'order_warehouse', ''),
+      'warehouse' => get_filter('warehouse', 'order_warehouse', 'all'),
       'notSave' => get_filter('notSave', 'notSave', NULL),
       'onlyMe' => get_filter('onlyMe', 'onlyMe', NULL),
       'isExpire' => get_filter('isExpire', 'isExpire', NULL),
 			'method' => get_filter('method', 'method', 'all'),
-			'DoNo' => get_filter('DoNo', 'DoNo', NULL),
-			'sap_status' => get_filter('sap_status', 'sap_status', 'all'),
       'order_by' => get_filter('order_by', 'order_order_by', ''),
       'sort_by' => get_filter('sort_by', 'order_sort_by', ''),
       'stated' => get_filter('stated', 'stated', ''),
       'startTime' => get_filter('startTime', 'startTime', ''),
       'endTime' => get_filter('endTime', 'endTime', ''),
       'is_pre_order' => get_filter('is_pre_order', 'is_pre_order', 'all'),
-      'is_backorder' => get_filter('is_backorder', 'is_backorder', 'all'),
-      'tax_status' => get_filter('tax_status', 'tax_status', 'all'),
-      'is_etax' => get_filter('is_etax', 'is_etax', 'all')
+      'is_backorder' => get_filter('is_backorder', 'is_backorder', 'all')
     );
 
     $state = array(
@@ -139,7 +134,6 @@ class Orders extends PS_Controller
       $this->pagination->initialize($init);
       $this->load->view('orders/orders_list', $filter);
     }
-
   }
 
 
@@ -186,20 +180,6 @@ class Orders extends PS_Controller
   }
 
 
-  public function is_exists_order($code, $old_code = NULL)
-  {
-    $exists = $this->orders_model->is_exists_order($code, $old_code);
-    if($exists)
-    {
-      echo 'เลขที่เอกสารซ้ำ';
-    }
-    else
-    {
-      echo 'not_exists';
-    }
-  }
-
-
   public function add()
   {
     $sc = TRUE;
@@ -211,7 +191,6 @@ class Orders extends PS_Controller
 			$this->load->model('masters/warehouse_model');
 			$this->load->model('masters/sender_model');
       $this->load->model('address/address_model');
-      $book_code = getConfig('BOOK_CODE_ORDER');
       $date_add = db_date($data->date_add);
       $code = $this->get_new_code($date_add);
 
@@ -222,18 +201,6 @@ class Orders extends PS_Controller
       $has_term = empty($payment) ? FALSE : ($payment->role == 4 ? FALSE : (is_true($payment->has_term)));
       $sale_code = $customer->sale_code;
 
-      //--- check over due
-      $is_strict = getConfig('STRICT_OVER_DUE') == 1 ? TRUE : FALSE;
-      $overDue = $is_strict ? $this->invoice_model->is_over_due($data->customer_code) : FALSE;
-
-      //--- ถ้ามียอดค้างชำระ และ เป็นออเดอร์แบบเครดิต
-      //--- ไม่ให้เพิ่มออเดอร์
-      if($overDue && $has_term && !($customer->skip_overdue))
-      {
-        $sc = FALSE;
-        $this->error = 'มียอดค้างชำระเกินกำหนดไม่อนุญาติให้ขาย';
-      }
-
       if($sc === TRUE)
       {
 				$ship_to = empty($customer_ref) ? $this->address_model->get_ship_to_address($customer->code) : $this->address_model->get_shipping_address($customer_ref);
@@ -243,7 +210,6 @@ class Orders extends PS_Controller
           'date_add' => $date_add,
           'code' => $code,
           'role' => $role,
-          'bookcode' => $book_code,
           'reference' => get_null($data->reference),
           'customer_code' => $customer->code,
           'customer_name' => $customer->name,
@@ -261,7 +227,7 @@ class Orders extends PS_Controller
           'is_pre_order' => $data->is_pre_order
         );
 
-        if( !$this->orders_model->add($ds))
+        if( ! $this->orders_model->add($ds))
         {
           $sc = FALSE;
           $this->error = "เพิ่มเอกสารไม่สำเร็จ กรุณาลองใหม่อีกครั้ง";
@@ -1056,58 +1022,45 @@ class Orders extends PS_Controller
       {
         if( $order->state == 1)
         {
-          //--- check over due
-          $is_strict = getConfig('STRICT_OVER_DUE') == 1 ? TRUE : FALSE;
-          $overDue = $is_strict ? $this->invoice_model->is_over_due($this->input->post('customer_code')) : FALSE;
+          $warehouse_code = $this->input->post('warehouse_code');
 
-          //--- ถ้ามียอดค้างชำระ และ เป็นออเดอร์แบบเครดิต
-          //--- ไม่ให้เพิ่มออเดอร์
-          if($overDue && $has_term && !($customer->skip_overdue))
+          $ds = array(
+            'reference' => $this->input->post('reference'),
+            'customer_code' => empty($customer) ? $this->input->post('customer_code') : $customer->code,
+            'customer_name' => empty($customer) ? NULL : $customer->name,
+            'customer_ref' => $this->input->post('customer_ref'),
+            'channels_code' => $this->input->post('channels_code'),
+            'payment_code' => $this->input->post('payment_code'),
+            'sale_code' => $sale_code,
+            'is_term' => $has_term,
+            'date_add' => db_date($this->input->post('date_add')),
+            'warehouse_code' => $warehouse_code,
+            'remark' => $this->input->post('remark'),
+            'transformed' => $this->input->post('transformed'),
+            'status' => 0,
+            'id_address' => NULL,
+            'id_sender' => NULL
+          );
+
+          $rs = $this->orders_model->update($code, $ds);
+
+          if($rs === TRUE)
           {
-            $sc = FALSE;
-            $this->error = 'มียอดค้างชำระเกินกำหนดไม่อนุญาติให้แก้ไขการชำระเงิน';
-          }
-          else
-          {
-            $warehouse_code = $this->input->post('warehouse_code');
-
-            $ds = array(
-              'reference' => $this->input->post('reference'),
-              'customer_code' => empty($customer) ? $this->input->post('customer_code') : $customer->code,
-              'customer_name' => empty($customer) ? NULL : $customer->name,
-              'customer_ref' => $this->input->post('customer_ref'),
-              'channels_code' => $this->input->post('channels_code'),
-              'payment_code' => $this->input->post('payment_code'),
-              'sale_code' => $sale_code,
-              'is_term' => $has_term,
-              'date_add' => db_date($this->input->post('date_add')),
-              'warehouse_code' => $warehouse_code,
-              'remark' => $this->input->post('remark'),
-              'transformed' => $this->input->post('transformed'),
-              'status' => 0,
-              'id_address' => NULL,
-              'id_sender' => NULL
-            );
-
-            $rs = $this->orders_model->update($code, $ds);
-
-            if($rs === TRUE)
+            if($recal == 1)
             {
-              if($recal == 1)
+              //---- Recal discount
+              $details = $this->orders_model->get_order_details($code);
+
+              if(!empty($details))
               {
-                //---- Recal discount
-                $details = $this->orders_model->get_order_details($code);
-
-                if(!empty($details))
+                foreach($details as $detail)
                 {
-                  foreach($details as $detail)
-                  {
-                    $qty	= $detail->qty;
+                  $qty	= $detail->qty;
 
-                    //---- คำนวณ ส่วนลดจากนโยบายส่วนลด
-                    $discount 	= $this->discount_model->get_item_recal_discount($detail->order_code, $detail->product_code, $detail->price, $order->customer_code, $qty, $order->payment_code, $order->channels_code, $order->date_add);
+                  //---- คำนวณ ส่วนลดจากนโยบายส่วนลด
+                  $discount 	= $this->discount_model->get_item_recal_discount($detail->order_code, $detail->product_code, $detail->price, $order->customer_code, $qty, $order->payment_code, $order->channels_code, $order->date_add);
 
-                    $arr = array(
+                  $arr = array(
                     "qty"		=> $qty,
                     "discount1"	=> $discount['discLabel1'],
                     "discount2" => $discount['discLabel2'],
@@ -1115,26 +1068,25 @@ class Orders extends PS_Controller
                     "discount_amount" => $discount['amount'],
                     "total_amount"	=> ($detail->price * $qty) - $discount['amount'],
                     "id_rule"	=> $discount['id_rule']
-                    );
+                  );
 
-                    $this->orders_model->update_detail($detail->id, $arr);
-                  }
+                  $this->orders_model->update_detail($detail->id, $arr);
                 }
-
-                $doc_total = $this->orders_model->get_order_total_amount($code);
-                $arr = array(
-                  'doc_total' => $doc_total,
-                  'status' => 0
-                );
-
-                $this->orders_model->update($code, $arr);
               }
+
+              $doc_total = $this->orders_model->get_order_total_amount($code);
+              $arr = array(
+              'doc_total' => $doc_total,
+              'status' => 0
+              );
+
+              $this->orders_model->update($code, $arr);
             }
-            else
-            {
-              $sc = FALSE;
-              $this->error = 'ปรับปรุงรายการไม่สำเร็จ';
-            }
+          }
+          else
+          {
+            $sc = FALSE;
+            $this->error = 'ปรับปรุงรายการไม่สำเร็จ';
           }
         }
         else
@@ -1212,70 +1164,6 @@ class Orders extends PS_Controller
 
     $order = $this->orders_model->get($code);
 
-    //--- ถ้าออเดอร์เป็นแบบเครดิต
-    if($order->is_term == 1 && ($order->role === 'S' OR $order->role === 'C') && $order->payment_role == 5)
-    {
-      //--- creadit used
-      $credit_used = round($this->orders_model->get_sum_not_complete_amount($order->customer_code), 2);
-      //--- credit balance from sap
-      $credit_balance = round($this->customers_model->get_credit($order->customer_code), 2);
-
-      $skip = getConfig('CONTROL_CREDIT');
-
-      if($skip == 1)
-      {
-        if($credit_used > $credit_balance)
-        {
-          $diff = $credit_used - $credit_balance;
-          $sc = FALSE;
-          $this->error = 'เครดิตคงเหลือไม่พอ (ขาด : '.number($diff, 2).')';
-        }
-      }
-    }
-
-    if($order->role === 'C' OR $order->role === 'N')
-    {
-      $isLimit = $order->role == 'C' ? is_true(getConfig('LIMIT_CONSIGNMENT')) : is_true(getConfig('LIMIT_CONSIGN'));
-
-      if($isLimit)
-      {
-        $this->load->model('masters/zone_model');
-        $this->load->model('masters/warehouse_model');
-        $whsCode = $this->zone_model->get_warehouse_code($order->zone_code);
-
-        if(! empty($whsCode))
-        {
-          $limitAmount = $this->warehouse_model->get_limit_amount($whsCode);
-
-          if($limitAmount > 0)
-          {
-            if($this->warehouse_model->is_stock_exists($order->role, $whsCode))
-            {
-              $balanceAmount = $this->warehouse_model->get_balance_amount($order->role, $whsCode);
-
-              $diff = $limitAmount - $balanceAmount;
-
-              $amount = round($this->orders_model->get_consign_not_complete_amount($order->role, $whsCode), 2);
-
-              if($diff < $amount)
-              {
-                $dif_over = $amount - $diff;
-                $sc = FALSE;
-                $this->error = "มูลค่าสินค้าที่เบิก เกินกว่ามูลค่าคงเหลือสูงสุดที่ของคลัง {$whsCode} (เกิน : ".number($dif_over, 2).")";
-              }
-            }
-          }
-        }
-        else
-        {
-          $sc = FALSE;
-          $this->error = "ไม่พบคลังสินค้า";
-        }
-      }
-    }
-
-		//--- ถ้าไม่ได้ระบุ ที่อยู่กับผู้จัดส่ง พยายามเติมให้ก่อน
-
 		if(empty($order->id_address))
 		{
 			$this->load->model('address/address_model');
@@ -1333,12 +1221,8 @@ class Orders extends PS_Controller
         {
           if($rs->is_count)
           {
-            //---- สต็อกคงเหลือในคลัง
             $sell_stock = $this->stock_model->get_sell_stock($rs->product_code, $order->warehouse_code);
-
-            //---- ยอดจองสินค้า ไม่รวมรายการที่กำหนด
             $reserv_stock = $this->orders_model->get_reserv_stock_exclude($rs->product_code, $order->warehouse_code, $rs->id);
-
             $available = $sell_stock - $reserv_stock;
 
             if($available < $rs->qty)
@@ -1377,194 +1261,6 @@ class Orders extends PS_Controller
 
     echo $sc === TRUE ? 'success' : $this->error;
   }
-
-
-	public function load_quotation()
-	{
-		$sc = TRUE;
-
-		$code = $this->input->get('order_code');
-		$qt_no = $this->input->get('qt_no');
-
-		if(!empty($code))
-		{
-			//--- load model
-			$this->load->model('orders/quotation_model');
-			$order = $this->orders_model->get($code);
-			if(!empty($order))
-			{
-				//---- order state ต้องยังไม่ถูกดึงไปจัด
-				if($order->state <= 3)
-				{
-
-					//---- start transection
-					$this->db->trans_begin();
-					//--- มีอยู่แต่ต้องการเอาออก
-					if(empty($qt_no) && !empty($order->quotation_no))
-					{
-						//--- 2. ลบรายการที่มีในออเดอร์แก่า
-						if($this->orders_model->clear_order_detail($code))
-						{
-							//---- update qt no on order
-							$arr = array(
-								'quotation_no' => NULL,
-								'status' => 0
-							);
-
-							if(! $this->orders_model->update($code, $arr))
-							{
-								$sc = FALSE;
-								$this->error = "ลบเลขที่ใบเสนอราคาไม่สำเร็จ";
-							}
-
-						}
-						else
-						{
-							$sc = FALSE;
-							$this->error = "ลบรายการไม่สำเร็จ";
-						}
-					}
-					else
-					{
-						if(!empty($qt_no))
-						{
-							//--- ยังไม่มี หรือ มีแล้วต้องการเปลี่ยน
-							$docEntry = $this->quotation_model->get_id($qt_no);
-
-							if(! empty($docEntry))
-							{
-								//---- 1. ดึงรายการในใบเสนอราคามาเช็คก่อนว่ามีรายการหรือไม่
-								$is_exists = $this->quotation_model->is_exists_details($docEntry);
-
-								if($is_exists === TRUE)
-								{
-									//--- 2. ลบรายการที่มีในออเดอร์แก่า
-									if($this->orders_model->clear_order_detail($code))
-									{
-										//--- 3. เพิ่มรายการใหม่
-										$details = $this->quotation_model->get_details($docEntry);
-
-										if(!empty($details))
-										{
-											$auz = getConfig('ALLOW_UNDER_ZERO');
-
-											foreach($details as $rs)
-											{
-												if($sc === FALSE)
-												{
-													break;
-												}
-
-												$item = $this->products_model->get($rs->code);
-
-												if(!empty($item))
-												{
-													//---- ยอดสินค้าที่่สั่งได้
-													$stock = $this->get_sell_stock($item->code, $order->warehouse_code);
-													$qty = round($rs->qty, 2);
-													//--- ถ้ามีสต็อกมากว่าที่สั่ง หรือ เป็นสินค้าไม่นับสต็อก
-								          if( $stock >= $qty OR $item->count_stock == 0 OR $auz == 1)
-								          {
-														$price = add_vat($rs->price); //-- PriceBefDi
-														$disc_amount = ($price * ($rs->discount * 0.01)) * $qty;
-														$total_amount = ($qty * $price) - $disc_amount;
-
-														$arr = array(
-															'order_code' => $code,
-															'style_code' => $item->style_code,
-															'product_code' => $item->code,
-															'product_name' => $item->name,
-															'cost' => $item->cost,
-															'price' => $price,
-															'qty' => $qty,
-															'discount1' => $rs->discount.'%',
-															'discount_amount' => $disc_amount,
-															'total_amount' => $total_amount,
-															'is_count' => $item->count_stock
-														);
-
-														$this->orders_model->add_detail($arr);
-													}
-													else
-													{
-														$sc = FALSE;
-														$this->error = "สินค้าไม่พอ : {$item->code} ต้องการ {$qty} คงเหลือ {$stock}";
-													}
-												}
-												else
-												{
-													$sc = FALSE;
-													$this->error = "ไม่พบรหัสสินค้า '{$rs->code}' ในระบบ";
-												}
-
-											} //--- end foreach
-
-											$arr = array(
-												'quotation_no' => $qt_no,
-												'status' => 0
-											);
-
-											$this->orders_model->update($code, $arr);
-
-										}
-										else
-										{
-											$sc = FALSE;
-											$this->error = "Error : ไม่พบรายการในใบเสนอราคา";
-										}
-									}
-									else
-									{
-										$sc = FALSE;
-										$this->error = "ลบรายการเก่าไม่สำเร็จ";
-									}
-								}
-								else
-								{
-									$sc = FALSE;
-									$this->error = "ไม่พบรายการในใบเสนอราคา";
-								}
-							}
-							else
-							{
-								$sc = FALSE;
-								$this->error = "ใบเสนอราคาไม่ถูกต้อง";
-							} //--- end if empty qt
-						}
-
-					} //--- end if empty qt_no
-
-
-					if($sc === TRUE)
-					{
-						$this->db->trans_commit();
-					}
-					else
-					{
-						$this->db->trans_rollback();
-					}
-
-				}
-				else
-				{
-					$sc = FALSE;
-					$this->error = "ออเดอร์อยุ๋ในสถานะที่ไม่สามารถแก้ไขรายการได้";
-				}
-			}
-			else
-			{
-				$sc = FALSE;
-				$this->error = "ไม่พบข้อมูลออเดอร์";
-			}
-		}
-		else
-		{
-			$sc = FALSE;
-			$this->error = "ไม่พบเลขที่เอกสาร";
-		}
-
-		echo $sc === TRUE ? 'success' : $this->error;
-	}
 
 
   public function get_product_order_tab()
@@ -2866,38 +2562,13 @@ class Orders extends PS_Controller
 
       if(! empty($order))
       {
-
-        if( ! $uat)
-        {
-          if($order->role == 'S' OR $order->role == 'C' OR $order->role == 'P' OR $order->role == 'U')
-          {
-            $sap = $this->orders_model->get_sap_doc_num($order->code);
-            if(!empty($sap))
-            {
-              echo 'กรุณายกเลิกใบส่งสินค้า SAP ก่อนย้อนสถานะ';
-              exit;
-            }
-          }
-
-          if($order->role == 'T' OR $order->role == 'L' OR $order->role == 'Q' OR $order->role == 'N')
-          {
-            $this->load->model('inventory/transfer_model');
-            $sap = $this->transfer_model->get_sap_transfer_doc($code);
-            if(! empty($sap))
-            {
-              echo "กรุณายกเลิกใบโอนสินค้าใน SAP ก่อนย้อนสถานะ";
-              exit;
-            }
-          }
-
-        } //--- end if uat
-
         //--- ถ้าเป็นเบิกแปรสภาพ จะมีการผูกสินค้าไว้
         if($order->role == 'T')
         {
           $this->load->model('inventory/transform_model');
           //--- หากมีการรับสินค้าที่ผูกไว้แล้วจะไม่อนุญาติให้เปลี่ยนสถานะใดๆ
           $is_received = $this->transform_model->is_received($code);
+
           if($is_received === TRUE)
           {
             echo 'ใบเบิกมีการรับสินค้าแล้วไม่อนุญาติให้ย้อนสถานะ';
@@ -2918,11 +2589,17 @@ class Orders extends PS_Controller
           }
         }
 
+        if($order->role == 'P')
+        {
+          $this->load->model('masters/sponsor_budget_model');
+          $this->load->model('inventory/invoice_model');
+          $sold_amount = $this->invoice_model->get_billed_amount($order->code);
+        }
+
 
         if($sc === TRUE)
         {
           $this->db->trans_begin();
-
           //--- ถ้าเปิดบิลแล้ว
           if($sc === TRUE && $order->state == 8)
           {
@@ -2933,6 +2610,13 @@ class Orders extends PS_Controller
               {
                 $sc = FALSE;
               }
+              else
+              {
+                if($order->role == 'P')
+                {
+                  $this->sponsor_budget_model->rollback_used($order->budget_id, $sold_amount);
+                }
+              }
             }
             else if($state == 9)
             {
@@ -2941,7 +2625,6 @@ class Orders extends PS_Controller
                 $sc = FALSE;
               }
             }
-
           }
           else if($sc === TRUE && $order->state != 8)
           {
@@ -3140,47 +2823,6 @@ class Orders extends PS_Controller
 
         } //--- end foreach
       } //---- end sold
-
-
-      if($sc === TRUE)
-      {
-        //---- Delete Middle Temp
-        //---- ถ้าเป็นฝากขายโอนคลัง ตามไปลบ transfer draft ที่ยังไม่เอาเข้าด้วย
-        if($role == 'N')
-        {
-          $middle = $this->transfer_model->get_middle_transfer_draft($code);
-          if(!empty($middle))
-          {
-            foreach($middle as $rows)
-            {
-              $this->transfer_model->drop_middle_transfer_draft($rows->DocEntry);
-            }
-          }
-        }
-        else if($role == 'T' OR $role == 'Q' OR $role == 'L')
-        {
-          $middle = $this->transfer_model->get_middle_transfer_doc($code);
-          if(!empty($middle))
-          {
-            foreach($middle as $rows)
-            {
-              $this->transfer_model->drop_middle_exits_data($rows->DocEntry);
-            }
-          }
-        }
-        else
-        {
-          //---- ถ้าออเดอร์ยังไม่ถูกเอาเข้า SAP ลบออกจากถังกลางด้วย
-          $middle = $this->delivery_order_model->get_middle_delivery_order($code);
-          if(!empty($middle))
-          {
-            foreach($middle as $rows)
-            {
-              $this->delivery_order_model->drop_middle_exits_data($rows->DocEntry);
-            }
-          }
-        }
-      }
     }
 
     return $sc;

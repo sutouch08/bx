@@ -92,7 +92,7 @@
 
 
 
-		<div class="col-lg-2 col-md-4 col-sm-3 col-xs-6 padding-5">
+		<div class="col-lg-4 col-md-4 col-sm-6 col-xs-6 padding-5">
 			<label>คลัง</label>
 	    <input type="text" class="form-control input-sm" value="<?php echo $order->warehouse_name; ?>" disabled />
 	  </div>

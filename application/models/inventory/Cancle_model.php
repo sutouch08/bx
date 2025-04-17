@@ -294,13 +294,29 @@ class Cancle_model extends CI_Model
     ->where('order_detail_id', $detail_id)
     ->or_where('order_detail_id IS NULL', NULL, FALSE)
     ->group_end();
-    
+
     if( $this->db->count_all_results('buffer') > 0)
     {
       return TRUE;
     }
 
     return FALSE;
+  }
+
+  public function get_product_cancle_zone($zone_code, $product_code)
+  {
+    $rs = $this->db
+    ->select_sum('qty')
+    ->where('zone_code', $zone_code)
+    ->where('product_code', $product_code)
+    ->get('cancle');
+
+    if($rs->num_rows() === 1)
+    {
+      return $rs->row()->qty > 0 ? $rs->row()->qty : 0;
+    }
+
+    return 0;
   }
 
 }

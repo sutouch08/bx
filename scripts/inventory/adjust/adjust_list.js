@@ -16,8 +16,7 @@ function goCancle(code){
 }
 
 
-function cancle(code)
-{
+function cancle(code){
 	var reason = $.trim($('#cancle-reason').val());
 
 	if(reason.length < 10)
@@ -62,6 +61,7 @@ function cancle(code)
   });
 }
 
+
 function doCancle() {
 	let code = $('#cancle-code').val();
 	let reason = $.trim($('#cancle-reason').val());
@@ -77,34 +77,9 @@ function doCancle() {
 }
 
 
-
 $('#cancle-modal').on('shown.bs.modal', function() {
 	$('#cancle-reason').focus();
 });
-
-
-function getSearch(){
-  $("#searchForm").submit();
-}
-
-
-
-
-
-function clearFilter(){
-  $.get(HOME + 'clear_filter', function(){ goBack(); });
-}
-
-
-
-
-
-$(".search").keyup(function(e){
-  if(e.keyCode == 13){
-    getSearch();
-  }
-});
-
 
 
 $("#fromDate").datepicker({
@@ -121,7 +96,6 @@ $("#toDate").datepicker({
     $("#fromDate").datepicker("option", "maxDate", sd);
   }
 });
-
 
 
 $(document).ready(function() {

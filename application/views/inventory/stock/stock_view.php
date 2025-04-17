@@ -41,37 +41,37 @@
 </form>
 <?php echo $this->pagination->create_links(); ?>
 <div class="row">
-  <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 padding-5">
-    <table class="table table-striped border-1">
+  <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 padding-5 table-responsive">
+    <table class="table table-striped table-bordered" style="min-width:840px;">
       <tr>
-        <th class="width-5 text-center">ลำดับ</th>
-        <th class="width-25">สินค้า</th>
-        <th class="width-20">รหัสโซน</th>
-        <th class="width-40">ชื่อโซน</th>
-        <th class="width-10 text-center">คงเหลือ</th>
+        <th class="fix-width-40 text-center">#</th>
+        <th class="min-width-200">สินค้า</th>
+    		<th class="fix-width-200">โซน</th>
+        <th class="fix-width-100 text-center">ในโซน</th>
+				<th class="fix-width-100 text-center">Buffer</th>
+				<th class="fix-width-100 text-center">Cancel</th>
+				<th class="fix-width-100 text-center">รวม</th>
       </tr>
       <tbody>
-    <?php if( !empty($data)) : ?>
+    <?php if( ! empty($data)) : ?>
     <?php $no = $this->uri->segment(4) + 1; ?>
-		<?php $pdName = []; ?>
-		<?php $zoneName = []; ?>
-
     <?php foreach($data as $rs) : ?>
-			<?php if(empty($zoneName[$rs->zone_code])) : ?>
-			<?php 	$zoneName[$rs->zone_code] = $this->zone_model->get_name($rs->zone_code); ?>
-			<?php endif; ?>
+			<?php $bQty = get_buffer_qty_by_product_and_zone($rs->product_code, $rs->zone_code); ?>
+			<?php $cQty = get_cancle_qty_by_product_and_zone($rs->product_code, $rs->zone_code); ?>
       <tr class="font-size-12">
-        <td class="text-center no"><?php echo $no; ?></td>
+        <td class="text-center"><?php echo $no; ?></td>
         <td><?php echo $rs->product_code; ?></td>
-        <td><?php echo $rs->zone_code; ?></td>
-        <td><?php echo $zoneName[$rs->zone_code]; ?></td>
-    		<td class="text-center"><?php echo number($rs->qty); ?></td>
+    		<td class=""><?php echo $rs->zone_code; ?></td>
+        <td class="text-center"> <?php echo number($rs->qty); ?></td>
+    		<td class="text-center"> <?php echo number($bQty); ?></td>
+				<td class="text-center"> <?php echo number($cQty); ?></td>
+				<td class="text-center"> <?php echo number($rs->qty + $bQty + $cQty); ?></td>
       </tr>
     <?php  $no++; ?>
     <?php endforeach; ?>
     <?php else : ?>
       <tr>
-        <td colspan="5" class="text-center">--- ไม่พบข้อมูล ---</td>
+        <td colspan="7" class="text-center">--- ไม่พบข้อมูล ---</td>
       </tr>
     <?php endif; ?>
       </tbody>

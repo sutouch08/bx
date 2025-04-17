@@ -1,3 +1,5 @@
+var click = 0;
+
 $('#date').datepicker({
   dateFormat:'dd-mm-yy'
 });
@@ -46,11 +48,14 @@ $("#customerCode").autocomplete({
 		}else{
 			$("#customerCode").val('');
 			$('#customer').val('');
-      $('#budgetLabel').val('');
-      $('#budgetAmount').val(0);
+      $('#budget-amount').val(0.00);
+      $('#budget-amount').data('amount', 0);
+      $('#budget-id').val('');
+      $('#budget-code').val('');
 		}
 	}
 });
+
 
 $("#customer").autocomplete({
 	source: BASE_URL + 'auto_complete/get_sponsor',
@@ -67,25 +72,52 @@ $("#customer").autocomplete({
 		}else{
 			$("#customerCode").val('');
 			$("#customer").val('');
-      $('#budgetLabel').val('');
-      $('#budgetAmount').val(0);
+      $('#budget-amount').val(0.00);
+      $('#budget-amount').data('amount', 0);
+      $('#budget-id').val('');
+      $('#budget-code').val('');
 		}
 	}
 });
 
 
-function getBudget(code){
+function getBudget(code) {
+  load_in();
+
   $.ajax({
-    url:BASE_URL + 'orders/sponsor/get_sponsor_budget/'+code,
+    url:HOME + 'get_budget',
     type:'GET',
     cache:false,
-    success:function(rs) {
-      $('#budgetAmount').val(rs);
-      $('#budgetLabel').val(addCommas(rs));
+    data:{
+      'code' : code
+    },
+    success:function(rs){
+      load_out();
+
+      if(isJson(rs)) {
+        let ds = JSON.parse(rs);
+
+        $('#budget-amount').val(ds.amount_label);
+        $('#budget-amount').data('amount', ds.amount);
+        $('#budget-id').val(ds.budget_id);
+        $('#budget-code').val(ds.budget_code);
+      }
+      else {
+        $('#budget-amount').val(0.00);
+        $('#budget-amount').data('amount', 0);
+        $('#budget-id').val('');
+        $('#budget-code').val('');
+      }
+    },
+    error:function(rs) {
+      load_out();
+      $('#budget-amount').val(0.00);
+      $('#budget-amount').data('amount', 0);
+      $('#budget-id').val('');
+      $('#budget-code').val('');
     }
   });
 }
-
 
 
 $('#customer').focusout(function(){
@@ -93,103 +125,124 @@ $('#customer').focusout(function(){
   if(code.length == 0)
   {
     $('#customerCode').val('');
-    $('#budgetLabel').val('');
-    $('#budgetAmount').val(0);
+    $('#budget-amount').val(0.00);
+    $('#budget-amount').data('amount', 0);
+    $('#budget-id').val('');
+    $('#budget-code').val('');
   }
 });
+
 
 $('#customerCode').focusout(function(){
   var code = $(this).val();
   if(code.length == 0)
   {
     $('#customer').val('');
-    $('#budgetLabel').val('');
-    $('#budgetAmount').val(0);
+    $('#budget-amount').val(0.00);
+    $('#budget-amount').data('amount', 0);
+    $('#budget-id').val('');
+    $('#budget-code').val('');
   }
 });
 
+
 function add() {
+  if(click == 0) {
+    click = 1;
+    clearErrorByClass('e');
 
-  let h = {
-    'customer_code' : $('#customerCode').val(),
-    'customer_name' : $('#customer').val(),
-    'date_add' : $('#date').val(),
-    'empName' : $('#empName').val(),
-    'warehouse_code' : $('#warehouse').val(),
-    'transformed' : $('#transformed').val(),
-    'remark' : $('#remark').val()
-  };
+    let h = {
+      'customer_code' : $('#customerCode').val(),
+      'customer_name' : $('#customer').val(),
+      'date_add' : $('#date').val(),
+      'empName' : $('#empName').val(),
+      'warehouse_code' : $('#warehouse').val(),
+      'budget_id' : $('#budget-id').val(),
+      'budget_code' : $('#budget-code').val(),
+      'budget_amount' : parseDefault(parseFloat($('#budget-amount').data('amount')), 0),
+      'transformed' : $('#transformed').val(),
+      'remark' : $('#remark').val().trim()
+    };
 
+    if(h.customer_code.length == 0) {
+      $('#customerCode').hasError();
+      click = 0;
+      return false;
+    }
 
+    if(h.customer_name.length == 0) {
+      $('#customer').hasError();
+      click = 0;
+      return false;
+    }
 
-  if(h.customer_code.length == 0 || h.customer_name.length == 0) {
-    swal('ชื่อผู้รับไม่ถูกต้อง');
-    return false;
-  }
+    if( ! isDate(h.date_add))
+    {
+      $('#datae').hasError();
+      click = 0;
+      return false;
+    }
 
-  if( ! isDate(h.date_add))
-  {
-    swal('วันที่ไม่ถูกต้อง');
-    return false;
-  }
+    if(h.budget_id == 0 || h.budget_id == null || h.budget_id == "") {
+      $('#budget-amount').hasError();
+      click = 0;
+      return false;
+    }
 
-  if(h.empName.length == 0)
-  {
-    swal('ชื่อผู้เบิกไม่ถูกต้อง');
-    return false;
-  }
+    if(h.budget_amount <= 0) {
+      $('#budget-amount').hasError();
+      click = 0;
+      return false;
+    }
 
-  if(h.warehouse_code == ""){
-    swal('กรุณาเลือกคลัง');
-    return false;
-  }
+    if(h.empName.length == 0)
+    {
+      $('#empName').hasError();
+      click = 0;
+      return false;
+    }
 
-  load_in();
+    if(h.warehouse_code == "") {
+      $('#warehouse').hasError();
+      swal('กรุณาเลือกคลัง');
+      click = 0;
+      return false;
+    }
 
-  $.ajax({
-    url:BASE_URL + 'orders/sponsor/add',
-    type:'POST',
-    cache:false,
-    data:{
-      'data' : JSON.stringify(h)
-    },
-    success:function(rs) {
-      load_out();
+    load_in();
 
-      if(isJson(rs)) {
-        let ds = JSON.parse(rs);
+    $.ajax({
+      url:BASE_URL + 'orders/sponsor/add',
+      type:'POST',
+      cache:false,
+      data:{
+        'data' : JSON.stringify(h)
+      },
+      success:function(rs) {
+        load_out();
 
-        if(ds.status == 'success') {
-          window.location.href = BASE_URL + 'orders/sponsor/edit_detail/'+ ds.code;
+        if(isJson(rs)) {
+          let ds = JSON.parse(rs);
+
+          if(ds.status == 'success') {
+            window.location.href = BASE_URL + 'orders/sponsor/edit_detail/'+ ds.code;
+          }
+          else {
+            beep();
+            showError(ds.message);
+          }
         }
         else {
-          swal({
-            title:'Error!',
-            text:ds.message,
-            type:'error'
-          });
+          beep();
+          showError(rs);
         }
+      },
+      error:function(rs) {
+        beep();
+        showError(rs);
       }
-      else {
-        swal({
-          title:'Error',
-          text:rs,
-          type:'error',
-          html:true
-        })
-      }
-    },
-    error:function(xhr) {
-      load_out();
-
-      swal({
-        title:'Error!',
-        type:'error',
-        text:xhr.responseText,
-        html:true
-      });
-    }
-  });
+    });
+  }
 
 }
 

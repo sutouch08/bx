@@ -344,21 +344,39 @@ class Pick_list extends PS_Controller
                     break;
                   }
 
-                  //--- move out
-                  $arr = array(
-                    'reference' => $code,
-                    'warehouse_code' => $from_warehouse_code,
-                    'zone_code' => $rs->zone_code,
-                    'product_code' => $rs->product_code,
-                    'move_in' => 0,
-                    'move_out' => $rs->qty,
-                    'date_add' => $doc->date_add
-                  );
-
-                  if( ! $this->movement_model->add($arr))
+                  if( ! $this->stock_model->update_stock_zone($rs->zone_code, $rs->product_code, ($rs->qty * -1)))
                   {
                     $sc = FALSE;
-                    $this->error = "Failed to create movement";
+                    $this->error = "ตัดสต็อกขาออกไม่สำเร็จ";
+                  }
+
+                  if($sc === TRUE)
+                  {
+                    //--- move out
+                    $arr = array(
+                      'reference' => $code,
+                      'warehouse_code' => $from_warehouse_code,
+                      'zone_code' => $rs->zone_code,
+                      'product_code' => $rs->product_code,
+                      'move_in' => 0,
+                      'move_out' => $rs->qty,
+                      'date_add' => $doc->date_add
+                    );
+
+                    if( ! $this->movement_model->add($arr))
+                    {
+                      $sc = FALSE;
+                      $this->error = "Failed to create movement";
+                    }
+                  }
+
+                  if($sc === TRUE)
+                  {
+                    if( ! $this->stock_model->update_stock_zone($doc->zone_code, $rs->product_code, $rs->qty))
+                    {
+                      $sc = FALSE;
+                      $this->error = "เพิ่มสต็อกขาเข้าไม่สำเร็จ";
+                    }
                   }
 
                   if($sc === TRUE)
@@ -391,17 +409,7 @@ class Pick_list extends PS_Controller
             else
             {
               $this->db->trans_rollback();
-            }
-
-            if($sc === TRUE)
-            {
-              $this->load->library('export');
-
-              if( ! $this->export->export_pick_list($code))
-              {
-                $ex = 1;
-              }
-            }
+            }            
           }
           else
           {
@@ -447,16 +455,16 @@ class Pick_list extends PS_Controller
     if( ! empty($stock))
     {
       $sc = "";
-
+      $i = 1;
       foreach($stock as $rs)
       {
-        $prepared = $this->prepare_model->get_buffer_zone($item_code, $rs->code);
-        $picked = $this->pick_list_model->get_picked_zone($rs->code, $item_code);
-        $qty = $rs->qty - $prepared - $picked;
+        $picked = $this->pick_list_model->get_picked_zone($rs->zone_code, $item_code);
+        $qty = $rs->qty - $picked;
 
         if($qty > 0)
         {
-          $sc .= $rs->name.' : '.($qty).'<br/>';
+          $sc .= $i == 1 ? $rs->name.' : '.($qty) : ' | '.$rs->name.' : '.$qty;
+          $i++;
         }
       }
     }
@@ -468,10 +476,9 @@ class Pick_list extends PS_Controller
   public function get_stock_zone($zone_code, $item_code)
   {
     $stock = $this->stock_model->get_stock_zone($zone_code, $item_code); //-- stock in zone
-    $prepared = $this->prepare_model->get_buffer_zone($item_code, $zone_code); //--- buffer
     $picked = $this->pick_list_model->get_picked_zone($zone_code, $item_code); //-- pick list transection
 
-    return $stock - $prepared - $picked;
+    return $stock - $picked;
   }
 
 

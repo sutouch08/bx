@@ -159,7 +159,6 @@ class Consign_so extends PS_Controller
   }
 
 
-
   public function add_new()
   {
     $this->load->view('order_consign/consign_add');
@@ -176,8 +175,6 @@ class Consign_so extends PS_Controller
 
     if( ! empty($data))
     {
-      $book_code = getConfig('BOOK_CODE_CONSIGN_SO');
-
       $date_add = db_date($data->date_add);
 
       $code = $this->get_new_code($date_add);
@@ -203,8 +200,7 @@ class Consign_so extends PS_Controller
               $ds = array(
                 'date_add' => $date_add,
                 'code' => $code,
-                'role' => $role,
-                'bookcode' => $book_code,
+                'role' => $role,                
                 'customer_code' => $customer->code,
                 'customer_name' => $customer->name,
                 'gp' => $gp,
@@ -841,7 +837,7 @@ class Consign_so extends PS_Controller
       'consign_fromDate',
       'consign_toDate',
       'consign_isApprove',
-			'consign_warehouse',			
+			'consign_warehouse',
       'consign_is_backorder',
       'consign_sap_status',
       'consign_notSave',

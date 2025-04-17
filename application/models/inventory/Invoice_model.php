@@ -55,6 +55,7 @@ class Invoice_model extends CI_Model
     return 0;
   }
 
+
   public function get_sum_prepared($order_code, $product_code, $order_detail_id)
   {
     $rs = $this->db
@@ -108,6 +109,7 @@ class Invoice_model extends CI_Model
     return $rs->row()->total_amount;
   }
 
+
   //----- get sold qty from order sold
   public function get_billed_detail_qty($code)
   {
@@ -138,7 +140,7 @@ class Invoice_model extends CI_Model
       return $rs->result();
     }
 
-    return FALSE;
+    return NULL;
   }
 
 
@@ -162,6 +164,7 @@ class Invoice_model extends CI_Model
     return NULL;
   }
 
+
   //-- use in API
   public function get_details_summary_group_by_item($code)
   {
@@ -181,13 +184,11 @@ class Invoice_model extends CI_Model
   }
 
 
-
   public function get_total_sold_qty($code)
   {
     $rs = $this->db->select_sum('qty')->where('reference', $code)->get('order_sold');
     return intval($rs->row()->qty);
   }
-
 
 
   public function get_item_sold_qty($code, $product_code)
@@ -203,7 +204,6 @@ class Invoice_model extends CI_Model
   }
 
 
-
   public function drop_sold($id)
   {
     return $this->db->where('id', $id)->delete('order_sold');
@@ -213,56 +213,6 @@ class Invoice_model extends CI_Model
   public function drop_all_sold($code)
   {
     return $this->db->where('reference', $code)->delete('order_sold');
-  }
-
-
-
-  public function is_over_due($customer_code)
-  {
-    $is_strict = getConfig('STRICT_OVER_DUE');
-    if($is_strict == 0)
-    {
-      return FALSE;
-    }
-    else
-    {
-      $control_day = getConfig('OVER_DUE_DATE');
-			$control_day++;
-
-      $rs = $this->ms
-      ->select('DocEntry', FALSE)
-      ->where('CardCode', $customer_code)
-      ->where('DocTotal >', 'PaidToDate', FALSE)
-      ->where("DATEADD(day,{$control_day}, DocDueDate) < ", "GETDATE()", FALSE)
-      ->get('OINV');
-
-      if($rs->num_rows() > 0)
-      {
-        return TRUE;
-      }
-    }
-
-    return FALSE;
-  }
-
-
-  public function is_received($code)
-  {
-    $rs = $this->mc
-    ->select('F_Receipt')
-    ->where('U_ECOMNO', $code)
-    ->group_start()
-    ->where('F_Sap IS NULL', NULL, FALSE)
-    ->or_where('F_Sap', 'N')
-    ->group_end()
-    ->get('DFOWTR');
-
-    if($rs->num_rows() === 1)
-    {
-      return $rs->row()->F_Receipt;
-    }
-
-    return FALSE;
   }
 
 } //--- end class

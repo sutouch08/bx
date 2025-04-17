@@ -1,16 +1,12 @@
 <?php $this->load->view('include/header'); ?>
 <div class="row">
-	<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 padding-5">
-    <h3 class="title">
-      <?php echo $this->title; ?>
-    </h3>
+	<div class="col-lg-6 col-md-6 col-sm-6 col-xs-12 padding-5 padding-top-5">
+    <h3 class="title"><?php echo $this->title; ?></h3>
   </div>
-  <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 padding-5">
-  	<p class="pull-right top-p">
-    <?php if($this->pm->can_add) : ?>
-      <button type="button" class="btn btn-sm btn-success" onclick="addNew()"><i class="fa fa-plus"></i> เพิ่มใหม่</button>
-    <?php endif; ?>
-    </p>
+  <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12 padding-5 text-right">
+		<?php if($this->pm->can_add) : ?>
+			<button type="button" class="btn btn-sm btn-success top-btn" onclick="addNew()"><i class="fa fa-plus"></i> เพิ่มใหม่</button>
+		<?php endif; ?>
   </div>
 </div><!-- End Row -->
 <hr class="padding-5"/>
@@ -26,13 +22,17 @@
     <input type="text" class="form-control input-sm search" name="customer" value="<?php echo $customer; ?>" />
   </div>
 	<div class="col-lg-2 col-md-2 col-sm-2 col-xs-6 padding-5">
-    <label>พนักงาน</label>
-    <input type="text" class="form-control input-sm search" name="user" value="<?php echo $user; ?>" />
+    <label>User</label>
+		<select class="width-100 filter" name="user" id="user">
+			<option value="all">ทั้งหมด</option>
+			<?php echo select_user($user); ?>
+		</select>
   </div>
-	<div class="col-lg-3 col-md-4-harf col-sm-4-harf col-xs-6 padding-5">
+
+	<div class="col-lg-3-harf col-md-4-harf col-sm-4-harf col-xs-6 padding-5">
 		<label>คลังสินค้า</label>
 		<select class="width-100" name="warehouse" id="warehouse" onchange="getSearch()">
-			<option value="">ทั้งหมด</option>
+			<option value="all">ทั้งหมด</option>
 			<?php echo select_warehouse($warehouse); ?>
 		</select>
 	</div>
@@ -55,23 +55,13 @@
 		</select>
 	</div>
 
-	<div class="col-lg-2-harf col-md-3 col-sm-3 col-xs-6 padding-5">
+	<div class="col-lg-2 col-md-2-harf col-sm-3 col-xs-6 padding-5">
     <label>วันที่</label>
-    <div class="input-daterange input-group">
+    <div class="input-daterange input-group width-100">
       <input type="text" class="form-control input-sm width-50 text-center from-date" name="fromDate" id="fromDate" value="<?php echo $from_date; ?>" />
       <input type="text" class="form-control input-sm width-50 text-center" name="toDate" id="toDate" value="<?php echo $to_date; ?>" />
     </div>
   </div>
-	<div class="col-lg-1-harf col-md-2 col-sm-2 col-xs-6 padding-5">
-		<label>SAP Status</label>
-		<select class="form-control input-sm" name="sap_status" onchange="getSearch()">
-			<option value="all">ทั้งหมด</option>
-			<option value="0" <?php echo is_selected('0', $sap_status); ?>>ยังไม่ส่งออก</option>
-			<option value="1" <?php echo is_selected('1', $sap_status); ?>>ยังไม่เข้า SAP</option>
-			<option value="2" <?php echo is_selected('2', $sap_status); ?>>เข้า SAP แล้ว</option>
-			<option value="3" <?php echo is_selected('3', $sap_status); ?>>ส่งออกไม่สำเร็จ</option>
-		</select>
-	</div>
 	<div class="col-lg-1 col-md-1-harf col-sm-1-harf col-xs-3 padding-5">
 		<label class="display-block not-show">search</label>
     <button type="submit" class="btn btn-xs btn-primary btn-block"><i class="fa fa-search"></i> Search</button>
@@ -134,13 +124,14 @@
 <?php echo $this->pagination->create_links(); ?>
 <div class="row">
 	<div class="col-sm-12 col-xs-12 padding-5 table-responsive">
-		<table class="table table-striped table-hover border-1" style="min-width:1000px;">
+		<table class="table table-striped table-hover border-1" style="min-width:840px;">
 			<thead>
-				<tr>
+				<tr class="font-size-11">
 					<th class="fix-width-40 middle text-center">ลำดับ</th>
 					<th class="fix-width-100 middle text-center">วันที่</th>
 					<th class="fix-width-120 middle">เลขที่เอกสาร</th>
-					<th class="fix-width-300 middle">ลูกค้า</th>
+					<th class="min-width-250 middle">ลูกค้า</th>
+					<th class="fix-width-100 middle text-center">Budget</th>
 					<th class="fix-width-120 middle text-right">ยอดเงิน</th>
 					<th class="fix-width-150 middle text-center">สถานะ</th>
 					<th class="fix-width-100 middle text-center">พนักงาน</th>
@@ -150,19 +141,14 @@
         <?php if(!empty($orders)) : ?>
           <?php $no = $this->uri->segment(4) + 1; ?>
           <?php foreach($orders as $rs) : ?>
-            <tr id="row-<?php echo $rs->code; ?>" style="<?php echo state_color($rs->state, $rs->status, $rs->is_expired); ?>">
+            <tr class="font-size-11" id="row-<?php echo $rs->code; ?>" style="<?php echo state_color($rs->state, $rs->status, $rs->is_expired); ?>">
               <td class="middle text-center pointer" onclick="editOrder('<?php echo $rs->code; ?>')"><?php echo $no; ?></td>
               <td class="middle text-center pointer" onclick="editOrder('<?php echo $rs->code; ?>')"><?php echo thai_date($rs->date_add); ?></td>
               <td class="middle pointer" onclick="editOrder('<?php echo $rs->code; ?>')"><?php echo $rs->code; ?></td>
               <td class="middle pointer" onclick="editOrder('<?php echo $rs->code; ?>')"><?php echo $rs->customer_name; ?></td>
-              <td class="middle pointer text-right" onclick="editOrder('<?php echo $rs->code; ?>')"><?php echo number($rs->total_amount, 2); ?></td>
-              <td class="middle pointer text-center" onclick="editOrder('<?php echo $rs->code; ?>')">
-								<?php if($rs->is_expired) : ?>
-									หมดอายุ
-								<?php else : ?>
-									<?php echo $rs->state_name; ?>
-								<?php endif; ?>
-							</td>
+							<td class="middle text-center pointer" onclick="editOrder('<?php echo $rs->code; ?>')"><?php echo $rs->budget_code; ?></td>
+              <td class="middle pointer text-right" onclick="editOrder('<?php echo $rs->code; ?>')"><?php echo number($rs->doc_total, 2); ?></td>
+              <td class="middle pointer text-center" onclick="editOrder('<?php echo $rs->code; ?>')"><?php echo state_name($rs->state); ?></td>
 							<td class="middle pointer text-center" onclick="editOrder('<?php echo $rs->code; ?>')"><?php echo $rs->user; ?></td>
               </td>
             </tr>
@@ -175,6 +161,7 @@
 </div>
 
 <script>
+	$('#user').select2();
 	$('#warehouse').select2();
 </script>
 <script src="<?php echo base_url(); ?>scripts/sponsor/sponsor.js?v=<?php echo date('Ymd'); ?>"></script>

@@ -1,32 +1,18 @@
 <?php $this->load->view('include/header'); ?>
-<?php $manual_code = 0; //getConfig('MANUAL_DOC_CODE');  ?>
-<?php if($manual_code == 1) :?>
-	<input type="hidden" id="manualCode" value="<?php echo $manual_code; ?>">
-	<input type="hidden" id="prefix" value="<?php echo getConfig('PREFIX_ORDER'); ?>">
-	<input type="hidden" id="runNo" value="<?php echo getConfig('RUN_DIGIT_ORDER'); ?>">
-<?php endif; ?>
-
 <div class="row">
-	<div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 padding-5">
-    <h4 class="title"><?php echo $this->title; ?></h4>
-    </div>
-    <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6 padding-5">
-    	<p class="pull-right top-p">
-        <button type="button" class="btn btn-xs btn-warning" onclick="goBack()"><i class="fa fa-arrow-left"></i> กลับ</button>
-      </p>
-    </div>
+	<div class="col-lg-6 col-md-6 col-sm-6 col-xs-12 padding-5 padding-top-5">
+		<h3 class="title"><?php echo $this->title; ?></h3>
+	</div>
+	<div class="col-lg-6 col-md-6 col-sm-6 col-xs-12 padding-5 text-right">
+		<button type="button" class="btn btn-xs btn-warning" onclick="goBack()"><i class="fa fa-arrow-left"></i> กลับ</button>
+	</div>
 </div><!-- End Row -->
 <hr class=""/>
-<form id="searchForm" method="post" >
 <div class="row">
-  <div class="col-lg-1-harf col-md-2 col-sm-2 col-xs-6 padding-5">
-    <label>เลขที่เอกสาร</label>
-	<?php if($manual_code == 1) : ?>
-    <input type="text" class="form-control input-sm" name="code" id="code" value="" />
-	<?php else : ?>
+	<div class="col-lg-1-harf col-md-2 col-sm-2 col-xs-6 padding-5">
+		<label>เลขที่เอกสาร</label>
 		<input type="text" class="form-control input-sm" value="" disabled />
-	<?php endif; ?>
-  </div>
+	</div>
 
   <div class="col-lg-1-harf col-md-2 col-sm-2 col-xs-6 padding-5">
     <label>วันที่</label>
@@ -35,12 +21,12 @@
 
 	<div class="col-lg-1-harf col-md-2 col-sm-2 col-xs-4 padding-5">
 		<label>รหัสลูกค้า</label>
-		<input type="text" class="form-control input-sm text-center" id="customer_code" name="customer_code" value="" disabled/>
+		<input type="text" class="form-control input-sm text-center" id="customer_code" name="customer_code" value="" />
 	</div>
 
   <div class="col-lg-6 col-md-6 col-sm-6 col-xs-8 padding-5">
     <label>ชื่อลูกค้า[ในระบบ]</label>
-    <input type="text" class="form-control input-sm" name="customer" id="customer" value="" required />
+    <input type="text" class="form-control input-sm" name="customer" id="customer" value="" />
   </div>
 
 	<div class="col-lg-1-harf col-md-2 col-sm-2 col-xs-6 padding-5">
@@ -99,16 +85,11 @@
   </div>
   <div class="col-lg-1-harf col-md-1-harf col-sm-1-harf col-xs-4 padding-5">
     <label class="display-block not-show">Submit</label>
-	<?php if($manual_code == 1) : ?>
-    <button type="Button" class="btn btn-xs btn-success btn-block" onclick="validateOrder()"><i class="fa fa-plus"></i> เพิ่ม</button>
-	<?php else : ?>
-		<button type="button" class="btn btn-xs btn-success btn-block" onclick="add()"><i class="fa fa-plus"></i> เพิ่ม</button>
-	<?php endif; ?>
+	<button type="button" class="btn btn-xs btn-success btn-block" onclick="add()"><i class="fa fa-plus"></i> เพิ่ม</button>
   </div>
 </div>
 <hr class="margin-top-15">
 <input type="hidden" name="customerCode" id="customerCode" value="" />
-</form>
 
 <script>
 	$('#warehouse').select2();
