@@ -25,11 +25,14 @@
 	</div>
 	<div class="col-lg-1-harf col-md-1-harf col-sm-1-harf col-xs-3 padding-5">
 		<label>วันที่</label>
-		<input type="text" class="form-control input-sm text-center" name="date_add" id="dateAdd" value="<?php echo date('d-m-Y'); ?>" readonly />
+		<input type="text" class="form-control input-sm text-center e" id="date-add" value="<?php echo date('d-m-Y'); ?>" readonly />
 	</div>
 	<div class="col-lg-3 col-md-3-harf col-sm-3-harf col-xs-6 padding-5">
 		<label>ผู้ยืม</label>
-		<input type="text" class="form-control input-sm edit" name="empName" id="empName" value="" placeholder="ชื่อผู้ยืม(พนักงาน)" required/>
+		<select class="width-100 filter e" id="employee" onchange="lend_code_init()">
+			<option value="">เลือกพนักงาน</option>
+			<?php echo select_employee(); ?>
+		</select>
 	</div>
 	<div class="col-lg-6 col-md-5 col-sm-5 col-xs-12 padding-5">
 		<label>หมายเหตุ</label>
@@ -40,7 +43,7 @@
 
 	<div class="col-lg-1-harf col-md-2 col-sm-2 col-xs-4 padding-5">
 		<label>ใบยืมสินค้า</label>
-		<input type="text" class="form-control input-sm text-center" name="lend_code" id="lend_code" value="" placeholder="ระบุเลขที่ใบยืมสินค้า" required>
+		<input type="text" class="form-control input-sm text-center e" id="lend_code" value="" placeholder="ระบุเลขที่ใบยืมสินค้า" required>
 	</div>
 	<div class="col-lg-1 col-md-1-harf col-sm-1-harf col-xs-3 padding-5">
 		<label class="display-block not-show">doc</label>
@@ -49,11 +52,11 @@
 	</div>
 	<div class="col-lg-2 col-md-2-harf col-sm-2-harf col-xs-5 padding-5">
 		<label>รหัสโซน</label>
-		<input type="text" class="form-control input-sm" name="zone_code" id="zone_code" value="" required />
+		<input type="text" class="form-control input-sm e" id="zone_code" value="" required />
 	</div>
 	<div class="col-lg-6-harf col-md-4-harf col-sm-4-harf col-xs-9 padding-5">
 		<label>โซน[รับคืน]</label>
-		<input type="text" class="form-control input-sm edit" name="zone" id="zone" value="" placeholder="กำหนดโซนที่จะรับสินค้าเข้า" required />
+		<input type="text" class="form-control input-sm e" id="zone" value="" placeholder="กำหนดโซนที่จะรับสินค้าเข้า" required />
 	</div>
 	<div class="col-lg-1 col-md-1-harf col-sm-1-harf col-xs-3 padding-5">
 		<label class="display-block not-show">chang</label>
@@ -109,7 +112,6 @@
 		</table>
 	</div>
 </div>
-<input type="hidden" name="empID" id="empID" value="">
 
 <?php $this->load->view('cancle_modal'); ?>
 
@@ -141,7 +143,7 @@
 					<span class="barcode" onClick="addToBarcode('{{barcode}}')">{{barcode}}</span>
 					{{/if}}
 				</td>
-				<td class="middle">{{itemCode}}</td>
+				<td class="middle">{{itemCode}} : {{itemName}}</td>
 				<td class="middle text-center">{{lendQtyLabel}}</td>
 				<td class="middle text-center">{{receivedLabel}}</td>
 				<td class="middle text-center">{{backlogsLabel}}</td>
@@ -150,6 +152,7 @@
 					<input type="number"
 					class="form-control input-sm text-right qty"
 					data-product="{{itemCode}}"
+					data-name="{{itemName}}"
 					id="receiveQty-{{no}}"
 					data-no="{{no}}"
 					value="" />
@@ -161,10 +164,10 @@
 {{/each}}
 </script>
 
-
-
+<script>
+	$('#employee').select2();
+</script>
 <script src="<?php echo base_url(); ?>scripts/inventory/return_lend/return_lend.js?v=<?php echo date('Ymd'); ?>"></script>
 <script src="<?php echo base_url(); ?>scripts/inventory/return_lend/return_lend_add.js?v=<?php echo date('Ymd'); ?>"></script>
 <script src="<?php echo base_url(); ?>scripts/inventory/return_lend/return_lend_control.js?v=<?php echo date('Ymd'); ?>"></script>
-<script src="<?php echo base_url(); ?>scripts/beep.js"></script>
 <?php $this->load->view('include/footer'); ?>

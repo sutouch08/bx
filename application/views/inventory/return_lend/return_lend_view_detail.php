@@ -1,34 +1,14 @@
 <?php $this->load->view('include/header'); ?>
-<?php
-	$pm = get_permission('APACRN', $this->_user->uid, $this->_user->id_profile);
-	$canAccept = NULL;
-
-	if( ! empty($pm))
-	{
-		$canAccept = (($pm->can_add + $pm->can_edit + $pm->can_delete + $pm->can_approve) > 0  OR $this->_SuperAdmin) ? TRUE : FALSE;
-	}
-	?>
 <div class="row">
-	<div class="col-lg-6 col-md-4 col-sm-4 hidden-xs padding-5">
+	<div class="col-lg-6 col-md-4 col-sm-4 col-xs-12 padding-5 padding-top-5">
     <h3 class="title"><?php echo $this->title; ?></h3>
   </div>
-	<div class="col-xs-12 visible-xs padding-5">
-    <h3 class="title-xs"><?php echo $this->title; ?></h3>
-  </div>
-  <div class="col-lg-6 col-md-8 col-sm-8 col-xs-12 padding-5">
-    <p class="pull-right top-p">
-			<button type="button" class="btn btn-sm btn-warning top-btn" onclick="goBack()"><i class="fa fa-arrow-left"></i> กลับ</button>
-			<?php if($doc->status != 2 && $this->pm->can_delete) : ?>
-				<button type="button" class="btn btn-sm btn-danger top-btn" onclick="goDelete('<?php echo $doc->code; ?>')"><i class="fa fa-trash"></i> ยกเลิก</button>
-			<?php endif; ?>
-			<?php if($doc->status == 1) : ?>
-			<button type="button" class="btn btn-sm btn-success top-btn" onclick="doExport()"><i class="fa fa-send"></i> ส่งข้อมูลไป SAP </button>
-			<?php endif; ?>
-			<?php if($doc->status == 4 && ($doc->owner == $this->_user->uname OR $canAccept)) : ?>
-				<button type="button" class="btn btn-sm btn-success top-btn" onclick="accept()"><i class="fa fa-check-circle"></i> ยืนยันการรับสินค้า</button>
-			<?php endif; ?>
-			<button type="button" class="btn btn-sm btn-info top-btn" onclick="printReturn()"><i class="fa fa-print"></i> พิมพ์</button>			
-    </p>
+  <div class="col-lg-6 col-md-8 col-sm-8 col-xs-12 padding-5 text-right">
+		<button type="button" class="btn btn-sm btn-warning top-btn" onclick="goBack()"><i class="fa fa-arrow-left"></i> กลับ</button>
+		<?php if($doc->status != 2 && $this->pm->can_delete) : ?>
+			<button type="button" class="btn btn-sm btn-danger top-btn" onclick="goDelete('<?php echo $doc->code; ?>')"><i class="fa fa-trash"></i> ยกเลิก</button>
+		<?php endif; ?>
+		<button type="button" class="btn btn-sm btn-info top-btn" onclick="printReturn()"><i class="fa fa-print"></i> พิมพ์</button>
   </div>
 </div>
 <hr />
@@ -88,14 +68,10 @@
 			<input type="text" class="form-control input-sm text-center" value="<?php echo $doc->cancle_user; ?>" disabled />
 		</div>
 	<?php else : ?>
-		<div class="col-lg-10-harf col-md-10-harf col-sm-10-harf col-xs-8 padding-5">
+		<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 padding-5">
 			<label>หมายเหตุ</label>
 			<input type="text" class="form-control input-sm" value="<?php echo $doc->remark; ?>" disabled/>
-		</div>
-		<div class="col-lg-1-harf col-md-1-harf col-sm-1-harf col-xs-4 padding-5">
-			<label>SAP No.</label>
-			<input type="text" class="form-control input-sm text-center" value="<?php echo $doc->inv_code; ?>" disabled />
-		</div>
+		</div>	
 	<?php endif; ?>
 </div>
 

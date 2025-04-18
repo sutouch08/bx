@@ -24,19 +24,13 @@
   </div>
 	<div class="col-lg-1-harf col-md-1-harf col-sm-2 col-xs-4 padding-5">
     <label>วันที่</label>
-    <input type="text" class="form-control input-sm text-center header-box" name="date_add" id="dateAdd" value="<?php echo thai_date($doc->date_add); ?>" disabled />
+    <input type="text" class="form-control input-sm text-center header-box e" name="date_add" id="date-add" value="<?php echo thai_date($doc->date_add); ?>" disabled />
   </div>
-	<div class="col-lg-1-harf col-md-1-harf col-sm-1-harf col-xs-6 padding-5">
+	<div class="col-lg-1-harf col-md-1-harf col-sm-1-harf col-xs-4 padding-5">
   	<label>Posting Date</label>
-    <input type="text" class="form-control input-sm text-center header-box" name="shipped_date" id="shipped-date" value="<?php echo (empty($doc->shipped_date) ? "" : thai_date($doc->shipped_date)); ?>" disabled/>
+    <input type="text" class="form-control input-sm text-center header-box e" name="shipped_date" id="shipped-date" value="<?php echo (empty($doc->shipped_date) ? "" : thai_date($doc->shipped_date)); ?>" disabled/>
   </div>
-	<div class="col-lg-1-harf col-md-1-harf col-sm-2 col-xs-4 padding-5">
-		<label>ช่องทางการรับ</label>
-		<select class="form-control input-sm header-box" name="is_wms" id="is_wms" disabled>		
-				<option value="0">>Warrix</option>
-		</select>
-	</div>
-	<div class="col-lg-5 col-md-5 col-sm-4-harf col-xs-9 padding-5">
+	<div class="col-lg-6-harf col-md-6 col-sm-5 col-xs-9 padding-5">
 		<label>หมายเหตุ</label>
 		<input type="text" class="form-control input-sm header-box" name="remark" id="remark" value="<?php echo $doc->remark; ?>" disabled />
 	</div>
@@ -46,9 +40,7 @@
 		<button type="button" class="btn btn-xs btn-warning btn-block" id="btn-edit" onclick="editHeader()">
 			<i class="fa fa-pencil"></i> แก้ไข
 		</button>
-		<button type="button" class="btn btn-xs btn-success btn-block hide" id="btn-update" onclick="updateHeader()">
-			<i class="fa fa-save"></i> อัพเดต
-		</button>
+		<button type="button" class="btn btn-xs btn-success btn-block hide" id="btn-update" onclick="updateHeader()">Update</button>
 <?php endif; ?>
 	</div>
 
@@ -60,7 +52,7 @@
 <div class="row">
 	<div class="col-lg-1-harf col-md-1-harf col-sm-2 col-xs-4 padding-5">
   	<label>ใบเบิกสินค้า</label>
-    <input type="text" class="form-control input-sm text-center" name="order_code" id="order_code" placeholder="ค้นหาใบสั่งซื้อ" value="<?php echo $doc->order_code; ?>" <?php echo ($doc->order_code == "" ? "" : "disabled"); ?>/>
+    <input type="text" class="form-control input-sm text-center c" name="order_code" id="order_code" placeholder="ค้นหาใบสั่งซื้อ" value="<?php echo $doc->order_code; ?>" <?php echo ($doc->order_code == "" ? "" : "disabled"); ?>/>
   </div>
 	<div class="col-lg-1 col-md-1 col-sm-1-harf col-xs-2 padding-5">
 		<label class="display-block not-show">clear</label>
@@ -69,15 +61,15 @@
 	</div>
   <div class="col-lg-1-harf col-md-1-harf col-sm-2 col-xs-6 padding-5">
   	<label>ใบส่งสินค้า</label>
-    <input type="text" class="form-control input-sm text-center" name="invoice" id="invoice" placeholder="อ้างอิงใบส่งสินค้า" value="<?php echo $doc->invoice_code; ?>" />
+    <input type="text" class="form-control input-sm text-center c" name="invoice" id="invoice" placeholder="อ้างอิงใบส่งสินค้า" value="<?php echo $doc->invoice_code; ?>" />
   </div>
 	<div class="col-lg-2 col-md-2-harf col-sm-2 col-xs-6 padding-5">
   	<label>โซนรับสินค้า</label>
-    <input type="text" class="form-control input-sm" name="zone_code" id="zone_code" placeholder="รหัสโซน" value="<?php echo $doc->zone_code; ?>"/>
+    <input type="text" class="form-control input-sm c" name="zone_code" id="zone_code" placeholder="รหัสโซน" value="<?php echo $doc->zone_code; ?>"/>
   </div>
   <div class="col-lg-6 col-md-5-harf col-sm-4-harf col-xs-6 padding-5">
   	<label class="not-show">ชื่อโซน</label>
-    <input type="text" class="form-control input-sm zone" name="zoneName" id="zoneName" placeholder="ชื่อโซน"  value="<?php echo $doc->zone_name; ?>"/>
+    <input type="text" class="form-control input-sm zone c" name="zoneName" id="zoneName" placeholder="ชื่อโซน"  value="<?php echo $doc->zone_name; ?>"/>
   </div>
 </div>
 <hr class="margin-top-15"/>
@@ -109,7 +101,7 @@
           <th class="fix-width-120 text-center hide">บาร์โค้ด</th>
           <th class="fix-width-200 text-center">รหัสสินค้า</th>
           <th class="fix-width-200">ชื่อสินค้า</th>
-					<th class="fix-width-100 text-right">ต้นทุน(เฉลี่ย)</th>
+					<th class="fix-width-100 text-right">ต้นทุน</th>
           <th class="fix-width-80 text-center">เบิก</th>
 					<th class="fix-width-80 text-center">รับแล้ว</th>
 					<th class="fix-width-80 text-center">รอยืนยัน</th>

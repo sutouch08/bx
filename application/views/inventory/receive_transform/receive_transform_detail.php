@@ -1,12 +1,4 @@
 <?php $this->load->view('include/header'); ?>
-<?php
-	$pm = get_permission('APACRT', $this->_user->uid, $this->_user->id_profile);
-	$canAccept = NULL;
-	if( ! empty($pm))
-	{
-		$canAccept = ($pm->can_add + $pm->can_edit + $pm->can_delete + $pm->can_approve) > 0  OR $this->_SuperAdmin ? TRUE : FALSE;
-	}
-	?>
 <div class="row">
 	<div class="col-lg-6 col-md-6 col-sm-6 hidden-xs padding-5">
     <h3 class="title"><?php echo $this->title; ?></h3>
@@ -18,15 +10,9 @@
     <p class="pull-right top-p">
 			<button type="button" class="btn btn-xs btn-warning top-btn" onclick="goBack()"><i class="fa fa-arrow-left"></i> กลับ</button>
       <button type="button" class="btn btn-xs btn-info top-btn" onclick="printReceived()"><i class="fa fa-print"></i> พิมพ์</button>
-			<?php if($doc->status == 4 && ($doc->uname == $this->_user->uname OR $canAccept)) : ?>
-				<button type="button" class="btn btn-xs btn-success top-btn" onclick="accept()">ยืนยันการรับสินค้า</button>
-			<?php endif; ?>
 			<?php if($doc->status == 4 && ($this->pm->can_edit OR $this->pm->can_delete)) : ?>
 				<button type="button" class="btn btn-xs btn-warning top-btn" onclick="rollbackStatus()">ยกเลิกการบันทึก</button>
 			<?php endif; ?>
-			<?php if($doc->status == 1) : ?>
-			<button type="button" class="btn btn-xs btn-success top-btn" onclick="doExport()"><i class="fa fa-send"></i> ส่งข้อมูลไป SAP</button>
-			<?php endif; ?>			
 			<?php if($this->pm->can_delete && $doc->status != 2) : ?>
         <button type="button" class="btn btn-xs btn-danger top-btn" onclick="goDelete('<?php echo $doc->code; ?>')"><i class="fa fa-exclamation-triangle"></i> ยกเลิก</button>
       <?php endif; ?>
@@ -62,14 +48,6 @@
   	<label>ชื่อโซน</label>
     <input type="text" class="form-control input-sm" value="<?php echo $doc->zone_name; ?>" disabled/>
   </div>
-	<div class="col-lg-1-harf col-md-1-harf col-sm-2 col-xs-6 padding-5">
-		<label>ช่องทางการรับ</label>
-		<select class="form-control input-sm header-box" name="is_wms" id="is_wms" disabled>
-			<option value="0" <?php echo is_selected('0', $doc->is_wms); ?>>Warrix</option>
-			<option value="1" <?php echo is_selected('1', $doc->is_wms); ?>>Poineer</option>
-			<option value="2" <?php echo is_selected('2', $doc->is_wms); ?>>SOKOCHAN</option>
-		</select>
-	</div>
 
 	<div class="col-lg-1-harf col-md-1-harf col-sm-2 col-xs-6 padding-5">
 		<label>สถานะ</label>
@@ -87,18 +65,22 @@
 		<label>หมายเหตุ</label>
 		<input type="text" class="form-control input-sm" value="<?php echo $doc->remark; ?>" disabled />
 	</div>
+	<div class="col-lg-1-harf col-md-1-harf col-sm-2 col-xs-4 padding-5">
+		<label>ยกเลิกโดย</label>
+		<input type="text" class="form-control input-sm" value="<?php echo $doc->user; ?>" disabled />
+	</div>
 	<div class="col-lg-4 col-md-4 col-sm-4 col-xs-6 padding-5">
 		<label>หมายเหตุในการยกเลิก</label>
 		<input type="text" class="form-control input-sm" value="<?php echo $doc->cancle_reason; ?>" disabled />
 	</div>
 <?php elseif($doc->status == 1) : ?>
-	<div class="col-lg-7-harf col-md-7-harf col-sm-10 col-xs-8 padding-5">
+	<div class="col-lg-9 col-md-9 col-sm-10 col-xs-8 padding-5">
 		<label>หมายเหตุ</label>
 		<input type="text" class="form-control input-sm" value="<?php echo $doc->remark; ?>" disabled />
 	</div>
 	<div class="col-lg-1-harf col-md-1-harf col-sm-2 col-xs-4 padding-5">
-		<label>SAP No.</label>
-		<input type="text" class="form-control input-sm" value="<?php echo $doc->inv_code; ?>" disabled />
+		<label>User</label>
+		<input type="text" class="form-control input-sm" value="<?php echo $doc->user; ?>" disabled />
 	</div>
 <?php else : ?>
 	<div class="col-lg-9 col-md-9 col-sm-12 col-xs-12 padding-5">

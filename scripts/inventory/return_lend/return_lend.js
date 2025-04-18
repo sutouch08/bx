@@ -1,6 +1,3 @@
-// JavaScript Document
-var HOME = BASE_URL + 'inventory/return_lend/';
-
 function goDelete(code) {
 	swal({
 		title: "คุณแน่ใจ ?",
@@ -19,8 +16,7 @@ function goDelete(code) {
 }
 
 
-function cancle_return(code)
-{
+function cancle_return(code){
 	let reason = $.trim($('#cancle-reason').val());
 	let force_cancel = $('#force-cancel').is(':checked') ? 1 : 0;
 
@@ -43,8 +39,7 @@ function cancle_return(code)
 		},
 		success: function(rs) {
 			load_out();
-			var rs = $.trim(rs);
-			if( rs == 'success' ) {
+			if( rs.trim() == 'success' ) {
 				setTimeout(function() {
 					swal({
 						title: 'Cancled',
@@ -58,10 +53,13 @@ function cancle_return(code)
 				}, 200);
 			}
 			else {
-				setTimeout(function() {
-					swal("Error !", rs, "error");
-				}, 200);
+				beep();
+				showError(rs);
 			}
+		},
+		error:function(rs) {
+			beep();
+			showError(rs);
 		}
 	});
 }
@@ -82,13 +80,12 @@ function doCancle() {
 }
 
 
-
 $('#cancle-modal').on('shown.bs.modal', function() {
 	$('#cancle-reason').focus();
 });
 
 
-function goAdd(){
+function addNew(){
   window.location.href = HOME + 'add_new';
 }
 
@@ -100,11 +97,6 @@ function goEdit(code){
 
 function viewDetail(code){
 	window.location.href = HOME + 'view_detail/'+ code;
-}
-
-
-function goBack(){
-	window.location.href = HOME;
 }
 
 
@@ -123,26 +115,12 @@ function leave(){
 }
 
 
-function getSearch(){
-	$("#searchForm").submit();
-}
-
-
-$(".search").keyup(function(e){
-	if( e.keyCode == 13 ){
-		getSearch();
-	}
-});
-
-
-
 $("#fromDate").datepicker({
 	dateFormat: 'dd-mm-yy',
 	onClose: function(ds){
 		$("#toDate").datepicker("option", "minDate", ds);
 	}
 });
-
 
 
 $("#toDate").datepicker({
@@ -153,19 +131,9 @@ $("#toDate").datepicker({
 });
 
 
-
-// JavaScript Document
 function printReturn(){
 	var code = $("#code").val();
 	var center = ($(document).width() - 800) /2;
   var target = HOME + 'print_return/'+code;
   window.open(target, "_blank", "width=800, height=900, left="+center+", scrollbars=yes");
-}
-
-
-function clearFilter(){
-  var url = HOME + 'clear_filter';
-  $.get(url, function(rs){
-    goBack();
-  });
 }

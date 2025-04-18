@@ -1,17 +1,11 @@
-$('#barcode').keyup(function(e){
-  if(e.keyCode == 13){
-    var barcode = $.trim($(this).val());
-
-    if(barcode.length > 0){
-      doReceive();
-    }
-  }
+window.addEventListener('load', () => {
+    lend_code_init();
+    qtyInit();
 });
 
+function lend_code_init() {
+  let empID = $('#employee').val();
 
-function lend_code_init()
-{
-  let empID = $('#empID').val();
   $('#lend_code').autocomplete({
     source:BASE_URL + 'auto_complete/get_valid_lend_code/'+ empID,
     autoFocus:true
@@ -37,17 +31,23 @@ function qtyInit() {
 }
 
 
-$(document).ready(function(){
-  lend_code_init();
-  qtyInit();
+$('#barcode').keyup(function(e){
+  if(e.keyCode == 13){
+    var barcode = $.trim($(this).val());
+
+    if(barcode.length > 0){
+      doReceive();
+    }
+  }
 });
 
-function load_lend_details(){
+function load_lend_details() {
   let code = $('#lend_code').val();
 
   if(code.length > 0)
   {
     load_in();
+
     $('#btn-set-code').addClass('hide');
 
     $.ajax({
@@ -56,10 +56,9 @@ function load_lend_details(){
       cache:false,
       success:function(rs){
         load_out();
-        if(isJson(rs)){
+        if(isJson(rs)) {
           let data = JSON.parse(rs);
-          $('#empName').val(data.empName);
-          $('#empID').val(data.empID);
+          $('#employee').val(data.empID).change();
           let source = $('#template').html();
           let output = $('#result');
           render(source, data, output);
@@ -82,7 +81,6 @@ function load_lend_details(){
     })
   }
 }
-
 
 
 $('#lend_code').keyup(function(e){
