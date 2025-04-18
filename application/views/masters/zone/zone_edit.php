@@ -112,7 +112,10 @@
 			<div class="row">
 				<div class="divider visible-xs"></div>
 				<div class="col-lg-6 col-md-7 col-sm-8 col-xs-9 padding-5">
-					<input type="text" class="form-control input-sm" id="empName" placeholder="ค้นหาพนักงาน">
+					<select class="width-100" id="empID">
+						<option value="">เลือกพนักงาน</option>
+						<?php echo select_active_employee(); ?>
+					</select>
 				</div>
 				<div class="col-lg-3 col-md-3 col-sm-3 col-xs-3 padding-5">
 					<button type="button" class="btn btn-xs btn-purple" onclick="addEmployee()">
@@ -138,7 +141,7 @@
 								<td class="middle"><?php echo $rs->empName; ?></td>
 								<td class="middle text-right">
 						<?php if($this->pm->can_edit) : ?>
-									<button type="button" class="btn btn-xs btn-danger" onclick="deleteEmployee(<?php echo $rs->id; ?>, '<?php echo $rs->empName; ?>')">
+									<button type="button" class="btn btn-minier btn-danger" onclick="deleteEmployee(<?php echo $rs->id; ?>, '<?php echo $rs->empName; ?>')">
 										<i class="fa fa-trash"></i>
 									</button>
 						<?php endif; ?>
@@ -159,12 +162,11 @@
 	<?php endif; ?>
 </div>
 
-
-<input type="hidden" id="empID" value="">
 <input type="hidden" id="customer_code" value="" >
 <input type="hidden" id="zone_code" value="<?php echo $ds->code; ?>">
 <script src="<?php echo base_url(); ?>scripts/masters/zone.js?v=<?php echo date('Ymd'); ?>"></script>
 <script>
 	$('#user_id').select2();
+	$('#empID').select2();
 </script>
 <?php $this->load->view('include/footer'); ?>

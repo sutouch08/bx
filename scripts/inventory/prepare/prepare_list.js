@@ -1,24 +1,7 @@
 
-function getSearch(){
-  $("#searchForm").submit();
-}
-
-
-function clearFilter(){
-  $.get(HOME + '/clear_filter', function(){ goBack(); });
-}
-
-
 function clearProcessFilter(){
-  $.get(HOME + '/clear_filter', function(){ viewProcess(); });
+  $.get(HOME + 'clear_filter', function(){ viewProcess(); });
 }
-
-
-$(".search").keyup(function(e){
-  if( e.keyCode == 13){
-    getSearch();
-  }
-});
 
 
 $("#fromDate").datepicker({

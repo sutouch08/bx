@@ -38,19 +38,18 @@ class Transform extends PS_Controller
   public function index()
   {
     $filter = array(
-      'code'      => get_filter('code', 'transform_code', ''),
-      'customer'  => get_filter('customer', 'transform_customer', ''),
-      'user'      => get_filter('user', 'transform_user', ''),
-      'user_ref'  => get_filter('user_ref', 'transform_user_ref', ''),
+      'code' => get_filter('code', 'transform_code', ''),
+      'customer' => get_filter('customer', 'transform_customer', ''),
+      'user' => get_filter('user', 'transform_user', 'all'),
+      'user_ref' => get_filter('user_ref', 'transform_user_ref', ''),
 			'notSave' => get_filter('notSave', 'transform_notSave', NULL),
       'onlyMe' => get_filter('onlyMe', 'transform_onlyMe', NULL),
       'isExpire' => get_filter('isExpire', 'transform_isExpire', NULL),
       'from_date' => get_filter('fromDate', 'transform_fromDate', ''),
-      'to_date'   => get_filter('toDate', 'transform_toDate', ''),
+      'to_date' => get_filter('toDate', 'transform_toDate', ''),
       'isApprove' => get_filter('isApprove', 'transform_isApprove', 'all'),
-			'warehouse' => get_filter('warehouse', 'transform_warehouse', ''),
-      'is_backorder' => get_filter('is_backorder', 'transform_is_backorder', 'all'),
-      'sap_status' => get_filter('sap_status', 'transform_sap_status', 'all')
+			'warehouse' => get_filter('warehouse', 'transform_warehouse', 'all'),
+      'is_backorder' => get_filter('is_backorder', 'transform_is_backorder', 'all')
     );
 
 		$state = array(
@@ -84,43 +83,21 @@ class Transform extends PS_Controller
     $button['only_me'] = empty($filter['onlyMe']) ? '' : 'btn-info';
     $button['is_expire'] = empty($filter['isExpire']) ? '' : 'btn-info';
 
-
     $filter['state_list'] = empty($state_list) ? NULL : $state_list;
 
 		//--- แสดงผลกี่รายการต่อหน้า
 		$perpage = get_rows();
-		//--- หาก user กำหนดการแสดงผลมามากเกินไป จำกัดไว้แค่ 300
-		if($perpage > 300)
-		{
-			$perpage = 20;
-		}
-
-    $role     = 'T'; //--- U = เบิกอภินันท์;
+    $role = 'T'; //--- U = เบิกอภินันท์;
 		$segment  = 4; //-- url segment
-		$rows     = $this->orders_model->count_rows($filter, $role);
-		//--- ส่งตัวแปรเข้าไป 4 ตัว base_url ,  total_row , perpage = 20, segment = 3
-		$init	    = pagination_config($this->home.'/index/', $rows, $perpage, $segment);
-		$orders   = $this->orders_model->get_list($filter, $perpage, $this->uri->segment($segment), $role);
-    $ds       = array();
-    if(!empty($orders))
-    {
-      foreach($orders as $rs)
-      {
-        $rs->customer_name = empty($rs->customer_name) ? $this->customers_model->get_name($rs->customer_code) : $rs->customer_name;
-        $rs->total_amount  = $rs->doc_total <= 0 ? $this->orders_model->get_order_total_amount($rs->code) : $rs->doc_total;
-        $rs->state_name    = get_state_name($rs->state);
-        $ds[] = $rs;
-      }
-    }
-
-    $filter['orders'] = $ds;
+		$rows = $this->orders_model->count_rows($filter, $role);
+    $filter['orders'] = $this->orders_model->get_list($filter, $perpage, $this->uri->segment($segment), $role);
 		$filter['state'] = $state;
     $filter['btn'] = $button;
 
+    $init = pagination_config($this->home.'/index/', $rows, $perpage, $segment);
 		$this->pagination->initialize($init);
     $this->load->view('transform/transform_list', $filter);
   }
-
 
 
   public function add_new()
@@ -132,14 +109,13 @@ class Transform extends PS_Controller
   public function add()
   {
     $sc = TRUE;
+
     $data = json_decode($this->input->post('data'));
 
     if( ! empty($data))
     {
 			$this->load->model('masters/warehouse_model');
-
-      $book_code = getConfig('BOOK_CODE_TRANSFORM');
-
+      
       $date_add = db_date($data->date_add);
 
       $due_date = db_date($data->due_date);
@@ -157,7 +133,6 @@ class Transform extends PS_Controller
           'date_add' => $date_add,
           'due_date' => $due_date,
           'role' => $role,
-          'bookcode' => $book_code,
           'customer_code' => $data->customer_code,
           'customer_name' => $data->customer_name,
           'reference' => get_null(trim($data->reference)),
@@ -692,7 +667,7 @@ class Transform extends PS_Controller
       'transform_fromDate',
       'transform_toDate',
       'transform_isApprove',
-			'transform_warehouse',			
+			'transform_warehouse',
       'transform_is_backorder',
       'transform_sap_status',
       'transform_notSave',

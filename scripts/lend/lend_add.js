@@ -23,46 +23,23 @@ function saveOrder(){
           timer: 1000
         });
 
-				setTimeout(function(){
+				setTimeout(function() {
           editOrder(order_code)
         }, 1200);
-
-			}else{
-				swal("Error ! ", rs , "error");
+			}
+      else {
+				beep();
+        showError(rs);
 			}
 		}
 	});
 }
 
 
-
-
-$("#empName").autocomplete({
-	source: BASE_URL + 'auto_complete/get_employee',
-	autoFocus: true,
-	close: function(){
-		var rs = $.trim($(this).val());
-		var arr = rs.split(' | ');
-		if( arr.length == 2 ){
-			var empName = arr[0];
-			var empID = arr[1];
-			$("#empName").val(empName);
-			$("#empID").val(empID);
-		}else{
-			$("#empID").val('');
-			$(this).val('');
-		}
-    zoneInit();
-	}
-});
-
-
-
-
-
-function zoneInit(){
+function zoneInit() {
   let empID = $('#empID').val();
-  if(empID == ""){
+
+  if(empID == "") {
     $('#zone_code').val('');
     $('#zone').val('');
   }
@@ -70,7 +47,7 @@ function zoneInit(){
   $('#zone').autocomplete({
     source:BASE_URL + 'auto_complete/get_lend_zone/'+empID,
     autoFocus: true,
-    close:function(){
+    close:function() {
       var rs = $.trim($(this).val());
       var arr = rs.split(' | ');
       if(arr.length == 2)
@@ -93,22 +70,16 @@ $(document).ready(function() {
 });
 
 
-function add(){
-  addOrder();
-}
-
-
-function addOrder() {
+function add() {
   let h = {
     'date_add' : $('#date').val(),
-    'user_ref' : $('#user_ref').val(),
+    'user_ref' : $('#user_ref').val().trim(),
     'empID' : $('#empID').val(),
-    'empName' :  $('#empName').val(),
-    'role' : $('#role').val(),
+    'empName' :  $('#empID option:selected').data('name'),
     'zone_code' : $('#zone_code').val(),
     'zone_name' : $('#zone').val(),
     'warehouse_code' : $('#warehouse').val(),
-    'remark' : $('#remark').val()
+    'remark' : $('#remark').val().trim()
   }
 
   if(!isDate(h.date_add))
@@ -116,7 +87,6 @@ function addOrder() {
     swal('วันที่ไม่ถูกต้อง');
     return false;
   }
-
 
   if(h.empID == "" || h.empName.length == 0){
     swal('ชื่อผู้รับไม่ถูกต้อง');
@@ -129,13 +99,11 @@ function addOrder() {
     return false;
   }
 
-
   if(h.empName.length == 0)
   {
     swal('ชื่อผู้เบิกไม่ถูกต้อง');
     return false;
   }
-
 
   if(h.warehouse == ""){
     swal('กรุณาระบุคลัง');
@@ -162,31 +130,18 @@ function addOrder() {
         }
         else
         {
-          swal({
-            title:'Error!',
-            text:ds.message,
-            type:'error'
-          })
+          beep();
+          showError(ds.message);
         }
       }
       else {
-        swal({
-          title:'Error!',
-          text:rs,
-          type:'error',
-          html:true
-        })
+        beep();
+        showError(rs);
       }
     },
-    error:function(xhr) {
-      load_out();
-
-      swal({
-        title:'Error!',
-        text:xhr.responseText,
-        type:'error',
-        html:true
-      })
+    error:function(rs) {
+      beep();
+      showError(rs);
     }
   })
 }
@@ -527,7 +482,7 @@ function changeState(){
   var reason_id = $('#reason-id').val();
   var cancle_reason = $.trim($('#cancle-reason').val());
   let force_cancel = $('#force-cancel').is(':checked') ? 1 : 0;
-  
+
   if(state == 9 && cancle_reason.length < 10) {
     showCancleModal();
     return false;

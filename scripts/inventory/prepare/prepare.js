@@ -1,6 +1,3 @@
-var HOME = BASE_URL + 'inventory/prepare';
-
-
 function goBack(){
     window.location.href = HOME;
 }
@@ -16,16 +13,16 @@ function refresh() {
 //---- ไปหน้าจัดสินค้า
 function goPrepare(code, view){
   if(view === undefined) {
-    window.location.href = HOME + '/process/'+code;
+    window.location.href = HOME + 'process/'+code;
   }
   else {
-    window.location.href = HOME + '/process/'+code+'/mobile';
+    window.location.href = HOME + 'process/'+code+'/mobile';
   }
 }
 
 
 function goProcess(view){
-  window.location.href = HOME + '/view_process';
+  window.location.href = HOME + 'view_process';
 }
 
 
@@ -93,7 +90,7 @@ function genPickList() {
       var mapForm = document.createElement('form');
        mapForm.target = "Map";
        mapForm.method = "POST";
-       mapForm.action = HOME + "/gen_pick_list";
+       mapForm.action = HOME + "gen_pick_list";
 
        var mapInput = document.createElement("input");
        mapInput.type = "hidden";
@@ -119,7 +116,7 @@ function genPickList() {
 
 function pullBack(code){
   $.ajax({
-    url:HOME + '/pull_order_back',
+    url:HOME + 'pull_order_back',
     type:'POST',
     cache:'false',
     data:{
@@ -139,5 +136,5 @@ function pullBack(code){
 
 //--- ไปหน้ารายการที่กำลังจัดสินค้าอยู่
 function viewProcess(){
-  window.location.href = HOME + '/view_process';
+  window.location.href = HOME + 'view_process';
 }

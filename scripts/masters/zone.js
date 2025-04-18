@@ -144,37 +144,11 @@ function saveUpdate() {
 }
 
 
-$("#empName").autocomplete({
-	source: BASE_URL + 'auto_complete/get_employee',
-	autoFocus: true,
-	close: function(){
-		var rs = $.trim($(this).val());
-		var arr = rs.split(' | ');
-		if( arr.length == 2 ){
-			var empName = arr[0];
-			var empID = arr[1];
-			$("#empName").val(empName);
-			$("#empID").val(empID);
-		}else{
-			$("#empID").val('');
-			$(this).val('');
-		}
-	}
-});
-
-
-$('#empName').keyup(function(e){
-  if(e.keyCode == 13){
-    addEmployee();
-  }
-});
-
-
-function addEmployee(){
+function addEmployee() {
   let code = $('#zone_code').val();
-  let empName = $('#empName').val();
   let empID = $('#empID').val();
-  if(code === undefined){
+  let empName = $('#empID option:selected').data('name');
+  if(code === undefined ){
     swal('ไม่พบรหัสโซน');
     return false;
   }

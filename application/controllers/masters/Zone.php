@@ -106,6 +106,7 @@ class Zone extends PS_Controller
 
       if($zone->role == 8)
       {
+        $this->load->helper('employee');
         $ds['employees'] = $this->zone_model->get_employee($code);
       }
 
@@ -113,8 +114,7 @@ class Zone extends PS_Controller
     }
     else
     {
-      set_error("คุณไม่มีสิทธิ์แก้ไข");
-      redirect($this->home);
+      $this->deny_page();
     }
   }
 

@@ -44,7 +44,7 @@ class Auto_complete extends CI_Controller
 
     echo json_encode($sc);
   }
-  
+
 
   public function get_vender_code_and_name()
   {
@@ -512,7 +512,7 @@ class Auto_complete extends CI_Controller
     ->where('status', 1)
     ->where('valid', 0);
 
-    if(!empty($vendor))
+    if( ! empty($vendor))
     {
       $this->db->where('vendor_code', $vendor);
     }
@@ -551,7 +551,7 @@ class Auto_complete extends CI_Controller
       $this->db->like('order_code', $txt);
     }
 
-    if(!empty($empID))
+    if( ! empty($empID))
     {
       $this->db->where('empID', $empID);
     }
@@ -628,7 +628,7 @@ class Auto_complete extends CI_Controller
     ->where('zone.active', 1)
     ->where('warehouse.active', 1);
 
-    if(!empty($warehouse))
+    if( ! empty($warehouse))
     {
       $warehouse = urldecode($warehouse);
       $arr = explode('|', $warehouse);
@@ -736,9 +736,10 @@ class Auto_complete extends CI_Controller
   public function get_lend_zone($empID)
   {
     $sc = array();
-    if(!empty($empID))
+    $txt = $_REQUEST['term'];
+
+    if( ! empty($empID))
     {
-      $txt = $_REQUEST['term'];
       $this->db
       ->select('zone.code AS code, zone.name AS name')
       ->from('zone')
@@ -905,7 +906,7 @@ class Auto_complete extends CI_Controller
       $this->db->group_end();
     }
 
-    if(!empty($warehouse_code))
+    if( ! empty($warehouse_code))
     {
       $this->db->where('zone.warehouse_code', $warehouse_code);
     }

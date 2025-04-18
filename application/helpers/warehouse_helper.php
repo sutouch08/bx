@@ -108,7 +108,7 @@ function select_lend_warehouse($se = NULL)
   {
     foreach($option as $ra)
     {
-      $sc .= '<option value="'.$ra->code.'" '.is_selected($se, $ra->code).'>'.$ra->name.'</option>';
+      $sc .= '<option value="'.$ra->code.'" '.is_selected($se, $ra->code).'>'.$ra->code.' | '.$ra->name.'</option>';
     }
   }
 

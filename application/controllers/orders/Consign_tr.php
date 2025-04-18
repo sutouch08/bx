@@ -41,7 +41,7 @@ class Consign_tr extends PS_Controller
     $filter = array(
       'code' => get_filter('code', 'consign_code', ''),
       'customer' => get_filter('customer', 'consign_customer', ''),
-      'user' => get_filter('user', 'consign_user', ''),
+      'user' => get_filter('user', 'consign_user', 'all'),
       'zone_code' => get_filter('zone', 'consign_zone', ''),
       'from_date' => get_filter('fromDate', 'consign_fromDate', ''),
       'to_date' => get_filter('toDate', 'consign_toDate', ''),
@@ -50,9 +50,8 @@ class Consign_tr extends PS_Controller
       'isExpire' => get_filter('isExpire', 'consign_isExpire', NULL),
       'isApprove' => get_filter('isApprove', 'consign_isApprove', 'all'),
       'isValid' => get_filter('isValid', 'consign_isValid', 'all'),
-			'warehouse' => get_filter('warehouse', 'consign_warehouse', ''),
-      'is_backorder' => get_filter('is_backorder', 'consign_is_backorder', 'all'),
-      'sap_status' => get_filter('sap_status', 'consign_sap_status', 'all')
+			'warehouse' => get_filter('warehouse', 'consign_warehouse', 'all'),
+      'is_backorder' => get_filter('is_backorder', 'consign_is_backorder', 'all')
     );
 
     $state = array(
@@ -88,34 +87,15 @@ class Consign_tr extends PS_Controller
 
 
     $filter['state_list'] = empty($state_list) ? NULL : $state_list;
-
+    
 		//--- แสดงผลกี่รายการต่อหน้า
 		$perpage = get_rows();
-		//--- หาก user กำหนดการแสดงผลมามากเกินไป จำกัดไว้แค่ 300
-		if($perpage > 300)
-		{
-			$perpage = 20;
-		}
 
 		$segment  = 4; //-- url segment
-		$rows     = $this->orders_model->count_rows($filter, 'N');
+		$rows = $this->orders_model->count_rows($filter, 'N');
 		//--- ส่งตัวแปรเข้าไป 4 ตัว base_url ,  total_row , perpage = 20, segment = 3
-		$init	    = pagination_config($this->home.'/index/', $rows, $perpage, $segment);
-		$orders   = $this->orders_model->get_list($filter, $perpage, $this->uri->segment($segment), 'N');
-    $ds       = array();
-    if(!empty($orders))
-    {
-      foreach($orders as $rs)
-      {
-        $rs->customer_name = $this->customers_model->get_name($rs->customer_code);
-        $rs->total_amount  = $this->orders_model->get_order_total_amount($rs->code);
-        $rs->state_name    = get_state_name($rs->state);
-        $rs->zone_name     = $this->zone_model->get_name($rs->zone_code);
-        $ds[] = $rs;
-      }
-    }
-
-    $filter['orders'] = $ds;
+		$init = pagination_config($this->home.'/index/', $rows, $perpage, $segment);
+    $filter['orders'] = $this->orders_model->get_list($filter, $perpage, $this->uri->segment($segment), 'N');
     $filter['state'] = $state;
     $filter['btn'] = $button;
 		$this->pagination->initialize($init);
@@ -206,7 +186,7 @@ class Consign_tr extends PS_Controller
     $data = json_decode($this->input->post('data'));
 
     if( ! empty($data))
-    {      
+    {
       $date_add = db_date($data->date_add);
 
       $code = $this->get_new_code($date_add);

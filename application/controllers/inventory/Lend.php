@@ -25,7 +25,7 @@ class Lend extends PS_Controller
 
     $this->load->helper('order');
     $this->load->helper('customer');
-    $this->load->helper('users');
+    $this->load->helper('employee');
     $this->load->helper('state');
     $this->load->helper('product_images');
     $this->load->helper('warehouse');
@@ -35,19 +35,18 @@ class Lend extends PS_Controller
   public function index()
   {
     $filter = array(
-      'code'      => get_filter('code', 'lens_code', ''),
-      'empName'  => get_filter('empName', 'lend_emp', ''),
-      'user'      => get_filter('user', 'lend_user', ''),
-      'user_ref'  => get_filter('user_ref', 'lend_user_ref', ''),
+      'code' => get_filter('code', 'lens_code', ''),
+      'empName' => get_filter('empName', 'lend_emp', ''),
+      'user' => get_filter('user', 'lend_user', 'all'),
+      'user_ref' => get_filter('user_ref', 'lend_user_ref', ''),
       'from_date' => get_filter('fromDate', 'lend_fromDate', ''),
-      'to_date'   => get_filter('toDate', 'lend_toDate', ''),
+      'to_date' => get_filter('toDate', 'lend_toDate', ''),
       'isApprove' => get_filter('isApprove', 'lend_isApprove', 'all'),
-			'warehouse' => get_filter('warehouse', 'lend_warehouse', ''),
+			'warehouse' => get_filter('warehouse', 'lend_warehouse', 'all'),
 			'notSave' => get_filter('notSave', 'lend_notSave', NULL),
       'onlyMe' => get_filter('onlyMe', 'lend_onlyMe', NULL),
       'isExpire' => get_filter('isExpire', 'lend_isExpire', NULL),
-      'is_backorder' => get_filter('is_backorder', 'lend_is_backorder', 'all'),
-      'sap_status' => get_filter('sap_status', 'lend_sap_status', 'all')
+      'is_backorder' => get_filter('is_backorder', 'lend_is_backorder', 'all')
     );
 
 		$state = array(
@@ -125,19 +124,18 @@ class Lend extends PS_Controller
   }
 
 
-
   public function add()
   {
     $sc = TRUE;
+
     $data = json_decode($this->input->post('data'));
 
     if( ! empty($data))
     {
 			$this->load->model('masters/warehouse_model');
 
-      $book_code = getConfig('BOOK_CODE_LEND');
-
       $date_add = db_date($data->date_add);
+
       $code = $this->get_new_code($date_add);
 
       $role = 'L'; //--- L = ยืมสินค้า
@@ -153,8 +151,7 @@ class Lend extends PS_Controller
         $ds = array(
           'date_add' => $date_add,
           'code' => $code,
-          'role' => $role,
-          'bookcode' => $book_code,
+          'role' => $role,          
           'customer_code' => NULL,
           'user' => $this->_user->uname,
           'user_ref' => $data->user_ref,
@@ -404,7 +401,7 @@ class Lend extends PS_Controller
       'lend_fromDate',
       'lend_toDate',
       'lend_isApprove',
-			'lend_warehouse',			
+			'lend_warehouse',
       'lend_is_backorder',
       'lend_sap_status',
       'lend_notSave',

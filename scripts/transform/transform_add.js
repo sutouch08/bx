@@ -43,7 +43,6 @@ function saveOrder(){
   else {
 		swal('warning !', 'กรุณากำหนดสินค้าแปรสภาพให้ครบถ้วน', 'warning');
 	}
-
 }
 
 
@@ -66,7 +65,6 @@ $("#customer-code").autocomplete({
 		}
 	}
 });
-
 
 
 $("#customer").autocomplete({
@@ -104,6 +102,7 @@ $('#customer').focusout(function(){
   }
 });
 
+
 $('#customerCode').focusout(function(){
   var code = $(this).val();
   if(code.length == 0)
@@ -130,6 +129,7 @@ $("#zone").autocomplete({
 		}
 	}
 });
+
 
 $('#zoneCode').autocomplete({
   source: BASE_URL + 'auto_complete/get_transform_zone',
@@ -168,13 +168,7 @@ $("#empName").autocomplete({
 });
 
 
-
-function add(){
-  addOrder();
-}
-
-
-function addOrder() {
+function add() {
   let h = {
     'customer_code' : $('#customerCode').val(),
     'customer_name' : $('#customer').val(),
@@ -188,8 +182,6 @@ function addOrder() {
     'reference' : $('#wq-ref').val(),
     'remark' : $('#remark').val()
   }
-
-  let reqRemark = $('#require_remark').val() == 1 ? true : false;
 
   if(h.customer_code.length == 0 || h.customer_name.length == 0){
     swal('ชื่อผู้รับไม่ถูกต้อง');
@@ -225,15 +217,6 @@ function addOrder() {
     return false;
   }
 
-  if(reqRemark && h.remark.length < 10) {
-    swal({
-      title: 'Required',
-      text: "กรุณาระบุหมายเหตุอย่างน้อย 10 ตัวอักษร",
-      type:'warning'
-    });
-
-    return false;
-  }
 
   load_in();
 
@@ -347,9 +330,6 @@ function addToOrder(){
 }
 
 
-
-
-// JavaScript Document
 function updateDetailTable(){
 	var order_code = $("#order_code").val();
 	$.ajax({
@@ -524,9 +504,6 @@ function validUpdate() {
 }
 
 
-
-
-
 function updateOrder() {
   let h = {
     'code' : $('#order_code').val(),
@@ -539,11 +516,9 @@ function updateOrder() {
     'zone_code' : $('#zoneCode').val(),
     'zone_name' : $('#zone').val(),
     'warehouse_code' : $('#warehouse').val(),
-    'reference' : $('#wq-ref').val(),
-    'remark' : $('#remark').val()
+    'reference' : $('#wq-ref').val().trim(),
+    'remark' : $('#remark').val().trim()
   }
-
-  let reqRemark = $('#require_remark').val() == 1 ? true : false;
 
   if(h.customer_code.length == 0 || h.customer_name.length == 0){
     swal('ชื่อผู้รับไม่ถูกต้อง');
@@ -576,16 +551,6 @@ function updateOrder() {
 
   if( ! isDate(h.due_date)) {
     swal('กรุณาระบุวันที่ต้องการสินค้า');
-    return false;
-  }
-
-  if(reqRemark && h.remark.length < 10) {
-    swal({
-      title: 'Required',
-      text: "กรุณาระบุหมายเหตุอย่างน้อย 10 ตัวอักษร",
-      type:'warning'
-    });
-
     return false;
   }
 
@@ -635,14 +600,15 @@ function changeState(){
   var reason_id = $('#reason-id').val();
   var cancle_reason = $.trim($('#cancle-reason').val());
   let force_cancel = $('#force-cancel').is(':checked') ? 1 : 0;
-  
+
   if(state == 9 && (reason_id == '' || cancle_reason.length < 10)) {
     showCancleModal();
     return false;
   }
 
-  if( state != 0){
+  if( state != 0) {
     load_in();
+
     $.ajax({
       url:BASE_URL + 'orders/orders/order_state_change',
       type:"POST",
@@ -659,8 +625,8 @@ function changeState(){
       },
       success:function(rs){
         load_out();
-        var rs = $.trim(rs);
-        if(rs == 'success'){
+
+        if(rs.trim() == 'success'){
           swal({
             title:'success',
             text:'status updated',
@@ -674,32 +640,17 @@ function changeState(){
 
         }
         else {
-          swal({
-            title:'Error!',
-            text:rs,
-            type:'error',
-            html:true
-          }, function() {
-            window.location.reload();
-          })
+          beep();
+          showError(rs);
         }
       },
-      error:function(xhr, status, error) {
-        load_out();
-
-        swal({
-          title:'Error!',
-          text:xhr.responseText,
-          type:'error',
-          html:true
-        }, function() {
-          window.location.reload();
-        })
+      error:function(rs) {
+        beep();
+        showError(rs);
       }
     });
   }
 }
-
 
 
 function setNotExpire(option){
@@ -733,6 +684,7 @@ function setNotExpire(option){
   });
 }
 
+
 function unExpired(){
   var order_code = $('#order_code').val();
   load_in();
@@ -761,49 +713,4 @@ function unExpired(){
       }
     }
   });
-}
-
-
-
-function validateOrder(){
-  var prefix = $('#prefix').val();
-  var runNo = parseInt($('#runNo').val());
-  let code = $('#code').val();
-  if(code.length == 0){
-    addOrder();
-    return false;
-  }
-
-  let arr = code.split('-');
-
-  if(arr.length == 2){
-    if(arr[0] !== prefix){
-      swal('Prefix ต้องเป็น '+prefix);
-      return false;
-    }else if(arr[1].length != (4 + runNo)){
-      swal('Run Number ไม่ถูกต้อง');
-      return false;
-    }else{
-      $.ajax({
-        url: BASE_URL + 'orders/orders/is_exists_order/'+code,
-        type:'GET',
-        cache:false,
-        success:function(rs){
-          if(rs == 'not_exists'){
-            addOrder();
-          }else{
-            swal({
-              title:'Error!!',
-              text: rs,
-              type: 'error'
-            });
-          }
-        }
-      })
-    }
-
-  }else{
-    swal('เลขที่เอกสารไม่ถูกต้อง');
-    return false;
-  }
 }

@@ -38,9 +38,6 @@ function removeTransformProduct(id_order_detail, product_code){
 }
 
 
-
-
-
 //---	ตรวจสอบสินค้าที่เชื่อมโยงว่าครบหรือไม่ก่อนบันทึกออเดอร์
 function validateTransformProducts(){
 	var sc = true;
@@ -59,9 +56,6 @@ function validateTransformProducts(){
 
 	return sc;
 }
-
-
-
 
 
 function addToTransform(){
@@ -124,8 +118,6 @@ function addToTransform(){
 }
 
 
-
-
 function clearFields(){
 	$('#id_order_detail').val('');
 	$('#transform_product').val('');
@@ -134,15 +126,10 @@ function clearFields(){
 	$('#trans-product').val('');
 }
 
-
 //----- แก้ไขรายการเชื่อมโยงสินค้า
 function editTransformProduct(id_order_detail, transform_product, limit){
 
 }
-
-
-
-
 
 //---- 	เปิดกล่องเชื่อมโยงสินค้า
 function addTransformProduct(id, original_product){
@@ -176,7 +163,6 @@ $('#transform-modal').on('shown.bs.modal', function(){
 });
 
 
-
 $('#trans-product').autocomplete({
 	source:BASE_URL + 'auto_complete/get_product_code',
 	autoFocus:true,
@@ -193,7 +179,6 @@ $('#trans-product').autocomplete({
      }
 	}
 });
-
 
 
 //---	หากมีการติ๊กถูกตรงช่องไม่คืน (สินค้าใช้แปรสภาพแล้วหมดไป)
@@ -292,20 +277,17 @@ function set_not_return(id, val, product_code) {
 }
 
 //---	เมื่อติ๊กถูกหรือติ๊กออก ช่องไม่คืนสินค้า
-function toggleReturn(id, productCode){
-
+function toggleReturn(id, productCode) {
 	var chk = $('#chk-'+id);
-
 	//---	ถ้าติ๊กถูก
 	if( chk.is(':checked')){
 		isConnected(id);
 	}else{
-	//---	ถ้าติ๊กออก
-	set_not_return(id, 0, productCode);
-	//addButton(id, productCode);
+		//---	ถ้าติ๊กออก
+		set_not_return(id, 0, productCode);
+		//addButton(id, productCode);
 	}
 }
-
 
 
 function removeButton(id){

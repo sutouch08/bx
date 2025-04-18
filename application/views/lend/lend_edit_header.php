@@ -19,7 +19,7 @@
 	    <label>โซน[คลังยืม]</label>
 			<input type="text" class="form-control input-sm edit" name="zone" id="zone" value="<?php echo $order->zone_name; ?>" disabled />
 	  </div>
-		<div class="col-lg-2 col-md-4 col-sm-4 col-xs-6 padding-5">
+		<div class="col-lg-3-harf col-md-4 col-sm-4 col-xs-6 padding-5">
 			<label>คลัง</label>
 	    <select class="form-control input-sm edit" name="warehouse" id="warehouse" disabled required>
 				<option value="">เลือกคลัง</option>
@@ -36,12 +36,7 @@
 			 	<label>หมายเหตุ</label>
 			  <input type="text" class="form-control input-sm edit" name="remark" id="remark" value="<?php echo $order->remark; ?>" disabled />
 			</div>
-			<?php if($order->state >= 8) : ?>
-				<div class="col-sm-1 col-1-harf col-xs-6 padding-5">
-					<label class="display-block">SAN No.</label>
-					<input type="text" class="form-control input-sm text-center" value="<?php echo $order->inv_code; ?>" disabled />
-				</div>
-			<?php else : ?>
+			<?php if($order->state < 8) : ?>
 				<div class="col-sm-1 col-1-harf col-xs-6 padding-5">
 					<label class="display-block not-show">แก้ไข</label>
 					<button type="button" class="btn btn-xs btn-warning btn-block" id="btn-edit" onclick="getEdit()"><i class="fa fa-pencil"></i> แก้ไข</i></button>

@@ -135,7 +135,11 @@
 						<?php echo empty($ch[$rs->channels_code]) ? "" : $ch[$rs->channels_code]; ?>
 					</td>
 					<td class="pointer" onclick="goDetail('<?php echo $rs->code; ?>')">
-						<?php echo $rs->customer_code ." : ".$rs->customer_name; ?>
+						<?php if($rs->role == 'L') : ?>
+							<?php echo $rs->empName; ?>
+						<?php else : ?>
+							<?php echo $rs->customer_code ." : ".$rs->customer_name; ?>
+						<?php endif; ?>
           </td>
 
           <td class="pointer text-center" onclick="goDetail('<?php echo $rs->code; ?>')">

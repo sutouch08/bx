@@ -904,7 +904,7 @@ class Orders_model extends CI_Model
       }
     }
 
-    if(!empty($ds['onlyMe']))
+    if( ! empty($ds['onlyMe']))
     {
       $this->db->where('user', $this->_user->uname);
     }

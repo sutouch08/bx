@@ -118,7 +118,6 @@ class Orders extends PS_Controller
       //--- ส่งตัวแปรเข้าไป 4 ตัว base_url ,  total_row , perpage = 20, segment = 3
       $init	= pagination_config($this->home.'/index/', $rows, $perpage, $segment);
       $offset = $rows < $this->uri->segment($segment) ? NULL : $this->uri->segment($segment);
-      // $orders = $this->orders_model->get_data($filter, $perpage, $offset);
       $orders = $this->orders_model->get_list($filter, $perpage, $offset);
 
       $endTime = now();
@@ -149,7 +148,7 @@ class Orders extends PS_Controller
     $result_rows = empty($list) ? 0 :count($list);
 
     $ds = array();
-    if(!empty($list))
+    if( ! empty($list))
     {
       foreach($list as $rs)
       {
@@ -864,11 +863,11 @@ class Orders extends PS_Controller
   {
 		$sc = TRUE;
     $detail = $this->orders_model->get_detail($id);
-		if(!empty($detail))
+		if( ! empty($detail))
 		{
 			$order = $this->orders_model->get($detail->order_code);
 
-			if(!empty($order))
+			if( ! empty($order))
 			{
 				//--- อนุญาติให้ลบได้แค่ 1 สถานะ
 				if($order->state == 1)
@@ -952,7 +951,7 @@ class Orders extends PS_Controller
 
     $rs = $this->orders_model->get($code);
 
-    if(!empty($rs))
+    if( ! empty($rs))
     {
       $rs->channels_name = $this->channels_model->get_name($rs->channels_code);
       $rs->payment_name  = $this->payment_methods_model->get_name($rs->payment_code);
@@ -964,7 +963,7 @@ class Orders extends PS_Controller
 
 			$state = $this->order_state_model->get_order_state($code);
 	    $ost = array();
-	    if(!empty($state))
+	    if( ! empty($state))
 	    {
 	      foreach($state as $st)
 	      {
@@ -1051,7 +1050,7 @@ class Orders extends PS_Controller
               //---- Recal discount
               $details = $this->orders_model->get_order_details($code);
 
-              if(!empty($details))
+              if( ! empty($details))
               {
                 foreach($details as $detail)
                 {
@@ -1169,7 +1168,7 @@ class Orders extends PS_Controller
 			$this->load->model('address/address_model');
 			$id_address = NULL;
 
-			if(!empty($order->customer_ref))
+			if( ! empty($order->customer_ref))
 			{
 				$id_address = $this->address_model->get_shipping_address_id_by_code($order->customer_ref);
 			}
@@ -1191,9 +1190,9 @@ class Orders extends PS_Controller
 
 			$sender = $this->sender_model->get_customer_sender_list($order->customer_code);
 
-			if(!empty($sender))
+			if( ! empty($sender))
 			{
-				if(!empty($sender->main_sender))
+				if( ! empty($sender->main_sender))
 				{
 					$id_sender = $sender->main_sender;
 				}
@@ -1403,7 +1402,7 @@ class Orders extends PS_Controller
     //----- Attribute Grid By Clicking image
     $style = $this->product_style_model->get_with_old_code($this->input->get('style_code'));
 
-    if(!empty($style))
+    if( ! empty($style))
     {
       //--- ถ้าได้ style เดียว จะเป็น object ไม่ใช่ array
       if(! is_array($style))
@@ -1474,7 +1473,7 @@ class Orders extends PS_Controller
     $auz = getConfig('ALLOW_UNDER_ZERO') ? TRUE : FALSE;
     $item = $this->products_model->get_with_old_code($item_code);
 
-    if(!empty($item))
+    if( ! empty($item))
     {
       if(! is_array($item))
       {
@@ -1506,7 +1505,7 @@ class Orders extends PS_Controller
 	{
 		$sc = '';
     $style = $this->product_style_model->get($style_code);
-    if(!empty($style))
+    if( ! empty($style))
     {
       if($style->active)
       {
@@ -1823,7 +1822,7 @@ class Orders extends PS_Controller
     $order = $this->orders_model->get($code);
     $order->customer_name = $this->customers_model->get_name($order->customer_code);
     $details = $this->orders_model->get_order_details($code);
-    if(!empty($details))
+    if( ! empty($details))
     {
       foreach($details as $rs)
       {
@@ -1914,7 +1913,7 @@ class Orders extends PS_Controller
     {
       $order = $this->orders_model->get($this->input->get('order_code'));
 
-      if(!empty($order))
+      if( ! empty($order))
       {
         //--- ยอดรวมหลังหักส่วนลด ตาม item
         $amount = $this->orders_model->get_order_total_amount($order->code);
@@ -2081,7 +2080,7 @@ class Orders extends PS_Controller
     $code = $this->input->post('order_code');
     $rs = $this->order_payment_model->get($code);
 
-    if(!empty($rs))
+    if( ! empty($rs))
     {
       $bank = $this->bank_model->get_account_detail($rs->id_account);
       $img  = payment_image_url($code); //--- order_helper
@@ -2128,7 +2127,7 @@ class Orders extends PS_Controller
 		$cus_ref = trim($this->input->post('customer_ref'));
     $is_spx = $this->input->post('id_sender') == 148 ? TRUE : FALSE;
 
-    if(!empty($customer_code) OR !empty($cus_ref))
+    if( ! empty($customer_code) OR !empty($cus_ref))
     {
       $this->load->model('address/address_model');
       $id = $this->input->post('id_address');
@@ -2272,12 +2271,12 @@ class Orders extends PS_Controller
 		$customer_code = trim($this->input->post('customer_code'));
 		$customer_ref = trim($this->input->post('customer_ref'));
 
-    if(!empty($customer_code) OR !empty($customer_ref))
+    if( ! empty($customer_code) OR !empty($customer_ref))
     {
 			$ds = array();
 			$this->load->model('address/address_model');
 			$adrs = empty($customer_ref) ? $this->address_model->get_ship_to_address($customer_code) : $this->address_model->get_shipping_address($customer_ref);
-			if(!empty($adrs))
+			if( ! empty($adrs))
 			{
 				foreach($adrs as $rs)
 				{
@@ -2362,7 +2361,7 @@ class Orders extends PS_Controller
     $this->load->model('address/address_model');
     $id = $this->input->post('id_address');
     $rs = $this->address_model->get_shipping_detail($id);
-    if(!empty($rs))
+    if( ! empty($rs))
     {
       $arr = array(
         'id' => $rs->id,
@@ -2413,7 +2412,7 @@ class Orders extends PS_Controller
     $code = $this->input->get('order_code');
 		$order = $this->orders_model->get($code);
 
-		if(!empty($order))
+		if( ! empty($order))
 		{
 			if($order->role == 'U' OR $order->role == 'P')
 			{
@@ -2476,7 +2475,7 @@ class Orders extends PS_Controller
 
     $order = $this->orders_model->get($code);
 
-    if(!empty($order))
+    if( ! empty($order))
     {
       if($order->state == 1)
       {
@@ -2514,7 +2513,7 @@ class Orders extends PS_Controller
     $sc = TRUE;
     $this->load->model('approve_logs_model');
     $order = $this->orders_model->get($code);
-    if(!empty($order))
+    if( ! empty($order))
     {
       if($order->state == 1 )
       {
@@ -2603,10 +2602,9 @@ class Orders extends PS_Controller
           //--- ถ้าเปิดบิลแล้ว
           if($sc === TRUE && $order->state == 8)
           {
-
             if($state < 8)
             {
-              if(! $this->roll_back_action($code, $order->role) )
+              if( ! $this->roll_back_action($code, $order->role) )
               {
                 $sc = FALSE;
               }
@@ -2700,6 +2698,7 @@ class Orders extends PS_Controller
     $this->load->model('inventory/delivery_order_model');
 
     $sc = TRUE;
+    $order = $this->orders_model->get($code);
 
     //---- set is_complete = 0
     if( ! $this->orders_model->un_complete($code) )
@@ -2724,7 +2723,6 @@ class Orders extends PS_Controller
         $this->error = "Clear Inv code failed";
       }
     }
-
 
     //---- move cancle product back to  buffer
     if($sc === TRUE)
@@ -2752,76 +2750,104 @@ class Orders extends PS_Controller
       //--- restore sold product back to buffer
       $sold = $this->invoice_model->get_details($code);
 
-      if(!empty($sold))
+      if( ! empty($sold))
       {
-        foreach($sold as $rs)
+        if($role == 'T' OR $role == 'Q' OR $role == 'C' OR $role == 'N' OR $role == 'L')
         {
-          if($sc === FALSE)
+          foreach($sold as $rs)
           {
-            break;
-          }
-
-          if($rs->is_count == 1)
-          {
-            //---- restore_buffer
-            if($this->buffer_model->is_exists($rs->reference, $rs->product_code, $rs->zone_code, $rs->order_detail_id) === TRUE)
+            if($rs->is_count == 1)
             {
-              if(! $this->buffer_model->update($rs->reference, $rs->product_code, $rs->zone_code, $rs->qty, $rs->order_detail_id))
+              $stock = $this->stock_model->get_stock_zone($order->zone_code, $rs->product_code);
+
+              if($stock < $rs->qty)
               {
                 $sc = FALSE;
-                $this->error = "Restore buffer (update) failed";
-              }
-            }
-            else
-            {
-              $ds = array(
-                'order_code' => $rs->reference,
-                'product_code' => $rs->product_code,
-                'warehouse_code' => $rs->warehouse_code,
-                'zone_code' => $rs->zone_code,
-                'qty' => $rs->qty,
-                'user' => $rs->user,
-                'order_detail_id' => $rs->order_detail_id
-              );
-
-              if(! $this->buffer_model->add($ds) )
-              {
-                $sc = FALSE;
-                $this->error = "Restore buffer (add) failed";
+                $this->error = "สต็อกคงเหลือในโซนไม่พอให้ย้อนสถานะ <br/>Zone : {$order->zone_code} <br/>SKU : {$rs->product_code} <br/>Qty : ".round($rs->qty, 2)."/{$stock}";
               }
             }
           }
+        }
 
-          if($sc === TRUE)
+        if($sc === TRUE)
+        {
+          foreach($sold as $rs)
           {
-            if( !$this->invoice_model->drop_sold($rs->id) )
-            {
-              $sc = FALSE;
-              $this->error = "Drop sold data failed";
-            }
+            if($sc === FALSE) { break; }
 
-            //------ หากเป็นออเดอร์เบิกแปรสภาพ
-            if($role == 'T')
+            if($rs->is_count == 1)
             {
-              if( ! $this->transform_model->reset_sold_qty($code) )
+              //---- restore_buffer
+              if($this->buffer_model->is_exists($rs->reference, $rs->product_code, $rs->zone_code, $rs->order_detail_id) === TRUE)
               {
-                $sc = FALSE;
-                $this->error = "Reset Transform sold qty failed";
+                if(! $this->buffer_model->update($rs->reference, $rs->product_code, $rs->zone_code, $rs->qty, $rs->order_detail_id))
+                {
+                  $sc = FALSE;
+                  $this->error = "Restore buffer (update) failed";
+                }
+              }
+              else
+              {
+                $ds = array(
+                  'order_code' => $rs->reference,
+                  'product_code' => $rs->product_code,
+                  'warehouse_code' => $rs->warehouse_code,
+                  'zone_code' => $rs->zone_code,
+                  'qty' => $rs->qty,
+                  'user' => $rs->user,
+                  'order_detail_id' => $rs->order_detail_id
+                );
+
+                if(! $this->buffer_model->add($ds) )
+                {
+                  $sc = FALSE;
+                  $this->error = "Restore buffer (add) failed";
+                }
+              }
+
+              if($sc === TRUE)
+              {
+                if($role == 'T' OR $role == 'Q' OR $role == 'C' OR $role == 'N' OR $role == 'L')
+                {
+                  if( ! $this->stock_model->update_stock_zone($order->zone_code, $rs->product_code, ($rs->qty * -1)))
+                  {
+                    $sc = FALSE;
+                    $this->error = "Failed remove stock from Zone : {$order->zone_code} <br/>SKU : {$rs->product_code} <br/> Qty : ".round($rs->qty, 2);
+                  }
+                }
               }
             }
 
-            //-- หากเป็นออเดอร์ยืม
-            if($role == 'L')
+            if($sc === TRUE)
             {
-              if(! $this->lend_model->drop_backlogs_list($code) )
+              if( !$this->invoice_model->drop_sold($rs->id) )
               {
                 $sc = FALSE;
-                $this->error = "Drop lend backlogs failed";
+                $this->error = "Drop sold data failed";
+              }
+
+              //------ หากเป็นออเดอร์เบิกแปรสภาพ
+              if($role == 'T')
+              {
+                if( ! $this->transform_model->reset_sold_qty($code) )
+                {
+                  $sc = FALSE;
+                  $this->error = "Reset Transform sold qty failed";
+                }
+              }
+
+              //-- หากเป็นออเดอร์ยืม
+              if($role == 'L')
+              {
+                if(! $this->lend_model->drop_backlogs_list($code) )
+                {
+                  $sc = FALSE;
+                  $this->error = "Drop lend backlogs failed";
+                }
               }
             }
-          }
-
-        } //--- end foreach
+          } //--- end foreach
+        }
       } //---- end sold
     }
 
@@ -2844,7 +2870,7 @@ class Orders extends PS_Controller
 
     $sc = TRUE;
 
-		if(!empty($cancle_reason))
+		if( ! empty($cancle_reason))
 		{
 			//----- add reason to table order_cancle_reason
 			$reason = array(
@@ -2862,7 +2888,7 @@ class Orders extends PS_Controller
       //--- put prepared product to cancle zone
       $prepared = $this->prepare_model->get_details($code);
 
-      if(!empty($prepared))
+      if( ! empty($prepared))
       {
         foreach($prepared AS $rs)
         {
@@ -2979,7 +3005,7 @@ class Orders extends PS_Controller
         //--- 6. ลบรายการที่ผู้ไว้ใน order_transform_detail (กรณีเบิกแปรสภาพ)
         if($role == 'T' OR $role == 'Q')
         {
-          if(! $this->transform_model->clear_transform_detail($code) )
+          if( ! $this->transform_model->clear_transform_detail($code) )
           {
             $sc = FALSE;
             $this->error = "Clear Transform backlogs failed";
@@ -2997,42 +3023,6 @@ class Orders extends PS_Controller
             $this->error = "Drop Lend backlogs failed";
           }
         }
-
-        //---- ถ้าเป็นฝากขายโอนคลัง ตามไปลบ transfer draft ที่ยังไม่เอาเข้าด้วย
-        if($role == 'N')
-        {
-          $middle = $this->transfer_model->get_middle_transfer_draft($code);
-          if(!empty($middle))
-          {
-            foreach($middle as $rows)
-            {
-              $this->transfer_model->drop_middle_transfer_draft($rows->DocEntry);
-            }
-          }
-        }
-        else if($role == 'T' OR $role == 'Q' OR $role == 'L')
-        {
-          $middle = $this->transfer_model->get_middle_transfer_doc($code);
-          if(!empty($middle))
-          {
-            foreach($middle as $rows)
-            {
-              $this->transfer_model->drop_middle_exits_data($rows->DocEntry);
-            }
-          }
-        }
-        else
-        {
-          //---- ถ้าออเดอร์ยังไม่ถูกเอาเข้า SAP ลบออกจากถังกลางด้วย
-          $middle = $this->delivery_order_model->get_middle_delivery_order($code);
-          if(!empty($middle))
-          {
-            foreach($middle as $rows)
-            {
-              $this->delivery_order_model->drop_middle_exits_data($rows->DocEntry);
-            }
-          }
-        }
       }
     }
 
@@ -3048,7 +3038,7 @@ class Orders extends PS_Controller
 
     $buffer = $this->buffer_model->get_all_details($code);
     //--- ถ้ายังมีรายการที่ค้างอยู่ใน buffer เคลียร์เข้า cancle
-    if(!empty($buffer))
+    if( ! empty($buffer))
     {
       foreach($buffer as $rs)
       {
@@ -3211,7 +3201,7 @@ class Orders extends PS_Controller
     $user = get_cookie('uname');
     $this->load->model('orders/discount_logs_model');
 
-    if(!empty($details))
+    if( ! empty($details))
     {
       foreach($details as $detail)
       {
@@ -3476,7 +3466,7 @@ class Orders extends PS_Controller
     $order = $this->orders_model->get($code);
     $details = $this->orders_model->get_order_details($code);
     $bank = $this->bank_model->get_active_bank();
-    if(!empty($details))
+    if( ! empty($details))
     {
       echo get_summary($order, $details, $bank); //--- order_helper;
     }
@@ -3564,7 +3554,7 @@ class Orders extends PS_Controller
   {
     $this->load->model('address/customer_address_model');
     $rs = $this->customer_address_model->get_customer_ship_to_address($id);
-    if(!empty($rs))
+    if( ! empty($rs))
     {
       $ex = $this->customer_address_model->is_sap_address_exists($rs->code, $rs->address_code, 'S');
       if(! $ex)

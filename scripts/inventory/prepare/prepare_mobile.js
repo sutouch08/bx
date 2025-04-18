@@ -191,7 +191,7 @@ function finishPrepare() {
 
 function getCompleteItem(id) {
   $.ajax({
-    url:HOME + '/get_complete_item/' + id,
+    url:HOME + 'get_complete_item/' + id,
     type:'GET',
     cache:false,
     success:function(rs) {
@@ -230,7 +230,7 @@ function getIncompleteItem(id) {
   let whsCode = $('#warehouse_code').val();
 
   $.ajax({
-    url:HOME + '/get_incomplete_item',
+    url:HOME + 'get_incomplete_item',
     type:'POST',
     cache:false,
     data:{
@@ -279,7 +279,7 @@ function getIncompleteItem(id) {
 function getZone(bZone, whsCode) {
   if(bZone != "" && bZone !== undefined && bZone !== null) {
     $.ajax({
-      url:HOME + '/get_zone_code',
+      url:HOME + 'get_zone_code',
       type:'GET',
       cache:false,
       data:{
@@ -402,7 +402,7 @@ function toggleExtraMenu() {
 
   if(hd.val() == "hide") {
     hd.val("show");
-    pad.addClass('slide-in');    
+    pad.addClass('slide-in');
   }
   else {
     hd.val("hide");
@@ -453,7 +453,7 @@ function removeBuffer(orderCode, pdCode, order_detail_id) {
   }, function() {
     setTimeout(()=>{
       $.ajax({
-        url: HOME + '/remove_buffer',
+        url: HOME + 'remove_buffer',
         type: 'POST',
         cache: false,
         data:{
@@ -516,7 +516,7 @@ function reloadStockInZone(id, pdCode, whsCode) {
   load_in();
 
   $.ajax({
-    url:HOME + '/reload_stock_in_zone',
+    url:HOME + 'reload_stock_in_zone',
     type:'GET',
     cache:false,
     data:{

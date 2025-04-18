@@ -19,6 +19,7 @@ class Prepare extends PS_Controller
     $this->load->model('orders/order_state_model');
     $this->load->model('masters/warehouse_model');
     $this->load->model('stock/stock_model');
+    $this->load->helper('order');
   }
 
 

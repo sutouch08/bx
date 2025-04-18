@@ -57,18 +57,11 @@
 		</div>
 
 		<div class="col-lg-1-harf col-md-2 col-sm-2-harf col-xs-12 padding-5 fi">
-			<label>ประเภท</label>
-			<select class="form-control input-sm" name="role">
-				<option value="all">ทั้งหมด</option>
-				<option value="S" <?php echo is_selected($role, 'S'); ?>>ขาย</option>
-				<option value="C" <?php echo is_selected($role, 'C'); ?>>ฝากขาย(SO)</option>
-				<option value="N" <?php echo is_selected($role, 'N'); ?>>ฝากขาย(TR)</option>
-				<option value="P" <?php echo is_selected($role, 'P'); ?>>สปอนเซอร์</option>
-				<option value="U" <?php echo is_selected($role, 'U'); ?>>อภินันท์</option>
-				<option value="Q" <?php echo is_selected($role, 'Q'); ?>>แปรสภาพ(สต็อก)</option>
-				<option value="T" <?php echo is_selected($role, 'T'); ?>>แปรสภาพ(ขาย)</option>
-				<option value="L" <?php echo is_selected($role, 'L'); ?>>ยืม</option>
-			</select>
+			<label>รูปแบบ</label>
+			<select class="width-100 filter" name="role" id="role">
+	      <option value="all">ทั้งหมด</option>
+	      <?php echo select_order_role($role); ?>
+	    </select>
 		</div>
 
 		<div class="col-lg-1-harf col-md-3 col-sm-2 col-xs-12 padding-5 fi">

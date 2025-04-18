@@ -1,5 +1,5 @@
-
 var ROLE = $('#role').val();
+
 if(ROLE == 'Q')
 {
   var HOME = BASE_URL + 'inventory/transform_stock/';
@@ -10,17 +10,14 @@ else
 }
 
 
-
 function addNew(){
   window.location.href = HOME + 'add_new';
 }
 
 
-
 function goBack(){
   window.location.href = HOME;
 }
-
 
 
 function editDetail(){
@@ -34,18 +31,15 @@ function editOrder(code){
 }
 
 
-
 function clearFilter(){
   var url = HOME + 'clear_filter';
   $.get(url, function(rs){ goBack(); });
 }
 
 
-
 function getSearch(){
   $('#searchForm').submit();
 }
-
 
 
 $('.search').keyup(function(e){
@@ -62,6 +56,7 @@ $("#fromDate").datepicker({
 	}
 });
 
+
 $("#toDate").datepicker({
 	dateFormat: 'dd-mm-yy',
 	onClose: function(ds){
@@ -69,10 +64,11 @@ $("#toDate").datepicker({
 	}
 });
 
+
 function approve()
 {
   if(validateTransformProducts()) {
-    var order_code = $('#order_code').val();
+    let order_code = $('#order_code').val();
 
   	load_in();
 
@@ -81,38 +77,30 @@ function approve()
       type:'POST',
       cache:false,
       success:function(rs){
-        if(rs === 'success'){
+        load_out();
+
+        if(rs.trim() === 'success') {
           change_state();
-        }else{
-  				load_out();
-          swal({
-            title:'Error!',
-            text:rs,
-            type:'error',
-  					html:true
-          });
+        }
+        else {
+  				beep();
+          showError(rs);
         }
       },
-  		error:function(xhr, status, error) {
-  			load_out();
-  			swal({
-  				title:'Error!',
-  				text:xhr.responseText,
-  				type:'error',
-  				html:true
-  			})
+  		error:function(rs) {
+  			beep();
+        showError(rs);
   		}
     });
   }
   else{
-		swal('Error !', 'พบรายการที่ไม่ได้เชื่อมโยงสินค้าอย่างถูกต้อง กรุณาตรวจสอบ', 'error');
+    beep();
+    showError('พบรายการที่ไม่ได้เชื่อมโยงสินค้าอย่างถูกต้อง กรุณาตรวจสอบ');
 	}
 }
 
 
-
-function unapprove()
-{
+function unapprove() {
   var order_code = $('#order_code').val();
   $.ajax({
     url:BASE_URL + 'orders/orders/un_approve/'+order_code,
@@ -148,7 +136,7 @@ function change_state(){
 	var id_sender = $('#id_sender').val();
 	var trackingNo = $('#trackingNo').val();
 	var tracking = $('#tracking').val();
-	
+
 	if( state != 0){
 		load_in();
 			$.ajax({
