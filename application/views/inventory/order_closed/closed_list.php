@@ -132,7 +132,11 @@
             <?php echo empty($ch[$rs->channels_code]) ? "" : $ch[$rs->channels_code]; ?>
           </td>
           <td class="pointer" onclick="viewDetail('<?php echo $rs->code; ?>')">
-            <?php echo $rs->customer_code ." : ".$rs->customer_name; ?>
+						<?php if($rs->role == 'L') : ?>
+							<?php echo $rs->empName; ?>
+						<?php else : ?>
+							<?php echo $rs->customer_code ." : ".$rs->customer_name; ?>
+						<?php endif; ?>            
           </td>
           <td class="pointer text-right" onclick="viewDetail('<?php echo $rs->code; ?>')">
 						<?php echo ($rs->doc_total <= 0 ? number($this->invoice_model->get_billed_amount($rs->code), 2) : number($rs->doc_total,2)); ?>

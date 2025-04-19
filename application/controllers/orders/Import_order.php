@@ -4,7 +4,6 @@ class Import_order extends CI_Controller
   public $ms;
   public $mc;
   public $_user;
-	public $sync_chatbot_stock = FALSE;
   public $error;
   public $message;
 
@@ -12,9 +11,6 @@ class Import_order extends CI_Controller
   public function __construct()
   {
     parent::__construct();
-    $this->ms = $this->load->database('ms', TRUE); //--- SAP database
-    $this->mc = $this->load->database('mc', TRUE); //--- Temp Database
-
     $uid = get_cookie('uid');
 
 		$this->_user = $this->user_model->get_user_by_uid($uid);
@@ -33,9 +29,6 @@ class Import_order extends CI_Controller
     $this->load->model('orders/order_import_logs_model');
 
     $this->load->library('excel');
-
-    $this->sokoApi = is_true(getConfig('SOKOJUNG_API'));
-
   }
 
 
@@ -63,7 +56,6 @@ class Import_order extends CI_Controller
     );
 
     $this->load->library("upload", $config);
-    $this->load->library("soko_order_api");
 
     if(! $this->upload->do_upload($file))
     {
@@ -121,7 +113,6 @@ class Import_order extends CI_Controller
                 $arr = array(
                   'code' => $order_code,
                   'role' => $order->role,
-                  'bookcode' => $order->bookcode,
                   'reference' => $order->reference,
                   'customer_code' => $order->customer_code,
                   'customer_name' => $order->customer_name,
@@ -142,20 +133,7 @@ class Import_order extends CI_Controller
                   'is_import' => $order->is_import,
                   'remark' => $order->remark,
                   'id_address' => $order->id_address,
-                  'id_sender' => $order->id_sender,
-                  'tax_status' => $order->tax_status,
-                  'is_etax' => $order->is_etax,
-                  'tax_id' => $order->tax_id,
-                  'name' => $order->name,
-                  'branch_code' => $order->branch_code,
-                  'branch_name' => $order->branch_name,
-                  'address' => $order->address,
-                  'sub_district' => $order->sub_district,
-                  'district' => $order->district,
-                  'province' => $order->province,
-                  'postcode' => $order->postcode,
-                  'phone' => $order->phone,
-                  'email' => $order->email
+                  'id_sender' => $order->id_sender                  
                 );
 
                 //--- add order
@@ -345,20 +323,7 @@ class Import_order extends CI_Controller
                       'is_import' => $order->is_import,
                       'remark' => $order->remark,
                       'id_address' => $order->id_address,
-                      'id_sender' => $order->id_sender,
-                      'tax_status' => $order->tax_status,
-                      'is_etax' => $order->is_etax,
-                      'tax_id' => $order->tax_id,
-                      'name' => $order->name,
-                      'branch_code' => $order->branch_code,
-                      'branch_name' => $order->branch_name,
-                      'address' => $order->address,
-                      'sub_district' => $order->sub_district,
-                      'district' => $order->district,
-                      'province' => $order->province,
-                      'postcode' => $order->postcode,
-                      'phone' => $order->phone,
-                      'email' => $order->email
+                      'id_sender' => $order->id_sender
                     );
 
                     if( ! $this->orders_model->update($order_code, $arr))
@@ -596,10 +561,7 @@ class Import_order extends CI_Controller
 
     if( ! empty($collection))
     {
-      $bookcode = getConfig('BOOK_CODE_ORDER');
       $role = 'S';
-
-      $sokoWh = getConfig('SOKOJUNG_WAREHOUSE');
 
       $default_warehouse = getConfig('WEB_SITE_WAREHOUSE_CODE');
       //---- กำหนดช่องทางขายสำหรับเว็บไซต์ เพราะมีลูกค้าแยกตามช่องทางการชำระเงินอีกที
@@ -640,13 +602,6 @@ class Import_order extends CI_Controller
 
       $itemsCache = array(); //--- เก็บ item cache
 
-      $taxType = array(
-        'NIDN' => 'NIDN', //-- บุคคลธรรมดา
-        'TXID' => 'TXID', //-- นิติบุคคล
-        'CCPT' => 'CCPT', //--- Passport
-        'OTHR' => 'OTHR' //--- N/A
-      );
-
       $headCol = array(
         'A' => 'Consignee Name',
         'B' => 'Address Line 1',
@@ -674,21 +629,7 @@ class Import_order extends CI_Controller
         'X' => 'Warehouse code',
         'Y' => 'Country',
         'Z' => 'Customer code',
-        'AA' => 'COD amount',
-        'AB' => 'Tax status',
-        'AC' => 'E-TAX',
-        'AD' => 'Tax type',
-        'AE' => 'Tax ID',
-        'AF' => 'Name',
-        'AG' => 'Branch code',
-        'AH' => 'Branch name',
-        'AI' => 'Address',
-        'AJ' => 'Sub district',
-        'AK' => 'District',
-        'AL' => 'Province',
-        'AM' => 'Post code',
-        'AN' => 'Phone',
-        'AO' => 'Email'
+        'AA' => 'COD amount'
       );
 
       $i = 1;
@@ -894,41 +835,6 @@ class Import_order extends CI_Controller
 
               $item = empty($itemsCache[$item_code]) ? NULL : $itemsCache[$item_code];
 
-              $tax_status = empty(trim($rs['AB'])) ? 0 : (trim($rs['AB']) == 1 ? 1 : 0);
-
-              if($tax_status)
-              {
-                $is_etax = empty(trim($rs['AC'])) ? 0 : (trim($rs['AC']) && $tax_status == 1 ? 1 : 0);
-
-                $tax_type = empty(trim($rs['AD'])) ? "NIDN" : trim($rs['AD']);
-                $tax_type = empty($taxType[$tax_type]) ? "NIDN" : $tax_type;
-
-                $tax_id = empty(trim($rs['AE'])) ? NULL : trim($rs['AE']);
-                $name = empty(trim($rs['AF'])) ? NULL : trim($rs['AF']);
-                $branch_code = empty(trim($rs['AG'])) ? '00000' : trim($rs['AG']);
-                $branch_name = empty(trim($rs['AH'])) ? 'สำนักงานใหญ่' : trim($rs['AH']);
-                $address = empty(trim($rs['AI'])) ? NULL : trim($rs['AI']);
-                $sub_district = empty(trim($rs['AJ'])) ? NULL : trim($rs['AJ']);
-                $district = empty(trim($rs['AK'])) ? NULL : trim($rs['AK']);
-                $province = empty(trim($rs['AL'])) ? NULL : trim($rs['AL']);
-                $postcode = empty(trim($rs['AM'])) ? NULL : trim($rs['AM']);
-                $phone = empty(trim($rs['AN'])) ? NULL : trim($rs['AN']);
-                $email = empty(trim($rs['AO'])) ? NULL : trim($rs['AO']);
-
-                if($is_etax && empty($email))
-                {
-                  $sc  = FALSE;
-                  $this->error .= "Email is required for E-Tax receipt at row{$i}";
-                }
-
-                if(empty($tax_id) OR empty($name) OR empty($address) OR empty($sub_district) OR empty($sub_district) OR empty($province))
-                {
-                  $sc = FALSE;
-                  $this->error .= "When Tax staus = 1. You must fill in all required fields [tax_id, name, address, sub_district, district, province] at row{$i}";
-                }
-              }
-
-
               if($sc === TRUE)
               {
                 //---	ถ้าเป็นออเดอร์ขาย จะมี id_sale
@@ -996,7 +902,6 @@ class Import_order extends CI_Controller
                 //---- now create order data
                 $ds[$ref_code] = (object) array(
                   'role' => $role,
-                  'bookcode' => $bookcode,
                   'reference' => $ref_code,
                   'customer_code' => $customer_code,
                   'customer_name' => $customer->name,
@@ -1015,25 +920,11 @@ class Import_order extends CI_Controller
                   'warehouse_code' => $warehouse_code,
                   'user' => $this->_user->uname,
                   'is_import' => 1,
-                  'remark' => $remark,                  
+                  'remark' => $remark,
                   'id_address' => $id_address,
                   'id_sender' => empty(trim($rs['W'])) ? NULL : $this->sender_model->get_id(trim($rs['W'])),
                   'force_update' => $rs['S'] == 1 ? TRUE : FALSE,
                   'hold' => $hold,
-                  'tax_status' => $tax_status,
-                  'tax_type' => $tax_status ? $tax_type : NULL,
-                  'is_etax' => $tax_status ? $is_etax : 0,
-                  'tax_id' => $tax_status ? $tax_id : NULL,
-                  'name' => $tax_status ? $name : NULL,
-                  'branch_code' => $tax_status ? $branch_code : NULL,
-                  'branch_name' => $tax_status ? $branch_name : NULL,
-                  'address' => $tax_status ? $address : NULL,
-                  'sub_district' => $tax_status ? $sub_district : NULL,
-                  'district' => $tax_status ? $district : NULL,
-                  'province' => $tax_status ? $province : NULL,
-                  'postcode' => $tax_status ? $postcode : NULL,
-                  'phone' => $tax_status ? $phone : NULL,
-                  'email' => $tax_status ? $email : NULL,
                   'items' => array()
                 );
 

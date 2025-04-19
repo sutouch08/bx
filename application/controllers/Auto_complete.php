@@ -114,6 +114,38 @@ class Auto_complete extends CI_Controller
   }
 
 
+  public function get_invoice_code($customer_code = NULL)
+	{
+		$txt = $_REQUEST['term'];
+		$ds = array();
+
+		$this->db
+		->select('code, customer_code, customer_name')
+		->where('state', 8)
+		->where_in('role', array('S','P', 'U'));
+
+    if( ! empty($customer_code))
+    {
+      $this->db->where('customer_code', $customer_code);
+    }
+
+    $qs = $this->db->like('code', $txt)->get('orders');
+
+		if($qs->num_rows() > 0)
+		{
+			foreach($qs->result() as $rs)
+			{
+				$ds[] = $rs->code ." | ".$rs->customer_code." | ".$rs->customer_name;
+			}
+		}
+		else
+		{
+			$ds[] = 'Not found';
+		}
+
+		echo json_encode($ds);
+	}
+
 	public function get_wx_code()
 	{
 		$txt = trim($_REQUEST['term']);
