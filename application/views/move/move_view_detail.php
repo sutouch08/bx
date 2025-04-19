@@ -5,7 +5,6 @@
       	<tr>
         	<th colspan="6" class="text-center">รายการโอนย้าย</th>
         </tr>
-
       	<tr>
         	<th class="width-5 text-center">ลำดับ</th>
           <th class="width-15">บาร์โค้ด</th>

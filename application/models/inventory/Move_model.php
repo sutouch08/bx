@@ -10,111 +10,10 @@ class Move_model extends CI_Model
     parent::__construct();
   }
 
-  public function get_sap_move_doc($code)
-  {
-    $rs = $this->ms
-    ->select('DocEntry, DocStatus')
-    ->where('U_ECOMNO', $code)
-    ->where('CANCELED', 'N')
-    ->get('OWTR');
-    if($rs->num_rows() === 1)
-    {
-      return $rs->row();
-    }
-
-    return FALSE;
-  }
-
-
-  public function is_middle_exists($code)
-  {
-    $rs = $this->mc->select('DocStatus')->where('U_ECOMNO', $code)->get('OWTR');
-    if($rs->num_rows() === 1)
-    {
-      return TRUE;
-    }
-
-    return FALSE;
-  }
-
-
-  public function get_middle_move_doc($code)
-  {
-    $rs = $this->mc
-    ->select('DocEntry')
-    ->where('U_ECOMNO', $code)
-    ->group_start()
-    ->where('F_Sap', 'N')
-    ->or_where('F_Sap IS NULL', NULL, FALSE)
-    ->group_end()
-    ->get('OWTR');
-
-    if($rs->num_rows() > 0)
-    {
-      return $rs->result();
-    }
-
-    return NULL;
-  }
-
-
-  public function add_sap_move_doc(array $ds = array())
-  {
-    if(!empty($ds))
-    {
-      $rs = $this->mc->insert('OWTR', $ds);
-      if($rs)
-      {
-        return $this->mc->insert_id();
-      }
-    }
-
-    return FALSE;
-  }
-
-
-  public function update_sap_move_doc($code, $ds = array())
-  {
-    if(! empty($code) && ! empty($ds))
-    {
-      return $this->mc->where('U_ECOMNO', $code)->update('OWTR', $ds);
-    }
-
-    return FALSE;
-  }
-
-
-  public function add_sap_move_detail(array $ds = array())
-  {
-    if(!empty($ds))
-    {
-      return $this->mc->insert('WTR1', $ds);
-    }
-
-    return FALSE;
-  }
-
-
-  public function drop_sap_exists_details($code)
-  {
-    return $this->mc->where('U_ECOMNO', $code)->delete('WTR1');
-  }
-
-
-  public function drop_middle_exits_data($docEntry)
-  {
-    $this->mc->trans_start();
-    $this->mc->where('DocEntry', $docEntry)->delete('WTR1');
-    $this->mc->where('DocEntry', $docEntry)->delete('OWTR');
-    $this->mc->trans_complete();
-
-    return $this->mc->trans_status();
-  }
-
 
   public function add(array $ds = array())
   {
-    if(!empty($ds))
+    if( ! empty($ds))
     {
       return $this->db->insert($this->tb, $ds);
     }
@@ -123,10 +22,9 @@ class Move_model extends CI_Model
   }
 
 
-
   public function update($code, array $ds = array())
   {
-    if(!empty($ds))
+    if( ! empty($ds))
     {
       return $this->db->where('code', $code)->update($this->tb, $ds);
     }
@@ -135,12 +33,22 @@ class Move_model extends CI_Model
   }
 
 
-
   public function add_detail(array $ds = array())
   {
-    if(!empty($ds))
+    if( ! empty($ds))
     {
       return $this->db->insert($this->td, $ds);
+    }
+
+    return FALSE;
+  }
+
+
+  public function update_detail($id, array $ds = array())
+  {
+    if( ! empty($ds))
+    {
+      return $this->db->where('id', $id)->update($this->td, $ds);
     }
 
     return FALSE;
@@ -189,7 +97,6 @@ class Move_model extends CI_Model
   }
 
 
-
   public function get_detail($id)
   {
     $rs = $this->db
@@ -206,7 +113,6 @@ class Move_model extends CI_Model
       return $rs->row();
     }
   }
-
 
 
   public function get_id($move_code, $product_code, $from_zone, $to_zone)
@@ -249,6 +155,7 @@ class Move_model extends CI_Model
 
     return NULL;
   }
+
 
   public function is_accept_all($code)
   {
@@ -342,14 +249,13 @@ class Move_model extends CI_Model
   }
 
 
-
   public function update_temp(array $ds = array())
   {
-    if(!empty($ds))
+    if( ! empty($ds))
     {
       $id = $this->get_temp_id($ds['move_code'], $ds['product_code'], $ds['zone_code']);
 
-      if(!empty($id))
+      if( ! empty($id))
       {
         return $this->update_temp_qty($id, $ds['qty']);
       }
@@ -386,7 +292,7 @@ class Move_model extends CI_Model
     $rs = $this->db->select_sum('qty')->where('product_code', $product_code)->get($this->tm);
     if($rs->num_rows() === 1)
     {
-      return $rs->row()->qty;
+      return get_zero($rs->row()->qty);
     }
 
     return 0;
@@ -395,7 +301,7 @@ class Move_model extends CI_Model
 
   public function add_temp(array $ds = array())
   {
-    if(!empty($ds))
+    if( ! empty($ds))
     {
       return $this->db->insert($this->tm, $ds);
     }
@@ -408,8 +314,6 @@ class Move_model extends CI_Model
   {
     return $this->db->set("qty", "qty + {$qty}", FALSE)->where('id', $id)->update($this->tm);
   }
-
-
 
 
   public function get_move_temp($code)
@@ -428,7 +332,6 @@ class Move_model extends CI_Model
 
     return FALSE;
   }
-
 
 
   public function get_temp_product($code, $product_code)
@@ -463,7 +366,6 @@ class Move_model extends CI_Model
 
     return 0;
   }
-
 
 
   public function get_move_qty($move_code, $product_code, $from_zone)
@@ -516,10 +418,9 @@ class Move_model extends CI_Model
   }
 
 
-
   public function is_exists($code, $old_code = NULL)
   {
-    if(!empty($old_code))
+    if( ! empty($old_code))
     {
       $this->db->where('code !=', $old_code);
     }
@@ -537,6 +438,7 @@ class Move_model extends CI_Model
   public function is_exists_detail($code)
   {
     $rs = $this->db->select('id')->where('move_code', $code)->get($this->td);
+
     if($rs->num_rows() > 0)
     {
       return TRUE;
@@ -544,7 +446,6 @@ class Move_model extends CI_Model
 
     return FALSE;
   }
-
 
 
   public function is_exists_temp($code)
@@ -563,7 +464,6 @@ class Move_model extends CI_Model
   {
     return $this->db->set('status', $status)->where('code', $code)->update($this->tb);
   }
-
 
 
   public function valid_all_detail($code, $valid)
@@ -693,7 +593,6 @@ class Move_model extends CI_Model
   }
 
 
-
   public function get_warehouse_in($txt)
   {
     $rs = $this->db
@@ -714,7 +613,6 @@ class Move_model extends CI_Model
 
     return $arr;
   }
-
 
 
   public function get_max_code($code)
@@ -768,23 +666,6 @@ class Move_model extends CI_Model
     if($rs->num_rows() > 0)
     {
       return $rs->result();
-    }
-
-    return NULL;
-  }
-
-
-  public function get_sap_doc_num($code)
-  {
-    $rs = $this->ms
-    ->select('DocNum')
-    ->where('U_ECOMNO', $code)
-    ->where('CANCELED', 'N')
-    ->get('OWTR');
-
-    if($rs->num_rows() > 0)
-    {
-      return $rs->row()->DocNum;
     }
 
     return NULL;

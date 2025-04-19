@@ -1,34 +1,4 @@
-function doExport()
-{
-	var code = $('#move_code').val();
-	load_in();
-	$.ajax({
-		url:HOME + 'export_move/' + code,
-		type:'POST',
-		cache:false,
-		success:function(rs){
-			load_out();
-			if(rs == 'success'){
-				swal({
-					title:'Success',
-					text:'ส่งข้อมูลไป SAP เรียบร้อยแล้ว',
-					type:'success',
-					timer:1000
-				});
-			}else{
-				swal({
-					title:'Error!',
-					text:rs,
-					type:'error'
-				});
-			}
-		}
-	});
-}
-
-
-function deleteMoveItem(id, code)
-{
+function deleteMoveItem(id, code){
 	var move_code = $('#move_code').val();
 
   swal({
@@ -50,8 +20,7 @@ function deleteMoveItem(id, code)
 				'id' : id
 			},
 			success: function(rs) {
-				var rs = $.trim(rs);
-				if( rs == 'success' ) {
+				if( rs.trim() == 'success' ) {
 					swal({
 						title:'Success',
 						text: 'ดำเนินการเรียบร้อยแล้ว',
@@ -62,9 +31,15 @@ function deleteMoveItem(id, code)
 					$('#row-'+id).remove();
 					reIndex();
 					reCal();
-				}else{
-					swal("ข้อผิดพลาด", rs, "error");
 				}
+				else{
+					beep();
+					showError(rs);
+				}
+			},
+			error:function(rs) {
+				beep();
+				showError(rs);
 			}
 		});
 	});
@@ -104,8 +79,6 @@ function getMoveTable(){
 }
 
 
-
-
 function getTempTable(){
 	var code = $("#move_code").val();
 	$.ajax({
@@ -133,9 +106,6 @@ function getTempTable(){
 		}
 	});
 }
-
-
-
 
 //--- เพิ่มรายการลงใน move detail
 //---	เพิ่มลงใน move_temp
@@ -230,9 +200,6 @@ function addToMove(){
 }
 
 
-
-
-
 function selectAll(){
 	$('.input-qty').each(function(index, el){
 		var qty = $(this).attr('max');
@@ -248,8 +215,6 @@ function clearAll(){
 }
 
 
-
-
 //----- นับจำนวน ช่องที่มีการใส่ตัวเลข
 function countInput(){
 	var count = 0;
@@ -257,139 +222,4 @@ function countInput(){
         count += ($(this).val() == "" ? 0 : 1 );
     });
 	return count;
-}
-
-
-function accept() {
-	let canAccept = $('#can-accept').val() == 1 ? true : false;
-	let code = $('#move_code').val();
-
-	if(canAccept) {
-		$('#accept-modal').on('shown.bs.modal', () => $('#accept-note').focus());
-		$('#accept-modal').modal('show');
-	}
-	else {
-
-		swal({
-			title:'Acception',
-			text:'ยินยอมให้โอนสินค้าเข้าโซนของคุณใช่หรือไม่ ?',
-			type:'info',
-			showCancelButton:true,
-			confirmButtonColor:'#87B87F',
-			confirmButtonText:'ยืนยัน',
-			cancelButtonText:'ยกเลิก',
-			closeOnConfirm:true
-		}, function() {
-			load_in();
-
-			$.ajax({
-				url:HOME + 'accept_zone',
-				type:'POST',
-				cache:false,
-				data: {
-					'code' : code
-				},
-				success:function(rs) {
-					load_out();
-					if(isJson(rs))
-					{
-						let ds = JSON.parse(rs);
-						if(ds.status === 'success') {
-							swal({
-								title:'Success',
-								type:'success',
-								timer:1000
-							});
-
-							setTimeout(() => {
-								window.location.reload();
-							}, 1200);
-						}
-						else if(ds.status === 'warning') {
-
-							swal({
-								title:'Warning',
-								text:ds.message,
-								type:'warning'
-							}, () => {
-								setTimeout(() => {
-									window.location.reload();
-								}, 500);
-							});
-						}
-						else {
-							swal({
-								title:'Error!',
-								text: rs,
-								type:'error'
-							});
-						}
-					}
-				}
-			})
-		})
-	}
-}
-
-
-function acceptConfirm() {
-	let code = $('#move_code').val();
-	let note = $.trim($('#accept-note').val());
-
-	if(note.length < 10) {
-		$('#accept-error').text('กรุณาระบุหมายเหตุอย่างนี้อย 10 ตัวอักษร');
-		return false;
-	}
-	else {
-		$('#accept-error').text('');
-	}
-
-	load_in();
-
-	$.ajax({
-		url:HOME + 'accept_confirm',
-		type:'POST',
-		cache:false,
-		data:{
-			"code" : code,
-			"accept_remark" : note
-		},
-		success:function(rs) {
-			load_out();
-			if(isJson(rs))
-			{
-				let ds = JSON.parse(rs);
-				if(ds.status === 'success') {
-					swal({
-						title:'Success',
-						type:'success',
-						timer:1000
-					});
-
-					setTimeout(() => {
-						window.location.reload();
-					}, 1200);
-				}
-				else if(ds.status === 'warning') {
-
-					swal({
-						title:'Warning',
-						text:ds.message,
-						type:'warning'
-					}, () => {
-						setTimeout(() => {
-							window.location.reload();
-						}, 500);
-					});
-				}
-				else {
-					swal({
-						title:'Error!',
-						text: rs,
-						type:'error'
-					});
-				}
-			}
-		}
-	});
 }

@@ -47,7 +47,8 @@ function from_zone_init(){
 				$(this).val(rs[1]);
 				//---	แสดงชื่อโซนที่ หัวตาราง
 				$('#zoneName').text(rs[1]);
-			}else{
+			}
+			else{
 
 				$("#from_zone_code").val('');
 				//---	ชื่อโซนที่ หัวตาราง
@@ -96,7 +97,8 @@ function to_zone_init(){
 			if( rs.length == 2 ){
 				$("#to_zone_code").val(rs[0]);
 				$(this).val(rs[1]);
-			}else{
+			}
+			else{
 				$("#to_zone_code").val('');
 				$(this).val('');
 			}
@@ -308,7 +310,6 @@ $("#barcode-item-to").keyup(function(e) {
 	}
 });
 
-
 //-------	เปิดกล่องควบคุมสำหรับยิงบาร์โค้ดโซนต้นทาง
 function getMoveOut() {
 	setTimeout(() => {
@@ -327,13 +328,14 @@ function getMoveOut() {
 //---	เปลี่ยนโซนต้นทาง
 function newFromZone(){
 	$("#from_zone_code").val("");
-	$("#fromZone-barcode").val("");	
+	$("#fromZone-barcode").val("");
 	$('#fromZone-barcode').removeAttr('disabled');
 	$('#btn-new-zone').attr('disabled', 'disabled');
 	$('#qty-from').attr('disabled', 'disabled');
 	$('#barcode-item-from').attr('disabled', 'disabled');
 	$("#fromZone-barcode").focus();
 }
+
 
 //---	ดึงข้อมูลสินค้าในโซนต้นทาง
 function getZoneFrom(){

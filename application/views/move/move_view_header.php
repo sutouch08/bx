@@ -38,8 +38,8 @@
     <input type="text" class="form-control input-sm text-center" value="<?php echo showStatus($doc->is_expire, $doc->status); ?>" disabled />
   </div>
   <div class="col-lg-1-harf col-md-1-harf col-sm-2 col-xs-6 padding-5">
-    <label>SAP</label>
-    <input type="text" class="form-control input-sm text-center" value="<?php echo $doc->inv_code; ?>" disabled/>
+    <label>User</label>
+    <input type="text" class="form-control input-sm text-center" value="<?php echo $doc->user; ?>" disabled/>
   </div>
 
   <?php if($doc->status == 2 && ! empty($doc->cancle_reason)) : ?>

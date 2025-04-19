@@ -1,10 +1,3 @@
-var HOME = BASE_URL + 'inventory/move/';
-
-function goBack(){
-  window.location.href = HOME;
-}
-
-
 function addNew(){
   window.location.href = HOME + 'add_new';
 }
@@ -36,9 +29,6 @@ function goUseKeyboard(){
 
 function goDelete(code, status){
   var title = 'ต้องการยกเลิก '+ code +' หรือไม่ ?';
-  if(status == 1){
-    title = 'หากต้องการยกเลิก คุณต้องยกเลิกเอกสารนี้ใน SAP ก่อน ต้องการยกเลิก '+ code +' หรือไม่ ?';
-  }
 
 	swal({
 		title: 'คุณแน่ใจ ?',
@@ -57,8 +47,7 @@ function goDelete(code, status){
 }
 
 
-function cancle(code)
-{
+function cancle(code){
 	var reason = $.trim($('#cancle-reason').val());
 
 	if(reason.length < 10)
@@ -78,8 +67,7 @@ function cancle(code)
     },
     success: function(rs) {
       load_out();
-      var rs = $.trim(rs);
-      if( rs == 'success' ) {
+      if( rs.trim() == 'success' ) {
         setTimeout(() => {
           swal({
             title:'Success',
@@ -96,9 +84,14 @@ function cancle(code)
       }
       else {
         setTimeout(() => {
-          swal("ข้อผิดพลาด", rs, "error");
+          beep();
+          showError(rs);
         }, 200);
       }
+    },
+    error:function(rs) {
+      beep();
+      showError(rs);
     }
   });
 }
@@ -121,25 +114,6 @@ function doCancle() {
 
 $('#cancle-modal').on('shown.bs.modal', function() {
 	$('#cancle-reason').focus();
-});
-
-
-function clearFilter(){
-  $.get(HOME + 'clear_filter', function(){
-		goBack();
-	});
-}
-
-
-function getSearch(){
-  $('#searchForm').submit();
-}
-
-
-$('.search').keyup(function(e){
-  if(e.keyCode == 13){
-    getSearch();
-  }
 });
 
 

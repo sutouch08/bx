@@ -93,9 +93,7 @@ function save(){
 }
 
 
-
-function saveMove(code)
-{
+function saveMove(code) {
   load_in();
 
   $.ajax({
@@ -104,46 +102,26 @@ function saveMove(code)
     cache:false,
     success:function(rs) {
       load_out();
+      if(rs.trim() === 'success') {
+        swal({
+          title:'Saved',
+          text: 'บันทึกเอกสารเรียบร้อยแล้ว',
+          type:'success',
+          timer:1000
+        });
 
-      if(isJson(rs)) {
-        let ds = JSON.parse(rs);
-
-        if(ds.status == 'success') {
-          swal({
-            title:'Saved',
-            text: 'บันทึกเอกสารเรียบร้อยแล้ว',
-            type:'success',
-            timer:1000
-          });
-
-          setTimeout(function() {
-            goDetail(code);
-          }, 1200);
-        }
-        else if(ds.status == 'warning') {
-          swal({
-            title:'Warning',
-            text:ds.message,
-            type:'warning'
-          }, () => {
-            goDetail(code);
-          });
-        }
-        else {
-          swal({
-            title:'Error!',
-            text:ds.message,
-            type:'error'
-          });
-        }
+        setTimeout(function() {
+          goDetail(code);
+        }, 1200);
       }
       else {
-        swal({
-          title:'Error!',
-          text:rs,
-          type:'error'
-        });
+        beep();
+        showError(rs);
       }
+    },
+    error:function(rs) {
+      beep();
+      showError(rs);
     }
   });
 }
