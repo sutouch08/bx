@@ -4,33 +4,29 @@
     <input type="text" class="form-control input-sm text-center" value="<?php echo $doc->code; ?>" disabled />
   </div>
 
-  <div class="col-lg-1-harf col-md-1-harf col-sm-1-harf col-xs-6 padding-5">
+  <div class="col-lg-1-harf col-md-1-harf col-sm-2 col-xs-6 padding-5">
     <label>วันที่</label>
     <input type="text" class="form-control input-sm text-center edit" name="date" id="date" value="<?php echo thai_date($doc->date_add); ?>" disabled />
   </div>
 
-  <div class="col-lg-1-harf col-md-1-harf col-sm-2 col-xs-3 padding-5">
-    <label>รหัส</label>
-    <input type="text" class="form-control input-sm edit" name="from_warehouse_code" id="from_warehouse_code" value="<?php echo $doc->from_warehouse; ?>" disabled />
-  </div>
+  <div class="col-lg-4-harf col-md-4-harf col-sm-4 col-xs-6 padding-5">
+		<label>คลังต้นทาง</label>
+		<select class="width-100 h f" id="from-warehouse" disabled>
+			<option value="">เลือกคลังต้นทาง</option>
+			<?php echo select_warehouse($doc->from_warehouse); ?>
+		</select>
+	</div>
 
-  <div class="col-lg-3 col-md-3 col-sm-6-harf col-xs-9 padding-5">
-    <label>คลังต้นทาง</label>
-    <input type="text" class="form-control input-sm edit" name="from_warehouse" id="from_warehouse" value="<?php echo $doc->from_warehouse_name; ?>" disabled/>
-  </div>
-
-  <div class="col-lg-1-harf col-md-1-harf col-sm-2 col-xs-3 padding-5">
-    <label>รหัส</label>
-    <input type="text" class="form-control input-sm edit" name="to_warehouse_code" id="to_warehouse_code" value="<?php echo $doc->to_warehouse; ?>" disabled />
-  </div>
-
-	<div class="col-lg-3 col-md-3 col-sm-6-harf col-xs-9 padding-5">
+  <div class="col-lg-4-harf col-md-4-harf col-sm-4 col-xs-6 padding-5">
     <label>คลังปลายทาง</label>
-		<input type="text" class="form-control input-sm edit" name="to_warehouse" id="to_warehouse" value="<?php echo $doc->to_warehouse_name; ?>" disabled/>
+		<select class="width-100 h f" id="to-warehouse" disabled>
+			<option value="">เลือกคลังปลายทาง</option>
+			<?php echo select_warehouse($doc->to_warehouse); ?>
+		</select>
   </div>
 
 
-  <div class="col-lg-1-harf col-md-2-harf col-sm-2 col-xs-4 padding-5">
+  <div class="col-lg-1-harf col-md-2 col-sm-2 col-xs-4 padding-5">
 		<label>สถานะ</label>
 		<select class="form-control input-sm edit" disabled>
 			<option>Unknow</option>
@@ -43,14 +39,14 @@
 		</select>
 	</div>
 
-  <div class="col-lg-1 col-md-2 col-sm-2 col-xs-4 padding-5">
-		<label>SAP</label>
-		<input type="text" class="form-control input-sm text-center" value="<?php echo $doc->inv_code; ?>" disabled >
-	</div>
-
-  <div class="col-lg-9-harf col-md-7-harf col-sm-10 col-xs-12 padding-5">
+  <div class="col-lg-8-harf col-md-8 col-sm-8 col-xs-8 padding-5">
     <label>หมายเหตุ</label>
     <input type="text" class="form-control input-sm edit" name="remark" id="remark" value="<?php echo $doc->remark; ?>" disabled>
+  </div>
+
+  <div class="col-lg-2 col-md-2 col-sm-2 col-xs-4 padding-5 hidden-xs">
+    <label>User</label>
+    <input type="text" class="form-control input-sm text-center" value="<?php echo $doc->user; ?>" disabled >
   </div>
 
   <?php if($doc->status == 2 && ! empty($doc->cancle_reason)) : ?>
@@ -79,3 +75,8 @@
 </div>
 
 <?php endif; ?>
+
+<script>
+	$('#from-warehouse').select2();
+	$('#to-warehouse').select2();
+</script>

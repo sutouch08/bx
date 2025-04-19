@@ -103,6 +103,7 @@ class Transfer extends PS_Controller
     }
   }
 
+
   public function import_data()
 	{
     $sc = TRUE;
@@ -409,6 +410,7 @@ class Transfer extends PS_Controller
     }
   }
 
+
   public function view_detail($code)
   {
     $this->load->model('approve_logs_model');
@@ -446,55 +448,31 @@ class Transfer extends PS_Controller
   {
     $sc = TRUE;
 
-    if($this->input->post())
+    $ds = json_decode($this->input->post('data'));
+
+    if( ! empty($ds))
     {
-      $date_add = db_date($this->input->post('date'), TRUE);
-      $fWh = $this->input->post('from_warehouse_code');
-      $tWh = $this->input->post('to_warehouse_code');
-			$wx_code = get_null(trim($this->input->post('wx_code')));
-      $remark = $this->input->post('remark');
-      $bookcode = getConfig('BOOK_CODE_TRANSFER');
+      $date_add = db_date($ds->date_add, TRUE);
+      $code = $this->get_new_code($date_add);
+      $arr = array(
+        'code' => $code,
+        'from_warehouse' => $ds->from_warehouse,
+        'to_warehouse' => $ds->to_warehouse,
+        'remark' => get_null($ds->remark),
+        'user' => $this->_user->uname,
+        'date_add' => $date_add
+      );
 
-      if($sc === TRUE)
+      if( ! $this->transfer_model->add($arr))
       {
-        //---- direction 0 = wrx to wrx, 1 = wrx to wms , 2 = wms to wrx
-        $direction = 0;  //--- Wrx to Wrx
-        $code = $this->get_new_code($date_add);
-
-        if( ! empty($code))
-        {
-          $must_approve = getConfig('STRICT_TRANSFER') == 1 ? 1 : 0;
-
-          $ds = array(
-            'code' => $code,
-            'bookcode' => $bookcode,
-            'from_warehouse' => $fWh,
-            'to_warehouse' => $tWh,
-            'remark' => trim($remark),
-            'user' => $this->_user->uname,
-            'date_add' => $date_add,
-            'direction' => $direction,
-            'wx_code' => $wx_code,
-            'must_approve' => $must_approve
-          );
-
-          if( ! $this->transfer_model->add($ds))
-          {
-            $sc = FALSE;
-            $this->error = 'เพิ่มเอกสารไม่สำเร็จ กรุณาลองใหม่อีกครั้ง';
-          }
-        }
-        else
-        {
-          $sc = FALSE;
-          $this->error = "Invalid Document Number";
-        }
+        $sc = FALSE;
+        $this->error = 'เพิ่มเอกสารไม่สำเร็จ กรุณาลองใหม่อีกครั้ง';
       }
     }
     else
     {
       $sc = FALSE;
-      $this->error = "Missing required parameter";
+      set_error('required');
     }
 
     $arr = array(
@@ -526,7 +504,7 @@ class Transfer extends PS_Controller
   {
     $doc = $this->transfer_model->get($code);
 
-    if(!empty($doc))
+    if( ! empty($doc))
     {
       $doc->from_warehouse_name = $this->warehouse_model->get_name($doc->from_warehouse);
       $doc->to_warehouse_name = $this->warehouse_model->get_name($doc->to_warehouse);
@@ -534,7 +512,7 @@ class Transfer extends PS_Controller
 
     $details = $this->transfer_model->get_details($code);
 
-    if(!empty($details))
+    if( ! empty($details))
     {
       foreach($details as $rs)
       {
@@ -891,6 +869,7 @@ class Transfer extends PS_Controller
   public function save_mobile_transfer($code)
   {
     $sc = TRUE;
+    $this->load->model('stock/stock_model');
     $this->load->model('inventory/movement_model');
     $doc = $this->transfer_model->get($code);
 
@@ -910,58 +889,87 @@ class Transfer extends PS_Controller
           {
             if($sc === FALSE) { break; }
 
-            if($rs->wms_qty == $rs->qty)
+            if($rs->qty > 0 && $rs->wms_qty > 0)
             {
-              if( ! $this->transfer_model->update_detail($rs->id, ['valid' => 1, 'date_upd' => now()]))
+              $stock = $this->stock_model->get_stock_zone($rs->from_zone, $rs->product_code);
+
+              if($stock < $rs->wms_qty)
               {
                 $sc = FALSE;
-                $this->error = "Failed to update transfer row status";
+                $this->error = "สต็อกต้นทางไม่พอโอนออก";
               }
-            }
-            else
-            {
-              $valid = 0;
-            }
 
-            if($sc === TRUE)
-            {
-              $move_out = array(
-                'reference' => $doc->code,
-                'warehouse_code' => $doc->from_warehouse,
-                'zone_code' => $rs->from_zone,
-                'product_code' => $rs->product_code,
-                'move_in' => 0,
-                'move_out' => $rs->wms_qty,
-                'date_add' => $date_add
-              );
-
-              if( ! $this->movement_model->add($move_out))
+              if($sc === TRUE)
               {
-                $sc = FALSE;
-                $this->error = 'บันทึก movement ขาออกไม่สำเร็จ';
+                if( ! $this->stock_model->update_stock_zone($rs->from_zone, $rs->product_code, ($rs->wms_qty * -1)))
+                {
+                  $sc = FALSE;
+                  $this->error = "ย้ายสต็อกออกจากโซนต้นทางไม่สำเร็จ";
+                }
               }
-            }
 
-            if($sc === TRUE)
-            {
-              $move_in = array(
-                'reference' => $doc->code,
-                'warehouse_code' => $doc->to_warehouse,
-                'zone_code' => $rs->to_zone,
-                'product_code' => $rs->product_code,
-                'move_in' => $rs->wms_qty,
-                'move_out' => 0,
-                'date_add' => $date_add
-              );
-
-              if( ! $this->movement_model->add($move_in))
+              if($sc === TRUE)
               {
-                $sc = FALSE;
-                $this->error = 'บันทึก movement ขาเข้าไม่สำเร็จ';
+                $move_out = array(
+                  'reference' => $doc->code,
+                  'warehouse_code' => $doc->from_warehouse,
+                  'zone_code' => $rs->from_zone,
+                  'product_code' => $rs->product_code,
+                  'move_in' => 0,
+                  'move_out' => $rs->wms_qty,
+                  'date_add' => $date_add
+                );
+
+                if( ! $this->movement_model->add($move_out))
+                {
+                  $sc = FALSE;
+                  $this->error = 'บันทึก movement ขาออกไม่สำเร็จ';
+                }
               }
-            }
-          }
-        }
+
+              if($sc === TRUE)
+              {
+                if( ! $this->stock_model->update_stock_zone($rs->to_zone, $rs->product_code, $rs->wms_qty))
+                {
+                  $sc = FALSE;
+                  $this->error = "ย้ายสต็อกเข้าโซนปลายทางไม่สำเร็จ";
+                }
+              }
+
+              if($sc === TRUE)
+              {
+                $move_in = array(
+                  'reference' => $doc->code,
+                  'warehouse_code' => $doc->to_warehouse,
+                  'zone_code' => $rs->to_zone,
+                  'product_code' => $rs->product_code,
+                  'move_in' => $rs->wms_qty,
+                  'move_out' => 0,
+                  'date_add' => $date_add
+                );
+
+                if( ! $this->movement_model->add($move_in))
+                {
+                  $sc = FALSE;
+                  $this->error = 'บันทึก movement ขาเข้าไม่สำเร็จ';
+                }
+              }
+
+              if($rs->wms_qty == $rs->qty)
+              {
+                if( ! $this->transfer_model->update_detail($rs->id, ['valid' => 1, 'date_upd' => now()]))
+                {
+                  $sc = FALSE;
+                  $this->error = "Failed to update transfer row status";
+                }
+              }
+              else
+              {
+                $valid = 0;
+              }
+            } //--- end if wms_qty > 0
+          } //--- end foreach
+        } //-- end if( ! empty($details))
 
         if($sc === TRUE)
         {
@@ -971,7 +979,7 @@ class Transfer extends PS_Controller
             'valid' => $valid
           );
 
-          if(!$this->transfer_model->update($code, $arr))
+          if( ! $this->transfer_model->update($code, $arr))
           {
             $sc = FALSE;
             $this->error = "Update failed : change document status failed";
@@ -995,11 +1003,6 @@ class Transfer extends PS_Controller
         {
           $this->db->trans_rollback();
         }
-
-        if($sc === TRUE)
-        {
-          $this->do_export($code);
-        }
       }
       else
       {
@@ -1020,146 +1023,132 @@ class Transfer extends PS_Controller
 	public function save_transfer($code)
   {
     $sc = TRUE;
-    $ex = 1;
 		$doc = $this->transfer_model->get($code);
 
 		if( ! empty($doc))
 		{
+      $this->load->model('stock/stock_model');
+      $this->load->model('inventory/movement_model');
+
 			$date_add = getConfig('ORDER_SOLD_DATE') == 'D' ? $doc->date_add : now();
 
 			if($doc->status == -1 OR $doc->status == 0)
 			{
 				$details = $this->transfer_model->get_details($code);
 
-				if(!empty($details))
+				if( ! empty($details))
 				{
-          $this->db->trans_begin();
-
-          //--- ถ้าต้องอนุมัติ แค่เปลี่ยนสถานะเป็น 0 พอ
-          if($doc->must_approve == 1)
+          foreach($details as $rs)
           {
-            $arr = array(
-              'status' => 0,
-              'is_approve' => 0
-            );
+            if($sc === FALSE) { break; }
 
-            if( ! $this->transfer_model->update($code, $arr))
+            $stock = $this->stock_model->get_stock_zone($rs->from_zone, $rs->product_code);
+
+            if($stock < $rs->qty)
             {
               $sc = FALSE;
-              $this->error = "Update Status Failed";
+              $this->error = "สต็อกในโซนต้นทางไม่พอโอน <br/>SKU : {$rs->product_code}<br/>Qty : {$rs->qty} / {$stock}";
             }
           }
-          else
-          {
-            if($doc->must_accept == 1)
-            {
-              $arr = array(
-                'status' => 4,
-                'is_accept' => 0
-              );
 
-              if( ! $this->transfer_model->update($code, $arr))
+          if($sc === TRUE)
+          {
+            $this->db->trans_begin();
+
+            foreach($details as $rs)
+            {
+              if( ! $this->stock_model->update_stock_zone($rs->from_zone, $rs->product_code, ($rs->qty * -1)))
               {
                 $sc = FALSE;
-                $this->error = "Update Status Failed";
+                $this->error = "ย้ายสต็อกออกจากโซนต้นทางไม่สำเร็จ";
               }
-            }
-            else
-            {
-              //--- movement
-              $this->load->model('inventory/movement_model');
 
-              foreach($details as $rs)
+              if($sc === TRUE)
               {
-                if($sc === FALSE) { break; }
+                $move_out = array(
+                  'reference' => $code,
+                  'warehouse_code' => $doc->from_warehouse,
+                  'zone_code' => $rs->from_zone,
+                  'product_code' => $rs->product_code,
+                  'move_in' => 0,
+                  'move_out' => $rs->qty,
+                  'date_add' => $date_add
+                );
 
-                $arr = array('wms_qty' => $rs->qty);
+                //--- move out
+                if(! $this->movement_model->add($move_out))
+                {
+                  $sc = FALSE;
+                  $this->error = 'บันทึก movement ขาออกไม่สำเร็จ';
+                }
+              }
+
+              if($sc === TRUE)
+              {
+                if( ! $this->stock_model->update_stock_zone($rs->to_zone, $rs->product_code, $rs->qty))
+                {
+                  $sc = FALSE;
+                  $this->error = "ย้ายสต็อกเข้าโซนปลายทางไม่สำเร็จ";
+                }
+              }
+
+              if($sc === TRUE)
+              {
+                $move_in = array(
+                  'reference' => $code,
+                  'warehouse_code' => $doc->to_warehouse,
+                  'zone_code' => $rs->to_zone,
+                  'product_code' => $rs->product_code,
+                  'move_in' => $rs->qty,
+                  'move_out' => 0,
+                  'date_add' => $date_add
+                );
+
+                //--- move in
+                if(! $this->movement_model->add($move_in))
+                {
+                  $sc = FALSE;
+                  $this->error = 'บันทึก movement ขาเข้าไม่สำเร็จ';
+                }
+              }
+
+              if($sc === TRUE)
+              {
+                $arr = array('wms_qty' => $rs->qty, 'valid' => 1);
 
                 if( ! $this->transfer_model->update_detail($rs->id, $arr))
                 {
                   $sc = FALSE;
                   $this->error = "Failed to update wms qty at {$rs->product_code}";
                 }
-
-                if($sc === TRUE)
-                {
-                  //--- 2. update movement
-                  $move_out = array(
-                    'reference' => $code,
-                    'warehouse_code' => $doc->from_warehouse,
-                    'zone_code' => $rs->from_zone,
-                    'product_code' => $rs->product_code,
-                    'move_in' => 0,
-                    'move_out' => $rs->qty,
-                    'date_add' => $date_add
-                  );
-
-                  //--- move out
-                  if(! $this->movement_model->add($move_out))
-                  {
-                    $sc = FALSE;
-                    $this->error = 'บันทึก movement ขาออกไม่สำเร็จ';
-                  }
-
-                  $move_in = array(
-                    'reference' => $code,
-                    'warehouse_code' => $doc->to_warehouse,
-                    'zone_code' => $rs->to_zone,
-                    'product_code' => $rs->product_code,
-                    'move_in' => $rs->qty,
-                    'move_out' => 0,
-                    'date_add' => $date_add
-                  );
-
-                  //--- move in
-                  if(! $this->movement_model->add($move_in))
-                  {
-                    $sc = FALSE;
-                    $this->error = 'บันทึก movement ขาเข้าไม่สำเร็จ';
-                  }
-                }
-              } //--- end foreach
-
-              if($sc === TRUE)
-              {
-                if(! $this->transfer_model->set_status($code, 1))
-                {
-                  $sc = FALSE;
-                  $this->error = "เปลี่ยนสถานะเอกสารไม่สำเร็จ";
-                }
-
-                if(! $this->transfer_model->valid_all_detail($code, 1))
-                {
-                  $sc = FALSE;
-                  $this->error = "เปลี่ยนสถานะรายการไม่สำเร็จ";
-                }
               }
-            } //--- must accept
-          } //--- must approve
+            } //--- end foreach
 
-          if($sc === TRUE)
-          {
-            $this->db->trans_commit();
-          }
-          else
-          {
-            $this->db->trans_rollback();
-          }
-
-          if($sc === TRUE)
-          {
-            if($doc->must_approve == 0 && $doc->must_accept == 0)
+            if($sc === TRUE)
             {
-              $this->transfer_model->update($code, array('shipped_date' => $date_add)); //--- update transferd date
+              $arr = array(
+                'status' => 1,
+                'shipped_date' => $date_add,
+                'update_user' => $this->_user->uname,
+                'valid' => 1
+              );
 
-              if( ! $this->do_export($code))
+              if( ! $this->transfer_model->update($code, $arr))
               {
                 $sc = FALSE;
-                $ex = 0;
-                $this->error = "บันทึกสำเร็จ แต่ส่งข้อมูลเข้า SAP ไม่สำเร็จ";
+                $this->error = "เปลี่ยนสถานะเอกสารไม่สำเร็จ";
               }
-            } //-- if must_approve && must_accept = 0
-          } //-- if $sc = TRUE
+            }
+
+            if($sc === TRUE)
+            {
+              $this->db->trans_commit();
+            }
+            else
+            {
+              $this->db->trans_rollback();
+            }
+          }
 				}
 				else
 				{
@@ -1170,586 +1159,16 @@ class Transfer extends PS_Controller
 			else
 			{
 				$sc = FALSE;
-				$this->error = "สถานะเอกสารไม่ถูกต้อง";
+				set_error('status');
 			}
 		}
 		else
 		{
 			$sc = FALSE;
-			$this->error = "เลขที่เอกสารไม่ถูกต้อง";
+			set_error('notfound');
 		}
 
-
-    $arr = array(
-      'status' => $sc === TRUE ? 'success' : ($ex = 0 ? 'warning' : 'failed'),
-      'message' => $sc === TRUE ? 'success' : $this->error
-    );
-
-    echo json_encode($arr);
-  }
-
-
-
-  public function do_approve()
-  {
-    $sc = TRUE;
-    $ex = 1;
-    $code = $this->input->post('code');
-
-    if($this->pm->can_approve)
-    {
-      $doc = $this->transfer_model->get($code);
-
-      if( ! empty($doc))
-      {
-        $date_add = getConfig('ORDER_SOLD_DATE') == 'D' ? $doc->date_add : now();
-
-
-        if($doc->status == 0 && ($doc->is_approve == 0 OR $doc->is_approve == 3))
-        {
-
-          $this->db->trans_begin();
-
-          $arr = array(
-            'is_approve' => 1,
-            'status' => $doc->must_accept == 1 ? 4 : 1
-          );
-
-          if( ! $this->transfer_model->update($code, $arr))
-          {
-            $sc = FALSE;
-            $this->error = "Update Status Failed";
-          }
-
-          $this->load->model('approve_logs_model');
-
-          $this->approve_logs_model->add($code, 1, $this->_user->uname);
-
-
-          if($sc === TRUE)
-          {
-            if($doc->must_accept == 0)
-            {
-              $this->load->model('inventory/movement_model');
-
-              $details = $this->transfer_model->get_details($code);
-
-              if( ! empty($details))
-              {
-                foreach($details as $rs)
-                {
-                  if($sc === FALSE) { break; }
-
-                  $arr = array('wms_qty' => $rs->qty);
-
-                  if( ! $this->transfer_model->update_detail($rs->id, $arr))
-                  {
-                    $sc = FALSE;
-                    $this->error = "Failed to update wms qty @{$rs->product_code}";
-                  }
-
-                  if($sc === TRUE)
-                  {
-                    //--- 2. update movement
-                    $move_out = array(
-                      'reference' => $code,
-                      'warehouse_code' => $doc->from_warehouse,
-                      'zone_code' => $rs->from_zone,
-                      'product_code' => $rs->product_code,
-                      'move_in' => 0,
-                      'move_out' => $rs->qty,
-                      'date_add' => $date_add
-                    );
-
-                    //--- move out
-                    if(! $this->movement_model->add($move_out))
-                    {
-                      $sc = FALSE;
-                      $this->error = 'บันทึก movement ขาออกไม่สำเร็จ';
-                      break;
-                    }
-
-                    $move_in = array(
-                      'reference' => $code,
-                      'warehouse_code' => $doc->to_warehouse,
-                      'zone_code' => $rs->to_zone,
-                      'product_code' => $rs->product_code,
-                      'move_in' => $rs->qty,
-                      'move_out' => 0,
-                      'date_add' => $date_add
-                    );
-
-                    if(! $this->movement_model->add($move_in))
-                    {
-                      $sc = FALSE;
-                      $this->error = 'บันทึก movement ขาเข้าไม่สำเร็จ';
-                      break;
-                    }
-                  }
-                } //--- end foreach
-
-                if($sc === TRUE)
-                {
-                  if(! $this->transfer_model->valid_all_detail($code, 1))
-                  {
-                    $sc = FALSE;
-                    $this->error = "เปลี่ยนสถานะรายการไม่สำเร็จ";
-                  }
-                }
-              }
-              else
-              {
-                $sc = FALSE;
-                $this->error = "ไม่พบรายการโอนย้าย";
-              }
-            }
-          }
-
-          if( $sc === TRUE)
-          {
-
-            $this->db->trans_commit();
-          }
-          else
-          {
-            $this->db->trans_rollback();
-          }
-
-
-          if($sc === TRUE && $doc->must_accept == 0)
-          {
-            if( ! empty($details))
-            {
-              $this->transfer_model->update($code, array('shipped_date' => $date_add));
-
-              if( ! $this->do_export($code))
-              {
-                $sc = FALSE;
-                $ex = 0;
-                $this->error = "บันทึกสำเร็จ แต่ส่งข้อมูลเข้า SAP ไม่สำเร็จ";
-              }
-            }
-            else
-            {
-              $sc = FALSE;
-              $this->error = "ไม่พบรายการโอนย้าย";
-            }
-          } //--- if must_accept == 0
-        }
-        else
-        {
-          $sc = FALSE;
-          $this->error = "สถานะเอกสารไม่ถูกต้อง";
-        }
-      }
-      else
-      {
-        $sc = FALSE;
-        $this->error = "เลขที่เอกสารไม่ถูกต้อง";
-      }
-    }
-    else
-    {
-      $sc = FALSE;
-      $this->error = "คุณไม่มีสิทธิ์ในการอนุมัติ";
-    }
-
-    $arr = array(
-      'status' => $sc === TRUE ? 'success' : ($ex = 0 ? 'warning' : 'failed'),
-      'message' => $sc === TRUE ? 'success' : $this->error
-    );
-
-    echo json_encode($arr);
-  }
-
-
-  public function do_reject()
-  {
-    $sc = TRUE;
-    $this->load->model('approve_logs_model');
-
-    $code = $this->input->post('code');
-
-    if($this->pm->can_approve)
-    {
-      if( ! empty($code))
-      {
-        $doc = $this->transfer_model->get($code);
-
-        if( ! empty($doc))
-        {
-          if($doc->status == 0 && $doc->is_approve == 0)
-          {
-            $arr = array(
-              'is_approve' => 3
-            );
-
-            if($this->transfer_model->update($code, $arr))
-            {
-              $this->approve_logs_model->add($code, 3, $this->_user->uname);
-            }
-            else
-            {
-              $sc = FALSE;
-              $this->error = "Update Status Failed";
-            }
-          }
-          else
-          {
-            $sc = FALSE;
-            $this->error = "Invalid document status";
-          }
-        }
-        else
-        {
-          $sc = FALSE;
-          $this->error = "Invalid document number";
-        }
-      }
-      else
-      {
-        $sc = FALSE;
-        $this->error = "Missing required parameter";
-      }
-    }
-    else
-    {
-      $sc = FALSE;
-      $this->error = "คุณไม่มีสิทธิ์ในการอนุมัติ";
-    }
-
-    echo $sc === TRUE ? 'success' : $this->error;
-  }
-
-
-
-  function accept_confirm()
-  {
-    $sc = TRUE;
-    $ex = 1;
-    $code = $this->input->post('code');
-    $remark = $this->input->post('accept_remark');
-    $doc = $this->transfer_model->get($code);
-
-    if( ! empty($doc))
-    {
-      $date_add = getConfig('ORDER_SOLD_DATE') == 'D' ? $doc->date_add : now();
-
-      if($doc->status == 4)
-      {
-        if($this->canAccept())
-        {
-          $this->db->trans_begin();
-
-          if( ! $this->transfer_model->accept_all($code, $this->_user->uname))
-          {
-            $sc = FALSE;
-            $this->error = "Update Accept Status Failed";
-          }
-
-          if( $sc === TRUE)
-          {
-            $arr = array(
-              'status' => 1,
-              'is_accept' => 1,
-              'accept_by' => $this->_user->uname,
-              'accept_on' => now(),
-              'accept_remark' => $remark
-            );
-
-            if( ! $this->transfer_model->update($code, $arr))
-            {
-              $sc = FALSE;
-              $this->error = "Update Status Failed";
-            }
-
-            if($sc === TRUE)
-            {
-              $this->load->model('inventory/movement_model');
-
-              $details = $this->transfer_model->get_details($code);
-
-              if( ! empty($details))
-              {
-                foreach($details as $rs)
-                {
-                  if($sc === FALSE) { break; }
-                  $arr = array('wms_qty' => $rs->qty);
-
-                  if( ! $this->transfer_model->update_detail($rs->id, $arr))
-                  {
-                    $sc = FALSE;
-                    $this->error = "Failed to update wms qty @{$rs->product_code}";
-                  }
-
-                  if($sc === TRUE)
-                  {
-                    $move_out = array(
-                      'reference' => $code,
-                      'warehouse_code' => $doc->from_warehouse,
-                      'zone_code' => $rs->from_zone,
-                      'product_code' => $rs->product_code,
-                      'move_in' => 0,
-                      'move_out' => $rs->qty,
-                      'date_add' => $date_add
-                    );
-
-                    $move_in = array(
-                      'reference' => $code,
-                      'warehouse_code' => $doc->to_warehouse,
-                      'zone_code' => $rs->to_zone,
-                      'product_code' => $rs->product_code,
-                      'move_in' => $rs->qty,
-                      'move_out' => 0,
-                      'date_add' => $date_add
-                    );
-
-                    if( ! $this->movement_model->add($move_out))
-                    {
-                      $sc = FALSE;
-                      $this->error = "Insert Movement (out) Failed";
-                    }
-
-                    if( ! $this->movement_model->add($move_in))
-                    {
-                      $sc = FALSE;
-                      $this->error = "Insert Movement (in) Failed";
-                    }
-                  }
-                } //-- foreach
-
-                if($sc === TRUE)
-                {
-                  if( ! $this->transfer_model->valid_all_detail($code, 1))
-                  {
-                    $sc = FALSE;
-                    $this->error = "Update Row(s) Status Failed";
-                  }
-                }
-              } //-- empty details
-            } //--- sc == TURE
-          } //--- sc == TURE
-
-          if($sc === TRUE)
-          {
-            $this->db->trans_commit();
-          }
-          else
-          {
-            $this->db->trans_rollback();
-          }
-
-          if($sc === TRUE)
-          {
-            $this->transfer_model->update($code, array('shipped_date' => $date_add));
-
-            if(! $this->do_export($code))
-            {
-              $sc = FALSE;
-              $ex = 0;
-              $this->error = "บันทึกเอกสารสำเร็จ แต่ส่งข้อมูลไป SAP ไม่สำเร็จ";
-            }
-          }
-        }
-        else
-        {
-          $sc = FALSE;
-          $this->error = "You don't have permission to perform this operation.";
-        }
-      }
-      else
-      {
-        $sc = FALSE;
-        $this->error = "Invalid Document Status";
-      }
-    }
-    else
-    {
-      $sc = FALSE;
-      $this->error = "Invalid Document Number";
-    }
-
-    $arr = array(
-      'status' => $sc === TRUE ? 'success' : ($ex == 0 ? 'warning' : 'failed'),
-      'message' => $sc === TRUE ? 'success' : $this->error
-    );
-
-    echo json_encode($arr);
-  }
-
-
-  function accept_zone()
-  {
-    $sc = TRUE;
-    $ex = 1;
-    $code = $this->input->post('code');
-    $doc = $this->transfer_model->get($code);
-    $is_accept_all = FALSE;
-
-    if( ! empty($doc))
-    {
-      $date_add = getConfig('ORDER_SOLD_DATE') == 'D' ? $doc->date_add : now();
-
-      if($doc->status == 4)
-      {
-        $my_zone = $this->transfer_model->get_my_zone($code, $this->_user->id);
-
-        if( ! empty($my_zone))
-        {
-          $this->db->trans_begin();
-
-          if( ! $this->transfer_model->accept_zone($code, $my_zone, $this->_user->uname))
-          {
-            $sc = FALSE;
-            $this->error = "Update Accept Status Failed";
-          }
-
-          if( $sc === TRUE)
-          {
-            //--- check all accept ?
-            $is_accept_all = $this->transfer_model->is_accept_all($code);
-
-            if($is_accept_all)
-            {
-              $arr = array(
-                'status' => 1,
-                'is_accept' => 1,
-                'accept_by' => NULL,
-                'accept_on' => now(),
-                'accept_remark' => NULL
-              );
-
-              if( ! $this->transfer_model->update($code, $arr))
-              {
-                $sc = FALSE;
-                $this->error = "Update Status Failed";
-              }
-
-              if($sc === TRUE)
-              {
-                $this->load->model('inventory/movement_model');
-
-                $details = $this->transfer_model->get_details($code);
-
-                if( ! empty($details))
-                {
-                  foreach($details as $rs)
-                  {
-                    if($sc === FALSE) { break; }
-
-                    $arr = array('wms_qty' => $rs->qty);
-
-                    if( ! $this->transfer_model->update_detail($rs->id, $arr))
-                    {
-                      $sc = FALSE;
-                      $this->error = "Failed to update wms qty @{$rs->product_code}";
-                    }
-
-                    $move_out = array(
-                      'reference' => $code,
-                      'warehouse_code' => $doc->from_warehouse,
-                      'zone_code' => $rs->from_zone,
-                      'product_code' => $rs->product_code,
-                      'move_in' => 0,
-                      'move_out' => $rs->qty,
-                      'date_add' => $date_add
-                    );
-
-                    $move_in = array(
-                      'reference' => $code,
-                      'warehouse_code' => $doc->to_warehouse,
-                      'zone_code' => $rs->to_zone,
-                      'product_code' => $rs->product_code,
-                      'move_in' => $rs->qty,
-                      'move_out' => 0,
-                      'date_add' => $date_add
-                    );
-
-                    if( ! $this->movement_model->add($move_out))
-                    {
-                      $sc = FALSE;
-                      $this->error = "Insert Movement (out) Failed";
-                    }
-
-                    if( ! $this->movement_model->add($move_in))
-                    {
-                      $sc = FALSE;
-                      $this->error = "Insert Movement (in) Failed";
-                    }
-                  } //-- foreach
-
-                  if($sc === TRUE)
-                  {
-                    if( ! $this->transfer_model->valid_all_detail($code, 1))
-                    {
-                      $sc = FALSE;
-                      $this->error = "Update Row(s) Status Failed";
-                    }
-                  }
-                } //-- empty details
-              } //--- sc == TURE
-            }
-          } //--- sc == TURE
-
-          if($sc === TRUE)
-          {
-            $this->db->trans_commit();
-          }
-          else
-          {
-            $this->db->trans_rollback();
-          }
-
-
-          if($sc === TRUE && $is_accept_all === TRUE)
-          {
-            $this->transfer_model->update($code, array('shipped_date' => $date_add));
-
-            if(! $this->do_export($code))
-            {
-              $sc = FALSE;
-              $ex = 0;
-              $this->error = "บันทึกเอกสารสำเร็จ แต่ส่งข้อมูลไป SAP ไม่สำเร็จ";
-            }
-          }
-        }
-        else
-        {
-          $sc = FALSE;
-          $this->error = "You don't have permission to perform this operation.";
-        }
-      }
-      else
-      {
-        $sc = FALSE;
-        $this->error = "Invalid Document Status";
-      }
-    }
-    else
-    {
-      $sc = FALSE;
-      $this->error = "Invalid Document Number";
-    }
-
-    $arr = array(
-      'status' => $sc === TRUE ? 'success' : ($ex == 0 ? 'warning' : 'failed'),
-      'message' => $sc === TRUE ? 'success' : $this->error
-    );
-
-    echo json_encode($arr);
-  }
-
-
-  public function canAccept()
-  {
-    $pm = get_permission('APACWW', $this->_user->uid, $this->_user->id_profile);
-
-    if( ! empty($pm))
-    {
-      return ($pm->can_view + $pm->can_add + $pm->can_edit + $pm->can_delete + $pm->can_approve) > 0 ? TRUE : FALSE;
-    }
-
-    return FALSE;
+    $this->_response($sc);
   }
 
 
@@ -1773,7 +1192,7 @@ class Transfer extends PS_Controller
       //--- check middle doc delete it if exists
       $middle = $this->transfer_model->get_middle_transfer_doc($code);
 
-      if(!empty($middle))
+      if( ! empty($middle))
       {
         foreach($middle as $rs)
         {
@@ -1822,11 +1241,8 @@ class Transfer extends PS_Controller
       }
     }
 
-
-
     echo $sc === TRUE ? 'success' : $this->error;
   }
-
 
 
 	public function add_to_transfer()
@@ -1835,7 +1251,7 @@ class Transfer extends PS_Controller
 
 		$data = json_decode($this->input->post('data'));
 
-		if(!empty($data))
+		if( ! empty($data))
 		{
 			if(! empty($data->transfer_code))
 	    {
@@ -1847,11 +1263,9 @@ class Transfer extends PS_Controller
 
         $zone = $this->zone_model->get($to_zone);
 
-        $must_accept = (empty($zone) ? 0 : (empty($zone->user_id) ? 0 : 1));
-
 	      $items = $data->items;
 
-	      if(!empty($items))
+	      if( ! empty($items))
 	      {
 	        $this->db->trans_begin();
 
@@ -1864,7 +1278,7 @@ class Transfer extends PS_Controller
 
 	          $id = $this->transfer_model->get_id($code, $item->item_code, $from_zone, $to_zone);
 
-	          if(!empty($id))
+	          if( ! empty($id))
 	          {
 	            if( !$this->transfer_model->update_qty($id, $item->qty))
               {
@@ -1880,8 +1294,7 @@ class Transfer extends PS_Controller
 	              'product_name' => $this->products_model->get_name($item->item_code),
 	              'from_zone' => $from_zone,
 	              'to_zone' => $to_zone,
-	              'qty' => $item->qty,
-                'must_accept' => $must_accept
+	              'qty' => $item->qty
 	            );
 
 	            if( ! $this->transfer_model->add_detail($arr))
@@ -1894,22 +1307,7 @@ class Transfer extends PS_Controller
 
 	        if($sc === TRUE)
 	        {
-            if($must_accept == 1)
-            {
-              $arr = array(
-                'status' => -1,
-                'must_accept' => 1
-              );
-            }
-            else
-            {
-              $arr = array('status' => -1);
-            }
-
-            $this->transfer_model->update($data->transfer_code, $arr);
-
 	          $this->db->trans_commit();
-
 	        }
           else
           {
@@ -2389,13 +1787,12 @@ class Transfer extends PS_Controller
   }
 
 
-
   public function get_temp_table($code)
   {
     $ds = array();
     $temp = $this->transfer_model->get_transfer_temp($code);
 
-    if(!empty($temp))
+    if( ! empty($temp))
     {
       $no = 1;
 
@@ -2437,7 +1834,7 @@ class Transfer extends PS_Controller
     $ds = array();
     $details = $this->transfer_model->get_details($code);
 
-    if(!empty($details))
+    if( ! empty($details))
     {
       $no = 1;
       $total_qty = 0;
@@ -2491,13 +1888,12 @@ class Transfer extends PS_Controller
   }
 
 
-
   public function get_transfer_zone($warehouse = '')
   {
     $txt = $_REQUEST['term'];
     $sc = array();
     $zone = $this->zone_model->search($txt, $warehouse);
-    if(!empty($zone))
+    if( ! empty($zone))
     {
       foreach($zone as $rs)
       {
@@ -2736,6 +2132,7 @@ class Transfer extends PS_Controller
 
     if($this->pm->can_delete)
     {
+      $this->load->model('stock/stock_model');
       $this->load->model('inventory/movement_model');
 
       $doc = $this->transfer_model->get($code);
@@ -2746,52 +2143,82 @@ class Transfer extends PS_Controller
         {
           if($doc->status == 1)
           {
-            $sap = $this->transfer_model->get_sap_transfer_doc($code);
+            $details = $this->transfer_model->get_details($code);
 
-            if( ! empty($sap))
+            if( ! empty($details))
             {
-              $sc = FALSE;
-              $this->error = "เอกสารเข้า SAP แล้วไม่อนุญาติให้ยกเลิก";
-            }
-
-            if($sc === TRUE)
-            {
-              $middle = $this->transfer_model->get_middle_transfer_doc($code);
-
-              if( ! empty($middle))
+              foreach($details as $rs)
               {
-                foreach($middle as $rs)
+                if($sc === FALSE) { break; }
+
+                if($rs->qty > 0 && $rs->wms_qty > 0)
                 {
-                  $this->transfer_model->drop_middle_exits_data($rs->DocEntry);
+                  $stock = $this->stock_model->get_stock_zone($rs->to_zone, $rs->product_code);
+                  if($stock < $rs->wms_qty)
+                  {
+                    $sc = FALSE;
+                    $this->error = "สต็อกในโซนไม่พอย้ายกลับ <br/>Zone : {$rs->to_zone} <br/>SKU : {$rs->product_code} <br/>Qty : {$rs->wms_qty} / {$stock}";
+                  }
                 }
               }
             }
           }
 
-
           if($sc === TRUE)
           {
             $this->db->trans_begin();
 
-            //--- clear temp
-            if( ! $this->transfer_model->drop_all_temp($code))
+            if($doc->status == 1)
             {
-              $sc = FALSE;
-              $this->error = "Failed to delete transfer temp";
+              if( ! empty($details))
+              {
+                foreach($details as $rs)
+                {
+                  if($sc === FALSE) { break; }
+
+                  if( ! $this->stock_model->update_stock_zone($rs->to_zone, $rs->product_code, ($rs->wms_qty * -1)))
+                  {
+                    $sc = FALSE;
+                    $this->error = "ย้ายสต็อกออกจากโซนไม่สำเร็จ";
+                  }
+
+                  if( ! $this->stock_model->update_stock_zone($rs->from_zone, $rs->product_code, $rs->wms_qty))
+                  {
+                    $sc = FALSE;
+                    $this->error = "ย้ายสต็อกเข้าโซนไม่สำเร็จ";
+                  }
+                }
+              }
             }
 
-            //--- delete detail
-            if( ! $this->transfer_model->drop_all_detail($code))
+            if($sc === TRUE)
             {
-              $sc = FALSE;
-              $this->error = "Failed to delete transfer rows";
+              //--- clear temp
+              if( ! $this->transfer_model->drop_all_temp($code))
+              {
+                $sc = FALSE;
+                $this->error = "Failed to delete transfer temp";
+              }
             }
 
-            //--- drop movement
-            if( ! $this->movement_model->drop_movement($code))
+            if($sc === TRUE)
             {
-              $sc = FALSE;
-              $this->error = "Failed to delete movement";
+              //--- delete detail
+              if( ! $this->transfer_model->drop_all_detail($code))
+              {
+                $sc = FALSE;
+                $this->error = "Failed to delete transfer rows";
+              }
+            }
+
+            if($sc === TRUE)
+            {
+              //--- drop movement
+              if( ! $this->movement_model->drop_movement($code))
+              {
+                $sc = FALSE;
+                $this->error = "Failed to delete movement";
+              }
             }
 
             if($sc === TRUE)
@@ -2799,7 +2226,6 @@ class Transfer extends PS_Controller
               //--- change status to 2 (cancled)
               $arr = array(
                 'status' => 2,
-                'inv_code' => NULL,
                 'cancle_reason' => trim($this->input->post('reason')),
                 'cancle_user' => $this->_user->uname
               );
@@ -2842,14 +2268,14 @@ class Transfer extends PS_Controller
   {
     $this->load->library('printer');
     $doc = $this->transfer_model->get($code);
-    if(!empty($doc))
+    if( ! empty($doc))
     {
       $doc->from_warehouse_name = $this->warehouse_model->get_name($doc->from_warehouse);
       $doc->to_warehouse_name = $this->warehouse_model->get_name($doc->to_warehouse);
     }
 
     $details = $this->transfer_model->get_details($code);
-    if(!empty($details))
+    if( ! empty($details))
     {
       foreach($details as $rs)
       {
@@ -2868,87 +2294,6 @@ class Transfer extends PS_Controller
   }
 
 
-  private function do_export($code)
-  {
-    $sc = TRUE;
-
-    $this->load->library('export');
-
-    if( ! $this->export->export_transfer($code))
-    {
-      $sc = FALSE;
-      $this->error = trim($this->export->error);
-    }
-    else
-    {
-      $this->transfer_model->update($code, array('is_export' => 1, 'inv_code' => NULL));
-    }
-
-    return $sc;
-  }
-
-
-
-  public function export_transfer($code)
-  {
-    if($this->do_export($code) === TRUE)
-    {
-      echo 'success';
-    }
-    else
-    {
-      echo $this->error;
-    }
-  }
-
-  //---- Update status transfer draft to receipted
-  public function confirm_receipted()
-  {
-    $sc = TRUE;
-    $code = trim($this->input->post('code'));
-    if(!empty($code))
-    {
-      $this->load->model('orders/orders_model');
-
-      //--- check ว่ามีเลขที่เอกสารนี้ใน transfer draft หรือไม่
-      $draft = $this->transfer_model->get_transfer_draft($code);
-      if(!empty($draft))
-      {
-        if(empty($draft->F_Receipt) OR $draft->F_Receipt == 'N' OR $draft->F_Receipt == 'D')
-        {
-          //---- ยืนยันรับสินค้า
-          if($this->transfer_model->confirm_draft_receipted($draft->DocEntry))
-          {
-            $this->orders_model->valid_transfer_draft($code);
-          }
-          else
-          {
-            $sc = FALSE;
-            $this->error = "ยืนยันการรับสินค้าใน Transfer Draft ไม่สำเร็จ";
-          }
-        }
-        else
-        {
-          $sc = FALSE;
-          $this->error = "เอกสารถูกยืนยันไปแล้ว";
-        }
-      }
-      else
-      {
-        $sc = FALSE;
-        $this->error = "ไม่พบเอกสาร Transfer draft";
-      }
-    }
-    else
-    {
-      $sc = FALSE;
-      $this->error = "ไม่พบเลขที่เอกสาร";
-    }
-
-    echo $sc === TRUE ? 'success' : $this->error;
-  }
-
-
   public function clear_filter()
   {
     $filter = array(
@@ -2959,7 +2304,7 @@ class Transfer extends PS_Controller
       'tr_to_warehouse',
       'tr_fromDate',
       'tr_toDate',
-      'tr_status',		
+      'tr_status',
       'tr_is_approve',
       'tr_valid',
       'tr_sap',

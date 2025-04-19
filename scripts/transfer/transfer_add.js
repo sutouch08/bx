@@ -1,126 +1,88 @@
 var click = 0;
 //--- เพิ่มเอกสารโอนคลังใหม่
-function addTransfer() {
-  if(click > 0) {
-    return false;
-  }
+function add() {
+  if(click == 0) {
+    click = 1;
 
-  click = 1;
+    clearErrorByClass('h');
 
-  $('.h').removeClass('has-error');
+    let h = {
+      'date_add' : $('#date').val(),
+      'from_warehouse' : $('#from-warehouse').val(),
+      'to_warehouse' : $('#to-warehouse').val(),
+      'remark' : $('#remark').val().trim()
+    }
 
-  var code = $('#code').val();
+    //--- ตรวจสอบวันที่
+    if( ! isDate(h.date_add))
+    {
+      click = 0;
+      swal('วันที่ไม่ถูกต้อง');
+      $('#date').hasError();
+      return false;
+    }
 
-  //--- วันที่เอกสาร
-  var date_add = $('#date').val();
+    //--- ตรวจสอบคลังต้นทาง
+    if(h.from_warehouse == '') {
+      click = 0;
+      swal('คลังต้นทางไม่ถูกต้อง');
+      $('#from-warehouse').hasError();
+      return false;
+    }
 
-  //--- คลังต้นทาง
-  var from_warehouse = $('#from_warehouse').val();
-  var from_warehouse_code = $('#from_warehouse_code').val();
+    //--- ตรวจสอบคลังปลายทาง
+    if(h.to_warehouse == ''){
+      click = 0;
+      swal('คลังปลายทางไม่ถูกต้อง');
+      $('#to-warehouse').hasError();
+      return false;
+    }
 
-  //--- คลังปลายทาง
-  var to_warehouse = $('#to_warehouse').val();
-  var to_warehouse_code = $('#to_warehouse_code').val();
-  var wx_code = $('#wx_code').val();
+    //--- ตรวจสอบว่าเป็นคนละคลังกันหรือไม่ (ต้องเป็นคนละคลังกัน)
+    if( h.from_warehouse == h.to_warehouse) {
+      swal('คลังต้นทางต้องไม่ตรงกับคลังปลายทาง');
+      $('#from-warehouse').hasError();
+      $('#to-warehouse').hasError();
+      click = 0;
+      return false;
+    }
 
-  //--- หมายเหตุ
-  var remark = $.trim($('#remark').val());
-  var reqRemark = $('#require_remark').val() == 1 ? true : false;
+    load_in();
 
-  //--- ตรวจสอบวันที่
-  if( ! isDate(date_add))
-  {
-    swal('วันที่ไม่ถูกต้อง');
-    $('#date').addClass('has-error');
-    click = 0;
-    return false;
-  }
+    $.ajax({
+      url:HOME + 'add',
+      type:'POST',
+      cache:false,
+      data:{
+        'data' : JSON.stringify(h)
+      },
+      success:function(rs) {
+        load_out();
+        click = 0;
 
-  //--- ตรวจสอบคลังต้นทาง
-  if(from_warehouse.length == 0 || from_warehouse_code == ''){
-    swal('คลังต้นทางไม่ถูกต้อง');
-    $('.f').addClass('has-error');
-    click = 0;
-    return false;
-  }
-
-  //--- ตรวจสอบคลังปลายทาง
-  if(to_warehouse_code == '' || to_warehouse.length == 0){
-    swal('คลังปลายทางไม่ถูกต้อง');
-    $('.t').addClass('has-error');
-    click = 0;
-    return false;
-  }
-
-  //--- ตรวจสอบว่าเป็นคนละคลังกันหรือไม่ (ต้องเป็นคนละคลังกัน)
-  if( from_warehouse_code == to_warehouse_code) {
-    swal('คลังต้นทางต้องไม่ตรงกับคลังปลายทาง');
-    $('.f').addClass('has-error');
-    $('.t').addClass('has-error');
-    click = 0;
-    return false;
-  }
-
-  if(reqRemark && remark.length < 10) {
-    swal({
-      title: 'Required',
-      text: "กรุณาระบุหมายเหตุอย่างน้อย 10 ตัวอักษร",
-      type:'warning'
-    });
-
-    $('#remark').addClass('has-error');
-    click = 0;
-    return false;
-  }
-
-  load_in();
-
-  $.ajax({
-    url:HOME + 'add',
-    type:'POST',
-    cache:false,
-    data:{
-      'code' : code,
-      'date' : date_add,
-      'from_warehouse_code' : from_warehouse_code,
-      'to_warehouse_code' : to_warehouse_code,
-      'wx_code' : wx_code,
-      'remark' : remark
-    },
-    success:function(rs) {
-      load_out();
-      if(isJson(rs)) {
-        let ds = JSON.parse(rs);
-        if(ds.status == 'success') {
-          let uuid = get_uuid();
-          window.location.href = HOME + 'edit/'+ds.code+'/'+uuid;
+        if(isJson(rs)) {
+          let ds = JSON.parse(rs);
+          if(ds.status == 'success') {
+            let uuid = get_uuid();
+            window.location.href = HOME + 'edit/'+ds.code+'/'+uuid;
+          }
+          else {
+            beep();
+            showError(ds.message);
+          }
         }
         else {
-          swal({
-            title:'Error!',
-            text:ds.message,
-            type:'error',
-            html:true
-          });
+          beep();
+          showError(rs);
         }
-
-        click = 0;
+      },
+      error:function(rs) {
+        beep();
+        showError(rs);
       }
-      else {
-        swal({
-          title:'Error!',
-          text:rs,
-          type:'error',
-          html:true
-        });
-
-        click = 0;
-      }
-    }
-  });
+    });
+  }
 }
-
-
 
 
 //--- update เอกสาร
@@ -225,7 +187,7 @@ function do_update(code, date_add, from_warehouse, to_warehouse, remark)
       'date_add' : date_add,
       'from_warehouse' : from_warehouse,
       'to_warehouse' : to_warehouse,
-      'remark' : remark,			
+      'remark' : remark,
 			'wx_code' : wx_code
     },
     success:function(rs){
@@ -262,35 +224,80 @@ function getEdit(){
 
 
 //---  บันทึกเอกสาร
-function save(){
-  var code = $('#transfer_code').val();
+function save() {
+  if(click == 0) {
+    click = 1;
+    clearErrorByClass('h');
 
-  //--- check temp
-  $.ajax({
-    url:HOME + 'check_temp_exists/'+code,
-    type:'POST',
-    cache:'false',
-    success:function(rs){
-      var rs = $.trim(rs);
-      //--- ถ้าไม่มียอดค้างใน temp
-      if( rs == 'not_exists') {
-        //--- ส่งข้อมูลไป formula
-        saveTransfer(code);
-      }
-      else{
-        swal({
-          title:'ข้อผิดพลาด !',
-          text:'พบรายการที่ยังไม่โอนเข้าปลายทาง กรุณาตรวจสอบ',
-          type:'error'
-        });
-      }
+    let h = {
+      'code' : $('#transfer_code').val(),
+      'date_add' : $('#date').val(),
+      'from_warehouse' : $('#from-warehouse').val(),
+      'to_warehouse' : $('#to-warehouse').val()
     }
-  });
+
+    //--- ตรวจสอบวันที่
+    if( ! isDate(h.date_add))
+    {
+      click = 0;
+      swal('วันที่ไม่ถูกต้อง');
+      $('#date').hasError();
+      return false;
+    }
+
+    //--- ตรวจสอบคลังต้นทาง
+    if(h.from_warehouse == '') {
+      click = 0;
+      swal('คลังต้นทางไม่ถูกต้อง');
+      $('#from-warehouse').hasError();
+      return false;
+    }
+
+    //--- ตรวจสอบคลังปลายทาง
+    if(h.to_warehouse == ''){
+      click = 0;
+      swal('คลังปลายทางไม่ถูกต้อง');
+      $('#to-warehouse').hasError();
+      return false;
+    }
+
+    //--- ตรวจสอบว่าเป็นคนละคลังกันหรือไม่ (ต้องเป็นคนละคลังกัน)
+    if( h.from_warehouse == h.to_warehouse) {
+      swal('คลังต้นทางต้องไม่ตรงกับคลังปลายทาง');
+      $('#from-warehouse').hasError();
+      $('#to-warehouse').hasError();
+      click = 0;
+      return false;
+    }
+
+    //--- check temp
+    $.ajax({
+      url:HOME + 'check_temp_exists/'+h.code,
+      type:'POST',
+      cache:'false',
+      success:function(rs) {
+        //--- ถ้าไม่มียอดค้างใน temp
+        if( rs.trim() == 'not_exists') {
+          //--- ส่งข้อมูลไป formula
+          saveTransfer(h.code);
+        }
+        else{
+          click = 0;
+          beep();
+          showError('พบรายการที่ยังไม่โอนเข้าปลายทาง กรุณาตรวจสอบ');
+        }
+      },
+      error:function(rs) {
+        click = 0;
+        beep();
+        showError(rs);
+      }
+    });
+  }
 }
 
 
-function saveAsRequest()
-{
+function saveAsRequest() {
   let code = $('#transfer_code').val().trim();
   load_in();
 
@@ -349,8 +356,7 @@ function saveAsRequest()
 }
 
 
-function saveTransfer(code)
-{
+function saveTransfer(code) {
   load_in();
 
   $.ajax({
@@ -359,47 +365,29 @@ function saveTransfer(code)
     cache:false,
     success:function(rs) {
       load_out();
-      if(isJson(rs)) {
-        let ds = JSON.parse(rs);
-        if(ds.status == 'success') {
-          swal({
-            title:'Saved',
-            text: 'บันทึกเอกสารเรียบร้อยแล้ว',
-            type:'success',
-            timer:1000
-          });
+      click = 0;
 
-          setTimeout(function() {
-            goDetail(code);
-          }, 1200);
-        }
-        else if(ds.status == 'warning') {
-          swal({
-            title:'Warning',
-            text:ds.message,
-            type:'warning',
-            html:true
-          }, () => {
-            goDetail(code);
-          });
-        }
-        else {
-          swal({
-            title:'Error!',
-            text:ds.message,
-            type:'error',
-            html:true
-          });
-        }
+      if(rs.trim() === 'success') {
+        swal({
+          title:'Saved',
+          text: 'บันทึกเอกสารเรียบร้อยแล้ว',
+          type:'success',
+          timer:1000
+        });
+
+        setTimeout(function() {
+          goDetail(code);
+        }, 1200);
       }
       else {
-        swal({
-          title:'Error!',
-          text:rs,
-          type:'error',
-          html:true
-        });
+        beep();
+        showError(rs);
       }
+    },
+    error:function(rs) {
+      click = 0;
+      beep();
+      showError(rs);
     }
   });
 }

@@ -1,15 +1,6 @@
-var HOME = BASE_URL + 'inventory/transfer/';
-
-function goBack(){
-  window.location.href = HOME;
-}
-
-
-
 function addNew(){
   window.location.href = HOME + 'add_new';
 }
-
 
 
 function goEdit(code) {
@@ -38,12 +29,9 @@ function goEdit(code) {
 }
 
 
-
 function goDetail(code){
   window.location.href = HOME + 'view_detail/'+code;
 }
-
-
 
 
 //--- สลับมาใช้บาร์โค้ดในการคีย์สินค้า
@@ -54,8 +42,6 @@ function goUseBarcode(){
 }
 
 
-
-
 //--- สลับมาใช้การคื่ย์มือในการย้ายสินค้า
 function goUseKeyboard(){
   let code = $('#transfer_code').val();
@@ -64,148 +50,8 @@ function goUseKeyboard(){
 }
 
 
-
-
-function doApprove() {
-  let code = $('#transfer_code').val();
-
-  swal({
-    title:'Approval',
-    text:'ต้องการอนุมัติ '+code+' หรือไม่ ?',
-    type:'warning',
-    showCancelButton:true,
-    confirmButtonColor:'#91b784',
-    confirmButtonText:'อนุมัติ',
-    cancelButtonText:'ยกเลิก',
-    closeOnConfirm:true
-  },
-  function() {
-    load_in();
-
-    $.ajax({
-      url:HOME + 'do_approve',
-      type:'POST',
-      cache:false,
-      data:{
-        'code' : code
-      },
-      success:function(rs) {
-        load_out();
-        if(isJson(rs)) {
-          let ds = JSON.parse(rs);
-
-          if(ds.status == 'success') {
-            setTimeout(() => {
-              swal({
-                title:'Success',
-                type:'success',
-                timer:1000
-              });
-
-              setTimeout(() => {
-                window.location.reload();
-              }, 1200);
-
-            }, 200);
-          }
-          else if(ds.status == 'warning') {
-            setTimeout(() => {
-              swal({
-                title:'Warning',
-                text:ds.message,
-                type:'warning',
-                html:true
-              }, () => {
-                window.location.reload();
-              });
-            }, 200);
-          }
-          else {
-            setTimeout(() => {
-              swal({
-                title:'Error!',
-                text:ds.message,
-                type:'error',
-                html:true
-              });
-            }, 200);
-          }
-        }
-        else {
-          setTimeout(() => {
-            swal({
-              title:'Error!',
-              text:rs,
-              type:'error',
-              html:true
-            });
-          }, 200);
-        }
-      }
-    });
-  });
-}
-
-
-function doReject() {
-  let code = $('#transfer_code').val();
-
-  swal({
-    title:'Rejection',
-    text:'ต้องการ Reject '+code+' หรือไม่ ?',
-    type:'warning',
-    showCancelButton:true,
-    confirmButtonColor:'#DD6855',
-    confirmButtonText:'Reject',
-    cancelButtonText:'ยกเลิก',
-    closeOnConfirm:true
-  },
-  function() {
-    load_in();
-
-    $.ajax({
-      url:HOME + 'do_reject',
-      type:'POST',
-      cache:false,
-      data:{
-        'code' : code
-      },
-      success:function(rs) {
-        load_out();
-
-        if(rs === 'success') {
-          setTimeout(() => {
-            swal({
-              title:'Success',
-              type:'success',
-              timer:1000
-            });
-
-            setTimeout(() => {
-              window.location.reload();
-            }, 1200);
-
-          }, 200);
-        }
-        else {
-          setTimeout(() => {
-            swal({
-              title:'Error!',
-              text:rs,
-              type:'error'
-            });
-          }, 200);
-        }
-      }
-    });
-  });
-}
-
 function goDelete(code, status){
   var title = 'ต้องการยกเลิก '+ code +' หรือไม่ ?';
-  if(status == 1){
-    title = 'หากต้องการยกเลิก คุณต้องยกเลิกเอกสารนี้ใน SAP ก่อน ต้องการยกเลิก '+ code +' หรือไม่ ?';
-  }
 
 	swal({
 		title: 'คุณแน่ใจ ?',
@@ -224,8 +70,7 @@ function goDelete(code, status){
 }
 
 
-function cancle(code)
-{
+function cancle(code){
 	let reason = $.trim($('#cancle-reason').val());
   let force_cancel = $('#force-cancel').is(':checked') ? 1 : 0;
 
@@ -272,6 +117,7 @@ function cancle(code)
   });
 }
 
+
 function doCancle() {
 	let code = $('#cancle-code').val();
 	let reason = $.trim($('#cancle-reason').val());
@@ -287,34 +133,9 @@ function doCancle() {
 }
 
 
-
 $('#cancle-modal').on('shown.bs.modal', function() {
 	$('#cancle-reason').focus();
 });
-
-
-function clearFilter(){
-  $.get(HOME + 'clear_filter', function(){
-		goBack();
-	});
-}
-
-
-
-
-function getSearch(){
-  $('#searchForm').submit();
-}
-
-
-
-
-$('.search').keyup(function(e){
-  if(e.keyCode == 13){
-    getSearch();
-  }
-});
-
 
 
 $('#fromDate').datepicker({
@@ -323,7 +144,6 @@ $('#fromDate').datepicker({
     $('#toDate').datepicker('option', 'minDate', sd);
   }
 });
-
 
 
 $('#toDate').datepicker({
@@ -337,7 +157,6 @@ $('#toDate').datepicker({
 $('#date').datepicker({
   dateFormat:'dd-mm-yy'
 });
-
 
 
 function printTransfer(){
