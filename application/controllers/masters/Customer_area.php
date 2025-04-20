@@ -18,197 +18,206 @@ class Customer_area extends PS_Controller
 
   public function index()
   {
-		$code = get_filter('code', 'code', '');
-		$name = get_filter('name', 'name', '');
-
-		//--- แสดงผลกี่รายการต่อหน้า
-		$perpage = get_filter('set_rows', 'rows', 20);
-		//--- หาก user กำหนดการแสดงผลมามากเกินไป จำกัดไว้แค่ 300
-		if($perpage > 300)
-		{
-			$perpage = get_filter('rows', 'rows', 300);
-		}
-
-		$segment = 4; //-- url segment
-		$rows = $this->customer_area_model->count_rows($code, $name);
-		//--- ส่งตัวแปรเข้าไป 4 ตัว base_url ,  total_row , perpage = 20, segment = 3
-		$init	= pagination_config($this->home.'/index/', $rows, $perpage, $segment);
-		$rs = $this->customer_area_model->get_data($code, $name, $perpage, $this->uri->segment($segment));
-    $ds = array(
-      'code' => $code,
-      'name' => $name,
-			'data' => $rs
+    $filter = array(
+      'code' => get_filter('code', 'code', '')
     );
 
-		$this->pagination->initialize($init);
-    $this->load->view('masters/customer_area/customer_area_view', $ds);
+    if($this->input->post('search'))
+    {
+      redirect($this->home);
+      exit();
+    }
+    else
+    {
+      $perpage = get_rows();
+      $segment = 4; //-- url segment
+      $rows = $this->customer_area_model->count_rows($filter);
+      $init	= pagination_config($this->home.'/index/', $rows, $perpage, $segment);
+      $filter['data'] = $this->customer_area_model->get_list($filter, $perpage, $this->uri->segment($segment));
+      $this->pagination->initialize($init);
+      $this->load->view('masters/customer_area/customer_area_list', $filter);
+    }
   }
 
 
   public function add_new()
   {
-    $data['code'] = $this->session->flashdata('code');
-    $data['name'] = $this->session->flashdata('name');
-    $this->title = 'เพิ่ม เขตการขาย';
-    $this->load->view('masters/customer_area/customer_area_add_view', $data);
+    if($this->pm->can_add)
+    {
+      $this->load->view('masters/customer_area/customer_area_add');
+    }
+    else
+    {
+      $this->deny_page();
+    }
   }
 
 
   public function add()
   {
-    if($this->input->post('code'))
+    $sc = TRUE;
+    $ds = json_decode($this->input->post('data'));
+
+    if($this->pm->can_add)
     {
-      $sc = TRUE;
-      $code = $this->input->post('code');
-      $name = $this->input->post('name');
-      $ds = array(
-        'code' => $code,
-        'name' => $name
-      );
-
-      if($this->customer_area_model->is_exists($code) === TRUE)
+      if( ! empty($ds) && ! empty($ds->code) && ! empty($ds->name))
       {
-        $sc = FALSE;
-        set_error("'".$code."' มีในระบบแล้ว");
-      }
-
-      if($this->customer_area_model->is_exists_name($name) === TRUE)
-      {
-        $sc = FALSE;
-        set_error("'".$name."' มีในระบบแล้ว");
-      }
-
-      if($sc === TRUE )
-      {
-        if($this->customer_area_model->add($ds))
-        {
-          set_message('เพิ่มข้อมูลเรียบร้อยแล้ว');
-        }
-        else
+        if($this->customer_area_model->is_exists($ds->code))
         {
           $sc = FALSE;
-          set_error('เพิ่มข้อมูลไม่สำเร็จ');
+          set_error('exists', $ds->code);
         }
 
+        if($sc === TRUE)
+        {
+          if($this->customer_area_model->is_exists_name($ds->name))
+          {
+            $sc = FALSE;
+            set_error('exists', $ds->name);
+          }
+        }
+
+        if($sc === TRUE)
+        {
+          $arr = array(
+            'code' => $ds->code,
+            'name' => $ds->name
+          );
+
+          if( ! $this->customer_area_model->add($arr))
+          {
+            $sc = FALSE;
+            set_error('insert');
+          }
+        }
       }
-
-
-      if($sc === FALSE)
+      else
       {
-        $this->session->set_flashdata('code', $code);
-        $this->session->set_flashdata('name', $name);
+        $sc = FALSE;
+        set_error('required');
       }
     }
     else
     {
-      set_error('ไม่พบข้อมูล');
+      $sc = FALSE;
+      set_error('permission');
     }
 
-    redirect($this->home.'/add_new');
+    $this->_response($sc);
   }
-
 
 
   public function edit($code)
   {
-    $this->title = 'แก้ไข เขตการขาย';
-    $rs = $this->customer_area_model->get($code);
-    $data = array(
-      'code' => $rs->code,
-      'name' => $rs->name
-    );
+    if($this->pm->can_edit)
+    {
+      $ds = $this->customer_area_model->get($code);
 
-    $this->load->view('masters/customer_area/customer_area_edit_view', $data);
+      if( ! empty($ds))
+      {
+        $this->load->view('masters/customer_area/customer_area_edit', ['ds' => $ds]);
+      }
+      else
+      {
+        $this->page_error();
+      }
+    }
+    else
+    {
+      $this->deny_page();
+    }
   }
-
 
 
   public function update()
   {
     $sc = TRUE;
 
-    if($this->input->post('code'))
+    if($this->pm->can_edit)
     {
-      $old_code = $this->input->post('customer_area_code');
-      $old_name = $this->input->post('customer_area_name');
-      $code = $this->input->post('code');
-      $name = $this->input->post('name');
+      $ds = json_decode($this->input->post('data'));
 
-      $ds = array(
-        'code' => $code,
-        'name' => $name
-      );
-
-      if($sc === TRUE && $this->customer_area_model->is_exists($code, $old_code) === TRUE)
+      if( ! empty($ds) && ! empty($ds->code) && ! empty($ds->name))
       {
-        $sc = FALSE;
-        set_error("'".$code."' มีอยู่ในระบบแล้ว โปรดใช้รหัสอื่น");
-      }
-
-      if($sc === TRUE && $this->customer_area_model->is_exists_name($name, $old_name) === TRUE)
-      {
-        $sc = FALSE;
-        set_error("'".$name."' มีอยู่ในระบบแล้ว โปรดใช้ชื่ออื่น");
-      }
-
-      if($sc === TRUE)
-      {
-        if($this->customer_area_model->update($old_code, $ds) === TRUE)
-        {
-          set_message('ปรับปรุงข้อมูลเรียบร้อยแล้ว');
-        }
-        else
+        if($this->customer_area_model->is_exists_name($ds->name, $ds->code))
         {
           $sc = FALSE;
-          set_error('ปรับปรุงข้อมูลไม่สำเร็จ');
+          set_error('exists', $ds->name);
+        }
+
+        if($sc === TRUE)
+        {
+          $arr = array('name' => $ds->name);
+
+          if( ! $this->customer_area_model->update($ds->code, $arr))
+          {
+            $sc = FALSE;
+            set_error('update');
+          }
         }
       }
-
+      else
+      {
+        $sc = FALSE;
+        set_error('required');
+      }
     }
     else
     {
       $sc = FALSE;
-      set_error('ไม่พบข้อมูล');
+      set_error('permission');
     }
 
-    if($sc === FALSE)
-    {
-      $code = $this->input->post('customer_area_code');
-    }
-
-    redirect($this->home.'/edit/'.$code);
+    $this->_response($sc);
   }
 
 
-
-  public function delete($code)
+  public function delete()
   {
-    if($code != '')
+    $sc = TRUE;
+
+    if($this->pm->can_delete)
     {
-      if($this->customer_area_model->delete($code))
+      $code = $this->input->post('code');
+
+      if( ! empty($code))
       {
-        set_message('ลบข้อมูลเรียบร้อยแล้ว');
+        if($this->customer_area_model->has_transection($code))
+        {
+          $sc = FALSE;
+          set_error('transection');
+        }
+
+        if($sc === TRUE)
+        {
+          if( ! $this->customer_area_model->delete($code))
+          {
+            $sc = FALSE;
+            set_error('delete');
+          }
+        }
       }
       else
       {
-        set_error('ลบข้อมูลไม่สำเร็จ');
+        $sc = FALSE;
+        set_error('required');
       }
     }
     else
     {
-      set_error('ไม่พบข้อมูล');
+      $sc = FALSE;
+      set_error('permission');
     }
 
-    redirect($this->home);
+    $this->_response($sc);
   }
-
 
 
   public function clear_filter()
 	{
-		$this->session->unset_userdata('code');
-    $this->session->unset_userdata('name');
-		echo 'done';
+		$filter = ['code', 'name'];
+
+    return clear_filter($filter);
 	}
 
 }//--- end class

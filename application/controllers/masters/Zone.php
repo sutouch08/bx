@@ -43,7 +43,7 @@ class Zone extends PS_Controller
 		$init = pagination_config($this->home.'/index/', $rows, $perpage, $segment);
 		$list = $this->zone_model->get_list($filter, $perpage, $this->uri->segment($segment));
 
-    if(!empty($list))
+    if( ! empty($list))
     {
       foreach($list as $rs)
       {
@@ -251,7 +251,7 @@ class Zone extends PS_Controller
         $code = $this->input->post('zone_code');
         $customer_code = $this->input->post('customer_code');
         $customer = $this->customers_model->get($customer_code);
-        if(!empty($customer))
+        if( ! empty($customer))
         {
           if($this->zone_model->is_exists_customer($code, $customer->code))
           {
@@ -342,7 +342,7 @@ class Zone extends PS_Controller
 
         if($sc === TRUE)
         {
-          if(!empty($emp))
+          if( ! empty($emp))
           {
             if($this->zone_model->is_exists_employee($code, $empID))
             {
@@ -420,7 +420,7 @@ class Zone extends PS_Controller
     $last_sync = $this->zone_model->get_last_sync_date();
     $newData = $this->zone_model->get_new_data($last_sync);
 
-    if(!empty($newData))
+    if( ! empty($newData))
     {
       foreach($newData as $rs)
       {
@@ -509,7 +509,7 @@ class Zone extends PS_Controller
     $sc = TRUE;
     $code = trim($this->input->get('barcode'));
     $warehouse_code = trim($this->input->get('warehouse_code'));
-    if(!empty($code) && !empty($warehouse_code))
+    if( ! empty($code) && !empty($warehouse_code))
     {
       $zone = $this->zone_model->get_zone_detail_in_warehouse($code, $warehouse_code);
       if($zone === FALSE)
@@ -577,7 +577,7 @@ class Zone extends PS_Controller
     $row = 2;
 
 
-    if(!empty($list))
+    if( ! empty($list))
     {
       $no = 1;
 

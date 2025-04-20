@@ -79,7 +79,7 @@ class Items extends PS_Controller
 		$init	    = pagination_config($this->home.'/index/', $rows, $perpage, $segment);
 		$products = $this->products_model->get_list($filter, $perpage, $this->uri->segment($segment));
     $ds       = array();
-    if(!empty($products))
+    if( ! empty($products))
     {
       foreach($products as $rs)
       {
@@ -117,7 +117,7 @@ class Items extends PS_Controller
 
 			$this->load->library("upload", $config);
 
-			if(! $this->upload->do_upload($file))
+			if( ! $this->upload->do_upload($file))
       {
         $sc = FALSE;
 				$this->error = $this->upload->display_errors();
@@ -183,7 +183,7 @@ class Items extends PS_Controller
               }
 
             }
-            else if(!empty($rs['A']))
+            else if( ! empty($rs['A']))
             {
               if($sc === FALSE)
               {
@@ -207,52 +207,52 @@ class Items extends PS_Controller
               $collection_code = get_null(trim($rs['N']));
               $year = empty($rs['O']) ? '0000' : trim($rs['O']);
 
-              if(!empty($color_code) && ! $this->product_color_model->is_exists($color_code))
+              if( ! empty($color_code) && ! $this->product_color_model->is_exists($color_code))
               {
                 $sc = FALSE;
                 $this->error = "Color : {$color_code}  does not exists";
               }
-              else if(!empty($size_code) && ! $this->product_size_model->is_exists($size_code))
+              else if( ! empty($size_code) && ! $this->product_size_model->is_exists($size_code))
               {
                 $sc = FALSE;
                 $this->error = "Size : {$size_code}  does not exists";
               }
-              else if(!empty($group_code) && ! $this->product_group_model->is_exists($group_code))
+              else if( ! empty($group_code) && ! $this->product_group_model->is_exists($group_code))
               {
                 $sc = FALSE;
                 $this->error = "Product Group : {$group_code}  does not exists";
               }
-							else if(!empty($main_group_code) && ! $this->product_main_group_model->is_exists($main_group_code))
+							else if( ! empty($main_group_code) && ! $this->product_main_group_model->is_exists($main_group_code))
               {
                 $sc = FALSE;
                 $this->error = "Product Sub Group : {$sub_group_code}  does not exists";
               }
-              else if(!empty($sub_group_code) && ! $this->product_sub_group_model->is_exists($sub_group_code))
+              else if( ! empty($sub_group_code) && ! $this->product_sub_group_model->is_exists($sub_group_code))
               {
                 $sc = FALSE;
                 $this->error = "Product Sub Group : {$sub_group_code}  does not exists";
               }
-              else if(!empty($category_code) && ! $this->product_category_model->is_exists($category_code))
+              else if( ! empty($category_code) && ! $this->product_category_model->is_exists($category_code))
               {
                 $sc = FALSE;
                 $this->error = "Product Category : {$category_code} does not exists";
               }
-              else if(!empty($kind_code) && ! $this->product_kind_model->is_exists($kind_code))
+              else if( ! empty($kind_code) && ! $this->product_kind_model->is_exists($kind_code))
               {
                 $sc = FALSE;
                 $this->error = "Product Kind : {$kind_code} does not exists";
               }
-              else if(!empty($type_code) && ! $this->product_type_model->is_exists($type_code))
+              else if( ! empty($type_code) && ! $this->product_type_model->is_exists($type_code))
               {
                 $sc = FALSE;
                 $this->error = "Product Type : {$type_code} does not exists";
               }
-              else if(!empty($brand_code) && ! $this->product_brand_model->is_exists($brand_code))
+              else if( ! empty($brand_code) && ! $this->product_brand_model->is_exists($brand_code))
               {
                 $sc = FALSE;
                 $this->error = "Brand : {$brand_code} does not exists";
               }
-              else if(! empty($collection_code) && ! $this->product_collection_model->is_exists($collection_code))
+              else if( ! empty($collection_code) && ! $this->product_collection_model->is_exists($collection_code))
               {
                 $sc = FALSE;
                 $this->error = "Collection : {$collection_code} does not exists";
@@ -263,9 +263,9 @@ class Items extends PS_Controller
                 break;
               }
 
-              if(!empty($style))
+              if( ! empty($style))
               {
-                if(! $this->product_style_model->is_exists($style) )
+                if( ! $this->product_style_model->is_exists($style) )
                 {
                   $ds = array(
                     'code' => $style,
@@ -288,17 +288,13 @@ class Items extends PS_Controller
                     'old_code' => $old_style
                   );
 
-                  if($this->product_style_model->add($ds))
-                  {
-                    //---- export to SAP
-                    $this->export_style($style);
-                  }
+                  $this->product_style_model->add($ds)
                 }
               }
 
               $rs['A'] = str_replace(array("\n", "\r"), '', $rs['A']); //--- เอาตัวขึ้นบรรทัดใหม่ออก
               $code = preg_replace($code_pattern, '', trim($rs['A']));
-              $old_code = NULL; //get_null(trim($rs['U'])) === NULL ? $code : trim($rs['U']);
+              $old_code = NULL;
               $arr = array(
                 'code' => $code,
                 'name' => trim($rs['B']),
@@ -333,11 +329,6 @@ class Items extends PS_Controller
               {
                 $is_done = $this->products_model->add($arr);
               }
-
-              if($is_done)
-              {
-                $this->do_export($code);
-              }
             }
           } //-- end foreach
         }
@@ -346,12 +337,10 @@ class Items extends PS_Controller
           $sc = FALSE;
           $this->error = "จำนวนนำเข้าสูงสุดได้ไม่เกิน {$limit} บรรทัด";
         } //-- end if count limit
-
       } //--- end if else
 
     echo $sc === TRUE ? 'success' : $this->error;
   }
-
 
 
   public function add_new()
@@ -412,18 +401,6 @@ class Items extends PS_Controller
           $sc = FALSE;
           $this->error = "Failed to add new item";
         }
-        else
-        {
-          $this->do_export($code);
-
-          if($this->sokoApi)
-          {
-            if( ! empty($ds->barcode))
-            {
-              $this->soko_product_api->create_item($ds->code, $ds);
-            }
-          }
-        }
       }
     }
     else
@@ -441,7 +418,7 @@ class Items extends PS_Controller
   {
     $item = $this->products_model->get_by_id($id);
 
-    if(! empty($item))
+    if( ! empty($item))
     {
       $this->load->view('masters/product_items/items_edit_view', $item);
     }
@@ -473,7 +450,7 @@ class Items extends PS_Controller
 		$sc = TRUE;
 		$ds = json_decode($this->input->post('data'));
 
-		if(! empty($ds))
+		if( ! empty($ds))
 		{
 			$code = $ds->code;
 
@@ -504,7 +481,7 @@ class Items extends PS_Controller
         'old_code' => get_null($ds->old_code)
       );
 
-      if(! $this->products_model->update($code, $arr))
+      if( ! $this->products_model->update($code, $arr))
       {
   			$sc = FALSE;
   			$this->error = "Update failed";
@@ -514,19 +491,6 @@ class Items extends PS_Controller
 		{
 			$sc = FALSE;
 			$this->error = "Missing form data";
-		}
-
-		if($sc === TRUE)
-		{
-			$this->do_export($code);
-
-      if($this->sokoApi)
-      {
-        if( ! empty($ds->barcode))
-        {
-          $this->soko_product_api->update_item($ds->code, $ds);
-        }
-      }
 		}
 
 		echo $sc === TRUE ? 'success' : $this->error;
@@ -604,9 +568,9 @@ class Items extends PS_Controller
 
     if( ! empty($item))
     {
-      if(! $this->products_model->has_transection($item->code))
+      if( ! $this->products_model->has_transection($item->code))
       {
-        if(! $this->products_model->delete_item_by_id($id))
+        if( ! $this->products_model->delete_item_by_id($id))
         {
           $sc = FALSE;
           $this->error = "ลบรายการไม่สำเร็จ";
@@ -628,136 +592,47 @@ class Items extends PS_Controller
   }
 
 
-
-  public function do_export($code, $method = 'A')
+  public function download_template($token)
   {
-		$sc = TRUE;
+    //--- load excel library
+    $this->load->library('excel');
 
-    $item = $this->products_model->get($code);
-    //--- เช็คข้อมูลในฐานข้อมูลจริง
-    $exst = $this->products_model->is_sap_exists($item->code);
+    $this->excel->setActiveSheetIndex(0);
+    $this->excel->getActiveSheet()->setTitle('Items Master Template');
 
-    $method = $exst === TRUE ? 'U' : $method;
+    //--- set report title header
+    $this->excel->getActiveSheet()->setCellValue('A1', 'Code');
+    $this->excel->getActiveSheet()->setCellValue('B1', 'Name');
+    $this->excel->getActiveSheet()->setCellValue('C1', 'Barcode');
+    $this->excel->getActiveSheet()->setCellValue('D1', 'Model');
+    $this->excel->getActiveSheet()->setCellValue('E1', 'Color');
+    $this->excel->getActiveSheet()->setCellValue('F1', 'Size');
+    $this->excel->getActiveSheet()->setCellValue('G1', 'Group');
+    $this->excel->getActiveSheet()->setCellValue('H1', 'MainGroup');
+    $this->excel->getActiveSheet()->setCellValue('I1', 'SubGroup');
+    $this->excel->getActiveSheet()->setCellValue('J1', 'Category');
+    $this->excel->getActiveSheet()->setCellValue('K1', 'Kind');
+    $this->excel->getActiveSheet()->setCellValue('L1', 'Type');
+    $this->excel->getActiveSheet()->setCellValue('M1', 'Brand');
+    $this->excel->getActiveSheet()->setCellValue('N1', 'Collection');
+    $this->excel->getActiveSheet()->setCellValue('O1', 'Year');
+    $this->excel->getActiveSheet()->setCellValue('P1', 'Cost');
+    $this->excel->getActiveSheet()->setCellValue('Q1', 'Price');
+    $this->excel->getActiveSheet()->setCellValue('R1', 'Unit');
+    $this->excel->getActiveSheet()->setCellValue('S1', 'CountStock');
+    $this->excel->getActiveSheet()->setCellValue('T1', 'IsAPI');
+    $this->excel->getActiveSheet()->setCellValue('U1', 'OldModel');
+    $this->excel->getActiveSheet()->setCellValue('V1', 'OldCode');
 
-    //--- เช็คข้อมูลในถังกลาง
-    $middle = $this->products_model->get_un_import_middle($item->code);
-    if(!empty($middle))
-    {
-      foreach($middle as $mid)
-      {
-        $this->products_model->drop_middle_item($mid->DocEntry);
-      }
-    }
 
-    $ds = array(
-      'ItemCode' => $item->code, //--- รหัสสินค้า
-      'ItemName' => limitText($item->name, 97),//--- ชื่อสินค้า
-      'FrgnName' => NULL,   //--- ชื่อสินค้าภาษาต่างประเทศ
-      'ItmsGrpCod' => getConfig('ITEM_GROUP_CODE'),  //--- กลุ่มสินค้า (ต้องตรงกับ SAP)
-      'VatGourpSa' => getConfig('SALE_VATE_CODE'), //--- รหัสกลุ่มภาษีขาย
-      'CodeBars' => $item->barcode, //--- บาร์โค้ด
-      'VATLiable' => 'Y', //--- มี vat หรือไม่
-      'PrchseItem' => 'Y', //--- สินค้าสำหรับซื้อหรือไม่
-      'SellItem' => 'Y', //--- สินค้าสำหรับขายหรือไม่
-      'InvntItem' => $item->count_stock == 1 ? 'Y' : 'N', //--- นับสต้อกหรือไม่
-      'SalUnitMsr' => $item->unit_code, //--- หน่วยขาย
-      'BuyUnitMsr' => $item->unit_code, //--- หน่วยซื้อ
-      'CntUnitMsr' => $item->unit_code,
-      'VatGroupPu' => getConfig('PURCHASE_VAT_CODE'), //---- รหัสกลุ่มภาษีซื้อ (ต้องตรงกับ SAP)
-      'ItemType' => 'I', //--- ประเภทของรายการ F=Fixed Assets, I=Items, L=Labor, T=Travel
-      'InvntryUom' => $item->unit_code, //--- หน่วยในการนับสต็อก
-      'validFor' => $item->active == 1 ? 'Y' : 'N',
-      'U_MODEL' => $item->style_code,
-      'U_COLOR' => $item->color_code,
-      'U_SIZE' => $item->size_code,
-      'U_GROUP' => $item->group_code,
-			'U_MAINGROUP' => $item->main_group_code,
-      'U_MAJOR' => $item->sub_group_code,
-      'U_CATE' => $item->category_code,
-      'U_SUBTYPE' => $item->kind_code,
-      'U_TYPE' => $item->type_code,
-      'U_BRAND' => $item->brand_code,
-      'U_YEAR' => $item->year,
-      'U_COST' => $item->cost,
-      'U_PRICE' => $item->price,
-      'U_OLDCODE' => $item->old_code,
-      'F_E_Commerce' => $method,
-      'F_E_CommerceDate' => sap_date(now(), TRUE)
-    );
+    setToken($token);
 
-		if( ! $this->products_model->add_item($ds))
-		{
-      $sc = FALSE;
-      $this->error = "Update Item failed";
-		}
-		
-    return $sc;
-
+    $file_name = "Items_master_template.xlsx";
+    header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'); /// form excel 2007 XLSX
+    header('Content-Disposition: attachment;filename="'.$file_name.'"');
+    $writer = PHPExcel_IOFactory::createWriter($this->excel, 'Excel2007');
+    $writer->save('php://output');
   }
-
-
-
-  public function export_style($style_code)
-  {
-    $style = $this->product_style_model->get($style_code);
-
-    if(!empty($style))
-    {
-      $ext = $this->product_style_model->is_middle_exists($style_code);
-      $flag = $ext === TRUE ? 'U' : 'A';
-      $arr = array(
-        'Code' => $style->code,
-        'Name' => $style->name,
-        'UpdateDate' => sap_date(now(), TRUE),
-        'Flag' => $flag
-      );
-      return $this->product_style_model->add_sap_model($arr);
-    }
-    return FALSE;
-  }
-
-
-    public function download_template($token)
-    {
-      //--- load excel library
-      $this->load->library('excel');
-
-      $this->excel->setActiveSheetIndex(0);
-      $this->excel->getActiveSheet()->setTitle('Items Master Template');
-
-      //--- set report title header
-      $this->excel->getActiveSheet()->setCellValue('A1', 'Code');
-      $this->excel->getActiveSheet()->setCellValue('B1', 'Name');
-      $this->excel->getActiveSheet()->setCellValue('C1', 'Barcode');
-      $this->excel->getActiveSheet()->setCellValue('D1', 'Model');
-      $this->excel->getActiveSheet()->setCellValue('E1', 'Color');
-      $this->excel->getActiveSheet()->setCellValue('F1', 'Size');
-      $this->excel->getActiveSheet()->setCellValue('G1', 'Group');
-      $this->excel->getActiveSheet()->setCellValue('H1', 'MainGroup');
-      $this->excel->getActiveSheet()->setCellValue('I1', 'SubGroup');
-      $this->excel->getActiveSheet()->setCellValue('J1', 'Category');
-      $this->excel->getActiveSheet()->setCellValue('K1', 'Kind');
-      $this->excel->getActiveSheet()->setCellValue('L1', 'Type');
-      $this->excel->getActiveSheet()->setCellValue('M1', 'Brand');
-      $this->excel->getActiveSheet()->setCellValue('N1', 'Collection');
-      $this->excel->getActiveSheet()->setCellValue('O1', 'Year');
-      $this->excel->getActiveSheet()->setCellValue('P1', 'Cost');
-      $this->excel->getActiveSheet()->setCellValue('Q1', 'Price');
-      $this->excel->getActiveSheet()->setCellValue('R1', 'Unit');
-      $this->excel->getActiveSheet()->setCellValue('S1', 'CountStock');
-      $this->excel->getActiveSheet()->setCellValue('T1', 'IsAPI');
-      $this->excel->getActiveSheet()->setCellValue('U1', 'OldModel');
-      $this->excel->getActiveSheet()->setCellValue('V1', 'OldCode');
-
-
-      setToken($token);
-
-      $file_name = "Items_master_template.xlsx";
-      header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'); /// form excel 2007 XLSX
-      header('Content-Disposition: attachment;filename="'.$file_name.'"');
-      $writer = PHPExcel_IOFactory::createWriter($this->excel, 'Excel2007');
-      $writer->save('php://output');
-    }
 
   public function clear_filter()
 	{

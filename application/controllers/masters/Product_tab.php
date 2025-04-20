@@ -38,7 +38,7 @@ class Product_tab extends PS_Controller
 		//--- ส่งตัวแปรเข้าไป 4 ตัว base_url ,  total_row , perpage = 20, segment = 3
 		$init	    = pagination_config($this->home.'/index/', $rows, $perpage, $segment);
 		$tabs = $this->product_tab_model->get_list($filter, $perpage, $this->uri->segment($segment));
-    if(!empty($tabs))
+    if( ! empty($tabs))
     {
       foreach($tabs as $rs)
       {

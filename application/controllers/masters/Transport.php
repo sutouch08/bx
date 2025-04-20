@@ -43,7 +43,7 @@ class Transport extends PS_Controller{
 
 		$list = $this->transport_model->get_list($filter, $perpage, $this->uri->segment($segment));
 
-		if(!empty($list))
+		if( ! empty($list))
 		{
 			foreach($list as $rs )
 			{
@@ -116,7 +116,7 @@ class Transport extends PS_Controller{
 	public function edit($id)
 	{
 		$rs = $this->transport_model->get($id);
-		if(!empty($rs))
+		if( ! empty($rs))
 		{
 			$rs->customer_name = $this->customers_model->get_name($rs->customer_code);
 			$rs->main_sender_name = $this->sender_model->get_name($rs->main_sender);

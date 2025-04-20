@@ -105,10 +105,6 @@ class Product_size extends PS_Controller
             $sc = FALSE;
             $this->error = "เพิ่มข้อมูลไม่สำเร็จ";
           }
-          else
-          {
-            $this->export_to_sap($code, $code);
-          }
         }
       }
     }
@@ -122,13 +118,11 @@ class Product_size extends PS_Controller
   }
 
 
-
   public function edit($id)
   {
     $rs = $this->product_size_model->get_by_id($id);
     $this->load->view('masters/product_size/product_size_edit_view', $rs);
   }
-
 
 
   public function update()
@@ -160,12 +154,7 @@ class Product_size extends PS_Controller
             'date_upd' => now()
           );
 
-          if($this->product_size_model->update_by_id($id, $ds))
-          {
-            //--- expor to sap
-            $this->export_to_sap($code);
-          }
-          else
+          if( ! $this->product_size_model->update_by_id($id, $ds))
           {
             $sc = FALSE;
             $this->error = 'ปรับปรุงข้อมูลไม่สำเร็จ';
@@ -186,7 +175,6 @@ class Product_size extends PS_Controller
 
     $this->_response($sc);
   }
-
 
 
   public function delete()
@@ -230,42 +218,6 @@ class Product_size extends PS_Controller
 
     $this->_response($sc);
   }
-
-
-
-  public function export_to_sap($code, $old_code = NULL)
-  {
-    $rs = $this->product_size_model->get($code);
-    if(!empty($rs))
-    {
-      $ext = $this->product_size_model->is_sap_exists($old_code);
-
-      $arr = array(
-        'Code' => $rs->code,
-        'Name' => $rs->name,
-        'UpdateDate' => sap_date(now(), TRUE)
-      );
-
-      if($ext)
-      {
-        $arr['Flag'] = 'U';
-        if($code !== $old_code)
-        {
-          $arr['OLDCODE'] = $old_code;
-        }
-      }
-      else
-      {
-        $arr['Flag'] = 'A';
-
-      }
-
-      return $this->product_size_model->add_sap_size($arr);
-    }
-
-    return FALSE;
-  }
-
 
 
   public function clear_filter()

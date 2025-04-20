@@ -43,7 +43,7 @@ class Warehouse extends PS_Controller
 		$init = pagination_config($this->home.'/index/', $rows, $perpage, $this->segment);
 		$list = $this->warehouse_model->get_list($filter, $perpage, $this->uri->segment($this->segment));
 
-    if(!empty($list))
+    if( ! empty($list))
     {
       foreach($list as $rs)
       {
@@ -165,7 +165,7 @@ class Warehouse extends PS_Controller
     //$last_sync = date('Y-m-d H:i:s', strtotime('2019-01-01 00:00:00'));
     $newData = $this->warehouse_model->get_new_data($last_sync);
 
-    if(!empty($newData))
+    if( ! empty($newData))
     {
       foreach($newData as $rs)
       {
@@ -208,7 +208,7 @@ class Warehouse extends PS_Controller
     $last_sync = date('Y-m-d H:i:s', strtotime('2019-01-01 00:00:00'));
     $newData = $this->warehouse_model->get_new_data($last_sync);
 
-    if(!empty($newData))
+    if( ! empty($newData))
     {
       foreach($newData as $rs)
       {

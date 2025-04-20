@@ -8,7 +8,7 @@ class Products extends PS_Controller
 	public $title = 'เพิ่ม/แก้ไข สินค้า';
   public $error = '';
 
-  
+
   public function __construct()
   {
     parent::__construct();
@@ -82,7 +82,7 @@ class Products extends PS_Controller
   		$init	    = pagination_config($this->home.'/index/', $rows, $perpage, $segment);
   		$products = $this->product_style_model->get_data($filter, $perpage, $this->uri->segment($segment));
       $ds       = array();
-      if(!empty($products))
+      if( ! empty($products))
       {
         foreach($products as $rs)
         {
@@ -153,7 +153,7 @@ class Products extends PS_Controller
     fputs($f, $bom = ( chr(0xEF) . chr(0xBB) . chr(0xBF) ));
     fputcsv($f, $header, $delimiter);
 
-    if(!empty($products))
+    if( ! empty($products))
     {
 
       foreach($products as $rs)
@@ -279,11 +279,7 @@ class Products extends PS_Controller
       {
         if($this->product_style_model->add($ds))
         {
-          //--- export tot sap
-          $this->export_style($code);
-
-          //---
-          if(!empty($tabs))
+          if( ! empty($tabs))
           {
             $this->product_tab_model->updateTabsProduct($code, $tabs);
           }
@@ -307,37 +303,12 @@ class Products extends PS_Controller
   }
 
 
-  public function export_style($style_code)
-  {
-    $style = $this->product_style_model->get($style_code);
-
-    if(!empty($style))
-    {
-      // $ext = $this->product_style_model->is_sap_exists($style_code);
-      // $exs = $this->product_style_model->is_middle_exists($style_code);
-      $ext = $this->product_style_model->is_middle_exists($style_code);
-      $flag = $ext === TRUE ? 'U' : 'A';
-      $arr = array(
-        'Code' => $style->code,
-        'Name' => $style->name,
-        'UpdateDate' => sap_date(now(), TRUE),
-        'Flag' => $flag
-      );
-
-      return $this->product_style_model->add_sap_model($arr);
-    }
-
-    return FALSE;
-  }
-
-
-
   public function edit($code, $tab = 'styleTab')
   {
     $code = urldecode($code);
     $style = $this->product_style_model->get($code);
 
-    if(!empty($style))
+    if( ! empty($style))
     {
       $data = array(
         'style'  => $style,
@@ -380,9 +351,6 @@ class Products extends PS_Controller
 
       if($this->products_model->update_by_id($id, $ds))
       {
-
-        $this->do_export($code, 'U'); //--- A = add, U = update
-
         echo 'success';
       }
       else
@@ -395,10 +363,6 @@ class Products extends PS_Controller
       echo 'Item code not found';
     }
   }
-
-
-
-
 
 
 
@@ -461,10 +425,7 @@ class Products extends PS_Controller
 
       if($rs)
       {
-        //--- export tot sap
-        $this->export_style($code);
-
-        if(!empty($tabs))
+        if( ! empty($tabs))
         {
           $this->product_tab_model->updateTabsProduct($code, $tabs);
         }
@@ -494,13 +455,13 @@ class Products extends PS_Controller
           );
 
           //--- ถ้าติกให้ updte cost มาด้วย
-          if(!empty($flag_cost))
+          if( ! empty($flag_cost))
           {
             $ds['cost'] = ($cost === NULL ? 0.00 : $cost);
           }
 
           //--- ถ้าติกให้ updte price มาด้วย
-          if(!empty($flag_price))
+          if( ! empty($flag_price))
           {
             $ds['price'] = ($price === NULL ? 0.00 : $price);
           }
@@ -605,7 +566,7 @@ class Products extends PS_Controller
       $cost = empty($this->input->post('cost')) ? 0 : $this->input->post('cost');
       $price = empty($this->input->post('price')) ? 0 : $this->input->post('price');
 
-      if(!empty($size))
+      if( ! empty($size))
       {
         $rs = $this->products_model->update_cost_price_by_size($code, $size, $cost, $price);
         if(!$rs)
@@ -634,14 +595,14 @@ class Products extends PS_Controller
   {
     $sc = TRUE;
     $this->error = "Update failed : ";
-    if(!empty($this->input->post('style_code')))
+    if( ! empty($this->input->post('style_code')))
     {
       $code = $this->input->post('style_code');
       $sizes = $this->input->post('size'); //--- array
       $cost = $this->input->post('cost'); //--- array
       $price = $this->input->post('price'); //--- array
 
-      if(!empty($sizes))
+      if( ! empty($sizes))
       {
         foreach($sizes as $no => $size)
         {
@@ -777,7 +738,7 @@ class Products extends PS_Controller
           if($val !== '')
           {
             $items = $this->products_model->get_items_by_color($code, $val);
-            if(!empty($items))
+            if( ! empty($items))
             {
               foreach($items as $item)
               {
@@ -964,15 +925,15 @@ class Products extends PS_Controller
   {
     $sc = TRUE;
     $style_code = $this->input->post('style_code');
-    if(!empty($style_code))
+    if( ! empty($style_code))
     {
       $style = $this->product_style_model->get($style_code);
-      if(!empty($style))
+      if( ! empty($style))
       {
-        if(!empty($style->old_code))
+        if( ! empty($style->old_code))
         {
           $items = $this->products_model->get_style_items($style->code);
-          if(!empty($items))
+          if( ! empty($items))
           {
             foreach($items as $item)
             {
@@ -985,10 +946,7 @@ class Products extends PS_Controller
                 'old_code' => $old_code
               );
 
-              if($this->products_model->update($item->code, $arr) === TRUE)
-              {
-                $this->do_export($item->code);
-              }
+              $this->products_model->update($item->code, $arr);
             }
           }
         }
@@ -1094,7 +1052,7 @@ class Products extends PS_Controller
     //--- จำนวนรูปภาพ
     $images = $this->product_image_model->get_style_images($style);
 
-    if(!empty($items) && !empty($images))
+    if( ! empty($items) && !empty($images))
     {
       $imgs = array();
       $count = count($images);
@@ -1194,7 +1152,7 @@ class Products extends PS_Controller
     $style = $this->input->post('style');
     $type  = $this->input->post('barcodeType');
     $items = $this->products_model->get_unbarcode_items($style);
-    if(!empty($items))
+    if( ! empty($items))
     {
       foreach($items as $item)
       {
@@ -1257,103 +1215,6 @@ class Products extends PS_Controller
   }
 
 
-
-  public function do_export($code, $method = 'A')
-  {
-		$sc = TRUE;
-
-    $item = $this->products_model->get($code);
-    //--- เช็คข้อมูลในฐานข้อมูลจริง
-    $exst = $this->products_model->is_sap_exists($item->code);
-
-    $method = $exst === TRUE ? 'U' : $method;
-
-    //--- เช็คข้อมูลในถังกลาง
-    $middle = $this->products_model->get_un_import_middle($item->code);
-    if(!empty($middle))
-    {
-      foreach($middle as $mid)
-      {
-        $this->products_model->drop_middle_item($mid->DocEntry);
-      }
-    }
-
-
-    $ds = array(
-      'ItemCode' => $item->code, //--- รหัสสินค้า
-      'ItemName' => limitText($item->name, 97),//--- ชื่อสินค้า
-      'FrgnName' => NULL,   //--- ชื่อสินค้าภาษาต่างประเทศ
-      'ItmsGrpCod' => getConfig('ITEM_GROUP_CODE'),  //--- กลุ่มสินค้า (ต้องตรงกับ SAP)
-      'VatGourpSa' => getConfig('SALE_VATE_CODE'), //--- รหัสกลุ่มภาษีขาย
-      'CodeBars' => $item->barcode, //--- บาร์โค้ด
-      'VATLiable' => 'Y', //--- มี vat หรือไม่
-      'PrchseItem' => 'Y', //--- สินค้าสำหรับซื้อหรือไม่
-      'SellItem' => 'Y', //--- สินค้าสำหรับขายหรือไม่
-      'InvntItem' => $item->count_stock == 1 ? 'Y' : 'N', //--- นับสต้อกหรือไม่
-      'SalUnitMsr' => $item->unit_code, //--- หน่วยขาย
-      'BuyUnitMsr' => $item->unit_code, //--- หน่วยซื้อ
-      'CntUnitMsr' => $item->unit_code,
-      'VatGroupPu' => getConfig('PURCHASE_VAT_CODE'), //---- รหัสกลุ่มภาษีซื้อ (ต้องตรงกับ SAP)
-      'ItemType' => 'I', //--- ประเภทของรายการ F=Fixed Assets, I=Items, L=Labor, T=Travel
-      'InvntryUom' => $item->unit_code, //--- หน่วยในการนับสต็อก
-      'validFor' => $item->active == 1 ? 'Y' : 'N',
-      'U_MODEL' => $item->style_code,
-      'U_COLOR' => $item->color_code,
-      'U_SIZE' => $item->size_code,
-      'U_GROUP' => $item->group_code,
-			'U_MAINGROUP' => $item->main_group_code,
-      'U_MAJOR' => $item->sub_group_code,
-      'U_CATE' => $item->category_code,
-      'U_SUBTYPE' => $item->kind_code,
-      'U_TYPE' => $item->type_code,
-      'U_BRAND' => $item->brand_code,
-      'U_YEAR' => $item->year,
-      'U_COST' => $item->cost,
-      'U_PRICE' => $item->price,
-      'U_OLDCODE' => $item->old_code,
-      'F_E_Commerce' => $method,
-      'F_E_CommerceDate' => sap_date(now(), TRUE)
-    );
-
-    if( ! $this->products_model->add_item($ds))
-		{
-      $sc = FALSE;
-      $this->error = "Update Item failed";
-		}
-
-		return $sc;
-  }
-
-
-  public function export_products($style_code)
-  {
-    $sc = TRUE;
-    $success = 0;
-    $fail = 0;
-
-    $products = $this->products_model->get_style_items($style_code);
-
-    if(!empty($products))
-    {
-      foreach($products as $item)
-      {
-        if($this->do_export($item->code))
-        {
-          $success++;
-        }
-        else
-        {
-          $sc = FALSE;
-          $fail++;
-        }
-      }
-    }
-
-    echo $sc === TRUE ? 'success' : "Success : {$success}, Fail : {$fail}";
-  }
-
-
-
   public function export_barcode($code, $token)
   {
     $products = $this->products_model->get_style_items($code);
@@ -1370,7 +1231,7 @@ class Products extends PS_Controller
 
 
     $row = 2;
-    if(!empty($products))
+    if( ! empty($products))
     {
       foreach($products as $rs)
       {

@@ -37,7 +37,7 @@ class Product_group extends PS_Controller
 
     $data = array();
 
-    if(!empty($group))
+    if( ! empty($group))
     {
       foreach($group as $rs)
       {
@@ -99,9 +99,6 @@ class Product_group extends PS_Controller
       {
         if($this->product_group_model->add($ds))
         {
-          //--- export to sap
-          $this->export_sap_product_group($code, $code);
-
           set_message('เพิ่มข้อมูลเรียบร้อยแล้ว');
         }
         else
@@ -173,10 +170,7 @@ class Product_group extends PS_Controller
       if($sc === TRUE)
       {
         if($this->product_group_model->update($old_code, $ds) === TRUE)
-        {
-          //--- export to sap
-          $this->export_sap_product_group($code, $old_code);
-
+        {          
           set_message('ปรับปรุงข้อมูลเรียบร้อยแล้ว');
         }
         else
@@ -228,7 +222,7 @@ class Product_group extends PS_Controller
   public function export_sap_product_group($code, $old_code)
   {
     $rs = $this->product_group_model->get($code);
-    if(!empty($rs))
+    if( ! empty($rs))
     {
       $ext = $this->product_group_model->is_sap_exists($old_code);
 

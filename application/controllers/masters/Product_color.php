@@ -41,7 +41,7 @@ class Product_color extends PS_Controller
 		$init	= pagination_config($this->home.'/index/', $rows, $perpage, $segment);
 		$color = $this->product_color_model->get_data($filter, $perpage, $this->uri->segment($segment));
 
-    if(!empty($color))
+    if( ! empty($color))
     {
       foreach($color as $rs)
       {
@@ -116,10 +116,6 @@ class Product_color extends PS_Controller
           {
             $sc = FALSE;
             set_error('insert');
-          }
-          else
-          {
-            $this->export_to_sap($code);
           }
         }
       }
@@ -238,38 +234,6 @@ class Product_color extends PS_Controller
     }
 
     $this->_response($sc);
-  }
-
-
-  public function export_to_sap($code, $old_code = NULL)
-  {
-    $rs = $this->product_color_model->get($code);
-    if(!empty($rs))
-    {
-      $ext = $this->product_color_model->is_sap_exists($old_code);
-      $arr = array(
-        'Code' => $rs->code,
-        'Name' => $rs->name,
-        'UpdateDate' => sap_date(now(), TRUE)
-      );
-
-      if($ext)
-      {
-        $arr['Flag'] = 'U';
-        if($code !== $old_code)
-        {
-          $arr['OLDCODE'] = $old_code;
-        }
-      }
-      else
-      {
-        $arr['Flag'] = 'A';
-      }
-
-      return $this->product_color_model->add_sap_color($arr);
-    }
-
-    return FALSE;
   }
 
 
