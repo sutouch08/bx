@@ -81,15 +81,13 @@ class Find_stock extends PS_Controller
 
     $data = array();
 
-    $sysBin = getConfig('SYSTEM_BIN_LOCATION');
-
     if( ! empty($products))
     {
       $warehouse = get_null($filter['warehouse']);
 
       foreach($products as $rs)
       {
-        $sell_stock = $this->stock_model->get_sell_stock($rs->code, $warehouse, NULL, $sysBin);
+        $sell_stock = $this->stock_model->get_sell_stock($rs->code, $warehouse, NULL);
 
         if($sell_stock > 0)
         {

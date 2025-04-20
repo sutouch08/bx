@@ -1,10 +1,3 @@
-var HOME = BASE_URL + 'account/consign_order/';
-
-function goBack(){
-  window.location.href = HOME;
-}
-
-
 function goAdd(){
   window.location.href = HOME + 'add_new';
 }
@@ -23,20 +16,20 @@ function goEdit(code)
 
 //--- delete all data and cancle document
 function getDelete(code){
-	swal({
-		title: "คุณแน่ใจ ?",
-		text: "ต้องการยกเลิก '"+code+"' หรือไม่ ?",
-		type: "warning",
-		showCancelButton: true,
-		confirmButtonColor: "#DD6B55",
-		confirmButtonText: 'ใช่, ฉันต้องการ',
-		cancelButtonText: 'ไม่ใช่',
-		closeOnConfirm: true
-		}, function(){
-      $('#cancle-code').val(code);
-      $('#cancle-reason').val('').removeClass('has-error');
-      cancle(code);
-	});
+  swal({
+    title: "คุณแน่ใจ ?",
+    text: "ต้องการยกเลิก '"+code+"' หรือไม่ ?",
+    type: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#DD6B55",
+    confirmButtonText: 'ใช่, ฉันต้องการ',
+    cancelButtonText: 'ไม่ใช่',
+    closeOnConfirm: true
+  }, function(){
+    $('#cancle-code').val(code);
+    $('#cancle-reason').val('').removeClass('has-error');
+    cancle(code);
+  });
 }
 
 

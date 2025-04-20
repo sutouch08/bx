@@ -1,51 +1,30 @@
 <?php $this->load->view('include/header'); ?>
 
 <div class="row">
-	<div class="col-lg-6 col-md-6 col-sm-6 col-xs-12 padding-5">
-		<h3 class="title" >
-			<?php echo $this->title; ?>
-		</h3>
+	<div class="col-lg-4 col-md-4 col-sm-4 col-xs-12 padding-5 padding-top-5">
+		<h4 class="title" ><?php echo $this->title; ?></h4>
 	</div>
-	<div class="col-lg-6 col-md-6 col-sm-6 col-xs-12 padding-5">
-		<p class="pull-right top-p">
-			<button type="button" class="btn btn-xs btn-warning" onclick="goBack()"><i class="fa fa-arrow-left"></i> กลับ</button>
-			<?php if(($this->pm->can_add OR $this->pm->can_edit) && $doc->status == 0 && $doc->valid == 0) : ?>
-				<button type="button" class="btn btn-xs btn-primary" onclick="reloadStock()">
-					<i class="fa fa-refresh"></i> โหลดยอดตั้งต้นใหม่
-				</button>
-				<?php if($doc->is_wms == 0) : ?>
-					<!--- consign_check_detail.js --->
-					<button type="button" class="btn btn-xs btn-success" onclick="closeCheck()">
-						<i class="fa fa-bolt"></i> ปิดการตรวจนับ
-					</button>
-				<?php endif; ?>
-			<?php endif; ?>
+	<div class="col-lg-8 col-md-8 col-sm-8 col-xs-12 padding-5 text-right">
+		<button type="button" class="btn btn-xs btn-warning top-btn" onclick="goBack()"><i class="fa fa-arrow-left"></i> กลับ</button>
+		<?php if(($this->pm->can_add OR $this->pm->can_edit) && $doc->status == 0 && $doc->valid == 0) : ?>
+			<button type="button" class="btn btn-xs btn-primary top-btn" onclick="reloadStock()"><i class="fa fa-refresh"></i> โหลดยอดตั้งต้นใหม่</button>
+			<button type="button" class="btn btn-xs btn-success top-btn" onclick="closeCheck()"><i class="fa fa-bolt"></i> ปิดการตรวจนับ</button>
+		<?php endif; ?>
 
-			<?php if(($this->_SuperAdmin && $doc->status != 2) OR (($this->pm->can_edit OR $this->pm->can_delete) && $doc->status != 2 && $doc->valid == 0)) : ?>
-				<!--- consign_check_detail.js --->
-				<button type="button" class="btn btn-xs btn-purple" onclick="openCheck()">
-					<i class="fa fa-bolt"></i> เปิดการตรวจนับ
-				</button>
-			<?php endif; ?>
+		<?php if(($this->_SuperAdmin && $doc->status != 2) OR (($this->pm->can_edit OR $this->pm->can_delete) && $doc->status != 2 && $doc->valid == 0)) : ?>
+			<!--- consign_check_detail.js --->
+			<button type="button" class="btn btn-xs btn-purple top-btn" onclick="openCheck()"><i class="fa fa-bolt"></i> เปิดการตรวจนับ</button>
+		<?php endif; ?>
 
-			<?php if(($this->_SuperAdmin && $doc->status != 2) OR (($this->pm->can_edit OR $this->pm->can_delete) && $doc->status != 2 && $doc->valid == 0)) : ?>
-				<!--- consign_check_detail.js --->
-				<button type="button" class="btn btn-xs btn-danger" onclick="goDelete('<?php echo $doc->code; ?>')">
-					<i class="fa fa-bolt"></i> ยกเลิก
-				</button>
-			<?php endif; ?>
+		<?php if(($this->_SuperAdmin && $doc->status != 2) OR (($this->pm->can_edit OR $this->pm->can_delete) && $doc->status != 2 && $doc->valid == 0)) : ?>
+			<!--- consign_check_detail.js --->
+			<button type="button" class="btn btn-xs btn-danger top-btn" onclick="goDelete('<?php echo $doc->code; ?>')"><i class="fa fa-bolt"></i> ยกเลิก</button>
+		<?php endif; ?>
 
-			<?php if($doc->status == 3 && (($this->sokoApi && $doc->is_wms == 2) OR ($this->wmsApi && $doc->is_wms == 1))) : ?>
-				<button type="button" class="btn btn-xs btn-success btn-top" onclick="sendToWms()"><i class="fa fa-send"></i> Send to WMS</button>
-			<?php endif; ?>
-
-			<?php if($this->pm->can_delete && $doc->status == 0 && $doc->valid == 0) : ?>
-				<!--- consign_check_detail.js --->
-				<button type="button" class="btn btn-xs btn-danger" onclick="clearDetails()">
-					<i class="fa fa-trash"></i> ยกเลิกการตรวจนับ
-				</button>
-			<?php endif; ?>
-		</p>
+		<?php if($this->pm->can_delete && $doc->status == 0 && $doc->valid == 0) : ?>
+			<!--- consign_check_detail.js --->
+			<button type="button" class="btn btn-xs btn-danger top-btn" onclick="clearDetails()"><i class="fa fa-trash"></i> ยกเลิกการตรวจนับ</button>
+		<?php endif; ?>
 	</div>
 </div>
 <hr />

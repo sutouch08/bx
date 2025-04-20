@@ -30,18 +30,11 @@ class Consign_check extends PS_Controller
       'to_date' => get_filter('to_date', 'check_to_date', ''),
       'status' => get_filter('status', 'check_status', 'all'),
       'valid' => get_filter('valid', 'check_valid', 'all'),
-      'consign_code' => get_filter('consign_code', 'check_consign_code', ''),
-			'is_wms' => get_filter('is_wms', 'check_is_wms', 'all')
+      'consign_code' => get_filter('consign_code', 'check_consign_code', '')
     );
 
     //--- แสดงผลกี่รายการต่อหน้า
 		$perpage = get_rows();
-		//--- หาก user กำหนดการแสดงผลมามากเกินไป จำกัดไว้แค่ 300
-		if($perpage > 300)
-		{
-			$perpage = 20;
-		}
-
 		$segment  = 4; //-- url segment
 		$rows     = $this->consign_check_model->count_rows($filter);
 		//--- ส่งตัวแปรเข้าไป 4 ตัว base_url ,  total_row , perpage = 20, segment = 3
@@ -63,7 +56,6 @@ class Consign_check extends PS_Controller
   }
 
 
-
   public function add_new()
   {
     $this->load->view('inventory/consign_check/consign_check_add');
@@ -74,7 +66,6 @@ class Consign_check extends PS_Controller
   public function add()
   {
     $sc = TRUE;
-    $ex = 1;
 
     $data = json_decode($this->input->post('data'));
 
@@ -176,9 +167,8 @@ class Consign_check extends PS_Controller
 
     $arr = array(
       'status' => $sc === TRUE ? 'success' : 'failed',
-      'message' => ($sc === TRUE && $ex == 1) ? 'success' : $this->error,
-      'code' => $sc === TRUE ? $code : NULL,
-      'ex' => $ex
+      'message' => $sc === TRUE ? 'success' : $this->error,
+      'code' => $sc === TRUE ? $code : NULL
     );
 
     echo json_encode($arr);

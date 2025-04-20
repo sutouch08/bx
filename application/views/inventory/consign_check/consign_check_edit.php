@@ -5,39 +5,25 @@
 	}
 </style>
 <div class="row">
-	<div class="col-lg-4 col-md-3 col-sm-3 col-xs-12 padding-5">
-		<h4 class="title"><?php echo $this->title; ?></h4>
+	<div class="col-lg-4 col-md-4 col-sm-4 col-xs-12 padding-5 padding-top-5">
+		<h4 class="title" ><?php echo $this->title; ?></h4>
 	</div>
-	<div class="col-lg-8 col-md-9 col-sm-9 col-xs-12 padding-5">
-		<p class="pull-right top-p">
-			<button type="button" class="btn btn-xs btn-warning" onclick="goBack()"><i class="fa fa-arrow-left"></i>
-				กลับ</button>
-				<?php if(($this->pm->can_add OR $this->pm->can_edit) && $doc->status == 0 && $doc->valid == 0) : ?>
-					<button type="button" class="btn btn-xs btn-primary" onclick="reloadStock()">
-						<i class="fa fa-refresh"></i> โหลดยอดตั้งต้นใหม่
-					</button>
-					<?php if($doc->is_wms == 0) : ?>
-						<button type="button" class="btn btn-xs btn-success" onclick="closeCheck()">
-							<i class="fa fa-bolt"></i> ปิดการตรวจนับ
-						</button>
-					<?php endif; ?>
-				<?php else : ?>
-					<!--- consign_check_detail.js --->
-					<button type="button" class="btn btn-xs btn-danger" onclick="openCheck()">
-						<i class="fa fa-bolt"></i> เปิดการตรวจนับ
-					</button>
-				<?php endif; ?>
+	<div class="col-lg-8 col-md-8 col-sm-8 col-xs-12 padding-5 text-right">
+		<button type="button" class="btn btn-xs btn-warning top-btn" onclick="goBack()"><i class="fa fa-arrow-left"></i>
+			กลับ</button>
+			<?php if(($this->pm->can_add OR $this->pm->can_edit) && $doc->status == 0 && $doc->valid == 0) : ?>
+				<button type="button" class="btn btn-xs btn-primary top-btn" onclick="reloadStock()"><i class="fa fa-refresh"></i> โหลดยอดตั้งต้นใหม่</button>
+				<button type="button" class="btn btn-xs btn-success top-btn" onclick="closeCheck()"><i class="fa fa-bolt"></i> ปิดการตรวจนับ</button>
+			<?php else : ?>
+				<!--- consign_check_detail.js --->
+				<button type="button" class="btn btn-xs btn-danger top-btn" onclick="openCheck()"><i class="fa fa-bolt"></i> เปิดการตรวจนับ</button>
+			<?php endif; ?>
 
-				<?php if($this->pm->can_delete && $doc->status == 0 && $doc->valid == 0) : ?>
-					<!--- consign_check_detail.js --->
-					<button type="button" class="btn btn-xs btn-danger" onclick="clearDetails()">
-						<i class="fa fa-trash"></i> เคลียร์รายการทั้งหมด
-					</button>
-					<button type="button" class="btn btn-xs btn-danger" onclick="goDelete()">
-						<i class="fa fa-trash"></i> ยกเลิกเอกสาร
-					</button>
-				<?php endif; ?>
-			</p>
+			<?php if($this->pm->can_delete && $doc->status == 0 && $doc->valid == 0) : ?>
+				<!--- consign_check_detail.js --->
+				<button type="button" class="btn btn-xs btn-danger top-btn" onclick="clearDetails()"><i class="fa fa-trash"></i> เคลียร์รายการทั้งหมด</button>
+				<button type="button" class="btn btn-xs btn-danger top-btn" onclick="goDelete()"><i class="fa fa-trash"></i> ยกเลิกเอกสาร</button>
+			<?php endif; ?>
 		</div>
 	</div>
 <hr />
@@ -54,37 +40,25 @@
 		<label>รหัสลูกค้า</label>
 		<input type="text" class="form-control input-sm text-center e" name="customer_code" id="customer_code" value="<?php echo $doc->customer_code; ?>" disabled/>
 	</div>
-	<div class="col-lg-6 col-md-7 col-sm-6-harf col-xs-12 padding-5">
+	<div class="col-lg-7-harf col-md-7 col-sm-6-harf col-xs-12 padding-5">
 		<label>ลูกค้า</label>
 		<input type="text" class="form-control input-sm e" name="customer_name" id="customer_name" value="<?php echo $doc->customer_name; ?>" disabled/>
 	</div>
-	<div class="col-lg-1-harf col-md-2-harf col-sm-2-harf col-xs-4 padding-5">
-		<label>ช่องทาง</label>
-		<select class="form-control input-sm e" id="is_wms" disabled>
-			<?php if($this->wmsApi OR $doc->is_wms == 1) : ?>
-				<option value="1" <?php echo is_selected('1', $doc->is_wms); ?>>Pioneer</option>
-			<?php endif; ?>
-			<?php if($this->sokoApi OR $doc->is_wms == 2) : ?>
-				<option value="2" <?php echo is_selected('2', $doc->is_wms); ?>>SOKOCHAN</option>
-			<?php endif; ?>
-			<option value="0" <?php echo is_selected('0', $doc->is_wms); ?>>Warrix</option>
-		</select>
-	</div>
-	<div class="col-lg-2 col-md-3 col-sm-3 col-xs-8 padding-5">
+	<div class="col-lg-2 col-md-3 col-sm-3 col-xs-4 padding-5">
 		<label>รหัสโซน[ฝากขาย]</label>
 		<input type="text" class="form-control input-sm e" name="zone_code" id="zone_code" value="<?php echo $doc->zone_code; ?>" disabled/>
 	</div>
-	<div class="col-lg-4-harf col-md-6-harf col-sm-6-harf col-xs-12 padding-5">
+	<div class="col-lg-4-harf col-md-9 col-sm-9 col-xs-8 padding-5">
 		<label>โซน[ฝากขาย]</label>
 		<input type="text" class="form-control input-sm e" name="zone_name" id="zone_name" value="<?php echo $doc->zone_name; ?>" disabled/>
 	</div>
 
-	<div class="col-lg-4-harf col-md-10-harf col-sm-10-harf col-xs-12 padding-5">
+	<div class="col-lg-4-harf col-md-10-harf col-sm-10-harf col-xs-9 padding-5">
 		<label>หมายเหตุ</label>
 		<input type="text" class="form-control input-sm" name="remark" id="remark" value="<?php echo $doc->remark; ?>" disabled/>
 	</div>
 
-  <div class="col-lg-1 col-md-1-harf col-sm-1-harf col-xs-6 padding-5">
+  <div class="col-lg-1 col-md-1-harf col-sm-1-harf col-xs-3 padding-5">
     <label class="display-block not-show">edit</label>
     <button type="button" class="btn btn-xs btn-warning btn-block" id="btn-edit" onclick="getEdit()"><i class="fa fa-pencil"></i> แก้ไข</button>
     <button type="button" class="btn btn-xs btn-success btn-block hide" id="btn-update" onclick="update()"><i class="fa fa-save"></i> บันทึก</button>

@@ -1,42 +1,40 @@
 <?php
 class Consign_check_model extends CI_Model
 {
+  private $tb = "consign_check";
+  private $td = "consign_check_detail";
   public function __construct()
   {
     parent::__construct();
   }
 
-
-
   //---- add new document
   public function add($ds = array())
   {
-    if(!empty($ds))
+    if( ! empty($ds))
     {
-      return $this->db->insert('consign_check', $ds);
+      return $this->db->insert($this->tb, $ds);
     }
 
     return FALSE;
   }
-
 
 
   public function update($code, $ds = array())
   {
     if( ! empty($ds))
     {
-      return $this->db->where('code', $code)->update('consign_check', $ds);
+      return $this->db->where('code', $code)->update($this->tb, $ds);
     }
 
     return FALSE;
   }
 
 
-
   //--- get document data row
   public function get($code)
   {
-    $rs = $this->db->where('code', $code)->get('consign_check');
+    $rs = $this->db->where('code', $code)->get($this->tb);
     if($rs->num_rows() === 1)
     {
       return $rs->row();
@@ -52,7 +50,7 @@ class Consign_check_model extends CI_Model
     $rs = $this->db
     ->where('check_code', $check_code)
     ->where('product_code', $product_code)
-    ->get('consign_check_detail');
+    ->get($this->td);
 
     if($rs->num_rows() === 1)
     {
@@ -69,7 +67,7 @@ class Consign_check_model extends CI_Model
 		->select('id')
 		->where('check_code', $check_code)
 		->where('product_code', $product_code)
-		->get('consign_check_detail');
+		->get($this->td);
 
 		if($rs->num_rows() === 1)
 		{
@@ -108,7 +106,7 @@ class Consign_check_model extends CI_Model
     ->where('zone_code', $zone_code)
     ->where('status', 1)
     ->where('valid', 0)
-    ->get('consign_check');
+    ->get($this->tb);
 
     if($rs->num_rows() > 0)
     {
@@ -143,7 +141,7 @@ class Consign_check_model extends CI_Model
     ->select('product_code, product_name, qty')
     ->where('check_code', $code)
     ->where('qty !=', 0, FALSE)
-    ->get('consign_check_detail');
+    ->get($this->td);
 
     if($rs->num_rows() > 0)
     {
@@ -160,7 +158,7 @@ class Consign_check_model extends CI_Model
     ->set('valid', $valid)
     ->where('code', $code);
 
-    return $this->db->update('consign_check');
+    return $this->db->update($this->tb);
   }
 
 
@@ -170,38 +168,37 @@ class Consign_check_model extends CI_Model
     ->set('return_code', $return_code)
     ->set('cn_loaded', $valid)
     ->where('code', $code)
-    ->update('consign_check');
+    ->update($this->tb);
   }
 
 
   //---- add detail row
   public function add_detail($ds = array())
   {
-    if(!empty($ds))
+    if( ! empty($ds))
     {
-      return $this->db->insert('consign_check_detail', $ds);
+      return $this->db->insert($this->td, $ds);
     }
 
     return FALSE;
   }
 
 
-
 	public function update_detail($id, $ds = array())
 	{
-		if(!empty($ds))
+		if( ! empty($ds))
 		{
-			return $this->db->where('id', $id)->update('consign_check_detail', $ds);
+			return $this->db->where('id', $id)->update($this->td, $ds);
 		}
 
 		return FALSE;
 	}
 
+
   public function update_stock_qty($id, $qty)
   {
-    return $this->db->set("stock_qty", "stock_qty + {$qty}", FALSE)->where('id', $id)->update('consign_check_detail');
+    return $this->db->set("stock_qty", "stock_qty + {$qty}", FALSE)->where('id', $id)->update($this->td);
   }
-
 
 
   public function update_check_detail($check_code, $product_code, $qty)
@@ -211,9 +208,8 @@ class Consign_check_model extends CI_Model
     ->where('check_code', $check_code)
     ->where('product_code', $product_code);
 
-    return $this->db->update('consign_check_detail');
+    return $this->db->update($this->td);
   }
-
 
 
   public function update_box_qty($id_box, $check_code, $product_code, $qty)
@@ -242,7 +238,6 @@ class Consign_check_model extends CI_Model
   }
 
 
-
   public function get_box_detail_id($id_box, $check_code, $product_code)
   {
     $rs = $this->db
@@ -258,7 +253,6 @@ class Consign_check_model extends CI_Model
 
     return FALSE;
   }
-
 
 
   public function get_box_list($check_code)
@@ -288,7 +282,6 @@ class Consign_check_model extends CI_Model
 
     return $this->db->delete('consign_box_detail');
   }
-
 
 
   public function get_consign_box_product_details($check_code, $product_code)
@@ -330,8 +323,6 @@ class Consign_check_model extends CI_Model
   }
 
 
-
-
   public function get_consign_box_detail($id_box, $check_code, $product_code)
   {
     $rs = $this->db
@@ -363,7 +354,7 @@ class Consign_check_model extends CI_Model
 
   public function add_box_detail($ds = array())
   {
-    if(!empty($ds))
+    if( ! empty($ds))
     {
       return $this->db->insert('consign_box_detail', $ds);
     }
@@ -382,7 +373,6 @@ class Consign_check_model extends CI_Model
 
     return FALSE;
   }
-
 
 
   public function get_box_qty($id_box, $check_code)
@@ -406,27 +396,24 @@ class Consign_check_model extends CI_Model
   }
 
 
-
-
   public function change_status($code, $status)
   {
-    return $this->db->set('status', $status)->where('code', $code)->update('consign_check');
+    return $this->db->set('status', $status)->where('code', $code)->update($this->tb);
   }
-
 
 
   public function set_valid($code, $status)
   {
-    return $this->db->set('valid', $status)->where('code', $code)->update('consign_check');
+    return $this->db->set('valid', $status)->where('code', $code)->update($this->tb);
   }
-
 
 
   ///---- set all  stock_qty to 0
   public function reset_stock_qty($code)
   {
-    return $this->db->set('stock_qty', 0)->where('check_code', $code)->update('consign_check_detail');
+    return $this->db->set('stock_qty', 0)->where('check_code', $code)->update($this->td);
   }
+
 
   //-- ลบรายการที่เมื่อมีการโหลดยอดตั้งต้นใหม่แล้วไม่มีรายการนี้อยู่แล้วออก
   public function delete_no_item_details($code)
@@ -436,9 +423,8 @@ class Consign_check_model extends CI_Model
     ->where('stock_qty', 0, FALSE) //--- set FALSE fo not escape string
     ->where('qty', 0, FALSE); //--- set FALSE fo not escape string
 
-    return $this->db->delete('consign_check_detail');
+    return $this->db->delete($this->td);
   }
-
 
 
   //--- ลบรายการในกล่องทั้งหมด
@@ -448,7 +434,6 @@ class Consign_check_model extends CI_Model
   }
 
 
-
   //--- ลบกล่องทั้งหมด
   public function delete_all_box($code)
   {
@@ -456,35 +441,33 @@ class Consign_check_model extends CI_Model
   }
 
 
-
   //--- ลบรายการตั้งต้นและรายการตรวจนับทั้งหมด
   public function delete_all_details($code)
   {
-    return $this->db->where('check_code', $code)->delete('consign_check_detail');
+    return $this->db->where('check_code', $code)->delete($this->td);
   }
-
 
 
   public function count_rows($ds = array())
   {
     $this->db
     ->select('consign_check.code')
-    ->from('consign_check')
+    ->from($this->tb)
     ->join('zone', 'consign_check.zone_code = zone.code', 'left');
 
-    if(!empty($ds['code']))
+    if( ! empty($ds['code']))
     {
       $this->db->like('consign_check.code', $ds['code']);
     }
 
-    if(!empty($ds['customer']))
+    if( ! empty($ds['customer']))
     {
       $this->db
       ->like('consign_check.customer_code', $ds['customer'])
       ->or_like('consign_check.customer_name', $ds['customer']);
     }
 
-    if(!empty($ds['zone']))
+    if( ! empty($ds['zone']))
     {
       $this->db
       ->like('zone.code', $ds['zone'])
@@ -492,7 +475,7 @@ class Consign_check_model extends CI_Model
     }
 
 
-    if(!empty($ds['consign_code']))
+    if( ! empty($ds['consign_code']))
     {
       $this->db->like('consign_code', $ds['consign_code']);
     }
@@ -503,17 +486,12 @@ class Consign_check_model extends CI_Model
       $this->db->where('status', $ds['status']);
     }
 
-		if($ds['is_wms'] != 'all')
-		{
-			$this->db->where('is_wms', $ds['is_wms']);
-		}
-
     if($ds['valid'] != 'all')
     {
       $this->db->where('valid', $ds['valid']);
     }
 
-    if(!empty($ds['from_date']) && !empty($ds['to_date']))
+    if( ! empty($ds['from_date']) && !empty($ds['to_date']))
     {
       $this->db
       ->where('date_add >=', from_date($ds['from_date']))
@@ -529,22 +507,22 @@ class Consign_check_model extends CI_Model
   {
     $this->db
     ->select('consign_check.*, zone.name AS zone_name')
-    ->from('consign_check')
+    ->from($this->tb)
     ->join('zone', 'consign_check.zone_code = zone.code', 'left');
 
-    if(!empty($ds['code']))
+    if( ! empty($ds['code']))
     {
       $this->db->like('consign_check.code', $ds['code']);
     }
 
-    if(!empty($ds['customer']))
+    if( ! empty($ds['customer']))
     {
       $this->db
       ->like('consign_check.customer_code', $ds['customer'])
       ->or_like('consign_check.customer_name', $ds['customer']);
     }
 
-    if(!empty($ds['zone']))
+    if( ! empty($ds['zone']))
     {
       $this->db
       ->like('zone.code', $ds['zone'])
@@ -552,7 +530,7 @@ class Consign_check_model extends CI_Model
     }
 
 
-    if(!empty($ds['consign_code']))
+    if( ! empty($ds['consign_code']))
     {
       $this->db->like('consign_code', $ds['consign_code']);
     }
@@ -563,19 +541,12 @@ class Consign_check_model extends CI_Model
       $this->db->where('status', $ds['status']);
     }
 
-
-		if($ds['is_wms'] != 'all')
-		{
-			$this->db->where('is_wms', $ds['is_wms']);
-		}
-
-
     if($ds['valid'] != 'all')
     {
       $this->db->where('valid', $ds['valid']);
     }
 
-    if(!empty($ds['from_date']) && !empty($ds['to_date']))
+    if( ! empty($ds['from_date']) && !empty($ds['to_date']))
     {
       $this->db
       ->where('date_add >=', from_date($ds['from_date']))
@@ -584,22 +555,21 @@ class Consign_check_model extends CI_Model
 
     $this->db->order_by('code', 'DESC');
 
-    if(!empty($perpage))
+    if( ! empty($perpage))
     {
       $offset = $offset === NULL ? 0 : $offset;
       $this->db->limit($perpage, $offset);
     }
 
     $rs = $this->db->get();
+
     if($rs->num_rows() > 0)
     {
       return $rs->result();
     }
 
-    return FALSE;
+    return NULL;
   }
-
-
 
 
   public function get_max_code($code)
@@ -612,7 +582,7 @@ class Consign_check_model extends CI_Model
 
 	public function is_not_close_exists($zone_code)
 	{
-    $count = $this->db->where('zone_code', $zone_code)->where('is_wms !=', 0)->where_in('status', array(0, 3))->count_all_results('consign_check');
+    $count = $this->db->where('zone_code', $zone_code)->where('is_wms !=', 0)->where_in('status', array(0, 3))->count_all_results($this->tb);
 
 		return $count > 0 ? TRUE : FALSE;
 	}

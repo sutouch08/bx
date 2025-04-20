@@ -83,13 +83,10 @@ function check_zero(){
 
 function unSaveConsign(){
   var code = $('#consign_code').val();
-  msg  = '<center><span style="color:red;">ก่อนยืนยันการทำรายการนี้</span></center>';
-  msg += '<center><span style="color:red;">คุณต้องแน่ใจว่าได้ลบ เอกสารใน SAP แล้ว</span></center>';
-  msg += '<center><span style="color:red;">ต้องการยกเลิกการเปิดบิลหรือไม่</span></center>';
 
   swal({
-    title: "ยกเลิกการเปิดบิล ?",
-    text: msg,
+    title: "ยกเลิกการเปิดบิล",
+    text: "ต้องการยกเลิกการเปิดบิลหรือไม่ ?",
     type: "warning",
     html:true,
     showCancelButton: true,
@@ -99,15 +96,14 @@ function unSaveConsign(){
     closeOnConfirm: true
     }, function(){
       load_in();
-      $.ajax({
-        url: HOME + 'unsave_consign/'+code,
-        type:'POST',
-        cache:'false',
-        success:function(rs){
-          load_out();
-          var rs = $.trim(rs);
-          if(rs == 'success'){
-            setTimeout(function() {
+      setTimeout(() => {
+        $.ajax({
+          url: HOME + 'unsave_consign/'+code,
+          type:'POST',
+          cache:'false',
+          success:function(rs){
+            load_out();
+            if(rs.trim() == 'success'){
               swal({
                 title:'Success',
                 type:'success',
@@ -116,20 +112,19 @@ function unSaveConsign(){
 
               setTimeout(function(){
                 goEdit(code);
-              }, 1500);
-            }, 200);
-
-          }else{
-            setTimeout(function() {
-              swal({
-                title:'Error!',
-                text:rs,
-                type:'error'
-              });
-            }, 200);
+              }, 1200);
+            }
+            else {
+              beep();
+              showError(rs);
+            }
+          },
+          error:function(rs) {
+            beep();
+            showError(rs);
           }
-        }
-      });
+        });
+      }, 100);
   });
 }
 
@@ -195,7 +190,6 @@ $(document).ready(function(){
 });
 
 
-
 function zoneInit(customer_code, edit) {
   if(edit) {
     $('#zone_code').val('');
@@ -240,8 +234,6 @@ function zoneInit(customer_code, edit) {
     }
   });
 }
-
-
 
 
 function add(){
@@ -382,7 +374,6 @@ function deleteDetail(id){
 }
 
 
-
 function clearAll(){
   swal({
 		title: "คุณแน่ใจ ?",
@@ -422,55 +413,6 @@ function deleteAllDetails(){
     }
   });
 }
-
-
-
-function unSave(id){
-  msg  = '<center><span style="color:red;">ก่อนยืนยันการทำรายการนี้</span></center>';
-  msg += '<center><span style="color:red;">คุณต้องแน่ใจว่าได้ลบ เอกสารใบสั่งซื้อ(SO) ใน Formula แล้ว</span></center>';
-  msg += '<center><span style="color:red;">ต้องการยกเลิกการเปิดบิลหรือไม่</span></center>';
-
-  swal({
-    title: "ยกเลิกการเปิดบิล ?",
-    text: msg,
-    type: "warning",
-    html:true,
-    showCancelButton: true,
-    confirmButtonColor: "#FA5858",
-    confirmButtonText: 'ใช่, ฉันต้องการลบ',
-    cancelButtonText: 'ยกเลิก',
-    closeOnConfirm: true
-    }, function(){
-      load_in();
-      $.ajax({
-        url:'controller/consignController.php?unSaveConsign',
-        type:'POST',
-        cache:'false',
-        data:{
-          'id_consign' : id
-        },
-        success:function(rs){
-          load_out();
-          var rs = $.trim(rs);
-          if(rs == 'success'){
-            swal({
-              title:'Success',
-              type:'success',
-              timer:1000
-            });
-
-            setTimeout(function(){
-              window.location.reload();
-            }, 1500);
-
-          }else{
-            swal('Error!', rs, 'error');
-          }
-        }
-      });
-  });
-}
-
 
 
 //--- ลบรายการนำเข้ายอดต่าง
@@ -541,7 +483,6 @@ function getActiveCheckList(){
 }
 
 
-
 function loadCheckDiff(check_code){
   $('#check-list-modal').modal('hide');
   swal({
@@ -592,11 +533,9 @@ function getSample(){
 }
 
 
-
 function getUploadFile(){
   $('#upload-modal').modal('show');
 }
-
 
 
 function getFile(){
@@ -622,7 +561,6 @@ $("#uploadFile").change(function(){
     $('#show-file-name').text(name);
 	}
 });
-
 
 
 function uploadfile(){
@@ -679,6 +617,7 @@ function uploadfile(){
 		}
 	});
 }
+
 
 function validateOrder(){
   var prefix = $('#prefix').val();

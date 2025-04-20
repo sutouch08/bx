@@ -1,6 +1,8 @@
 <?php
 class Consign_order_model extends CI_Model
 {
+  private $tb = "consign_order";
+  private $td = "consign_order_detail";
 
   public function __construct()
   {
@@ -10,9 +12,9 @@ class Consign_order_model extends CI_Model
 
   public function add($ds = array())
   {
-    if(!empty($ds))
+    if( ! empty($ds))
     {
-      return $this->db->insert('consign_order', $ds);
+      return $this->db->insert($this->tb, $ds);
     }
 
     return FALSE;
@@ -21,9 +23,9 @@ class Consign_order_model extends CI_Model
 
   public function add_detail($ds = array())
   {
-    if(!empty($ds))
+    if( ! empty($ds))
     {
-      $this->db->insert('consign_order_detail', $ds);
+      $this->db->insert($this->td, $ds);
       return $this->db->insert_id();
     }
 
@@ -35,7 +37,7 @@ class Consign_order_model extends CI_Model
   {
     if(! empty($ds))
     {
-      return $this->db->where('code', $code)->update('consign_order', $ds);
+      return $this->db->where('code', $code)->update($this->tb, $ds);
     }
 
     return FALSE;
@@ -46,7 +48,7 @@ class Consign_order_model extends CI_Model
   {
     if(! empty($ds))
     {
-      return $this->db->where('id', $id)->update('consign_order_detail', $ds);
+      return $this->db->where('id', $id)->update($this->td, $ds);
     }
 
     return FALSE;
@@ -57,7 +59,7 @@ class Consign_order_model extends CI_Model
   {
     if( ! empty($ds))
     {
-      return $this->db->where('consign_code', $code)->update('consign_order_detail', $ds);
+      return $this->db->where('consign_code', $code)->update($this->td, $ds);
     }
 
     return FALSE;
@@ -67,14 +69,14 @@ class Consign_order_model extends CI_Model
 
   public function update_ref_code($code, $check_code)
   {
-    return $this->db->set('ref_code', $check_code)->where('code', $code)->update('consign_order');
+    return $this->db->set('ref_code', $check_code)->where('code', $code)->update($this->tb);
   }
 
 
 
   public function drop_import_details($code, $check_code)
   {
-    return $this->db->where('consign_code', $code)->where('ref_code', $check_code)->delete('consign_order_detail');
+    return $this->db->where('consign_code', $code)->where('ref_code', $check_code)->delete($this->td);
   }
 
 
@@ -87,7 +89,7 @@ class Consign_order_model extends CI_Model
     ->where('ref_code', $check_code)
     ->where('status', 1)
     ->limit(1)
-    ->get('consign_order_detail');
+    ->get($this->td);
 
     if($rs->num_rows() > 0)
     {
@@ -101,48 +103,62 @@ class Consign_order_model extends CI_Model
 
   public function get($code)
   {
-    $rs = $this->db->where('code', $code)->get('consign_order');
+    $rs = $this->db->where('code', $code)->get($this->tb);
     if($rs->num_rows() === 1)
     {
       return $rs->row();
     }
 
-    return FALSE;
+    return NULL;
   }
 
+
+  public function get_consign_details($code)
+  {
+    $rs = $this->db->where('consign_code', $code)->get($this->td);
+
+    if($rs->num_rows() > 0)
+    {
+      return $rs->result();
+    }
+
+    return NULL;
+  }
 
 
   public function get_details($code)
   {
     $this->db
     ->select('consign_order_detail.*')
-    ->from('consign_order_detail')
+    ->from($this->td)
     ->join('products', 'consign_order_detail.product_code = products.code', 'left')
     ->join('product_size', 'products.size_code = product_size.code', 'left')
     ->where('consign_code', $code)
     ->order_by('products.style_code', 'ASC')
     ->order_by('products.color_code', 'ASC')
     ->order_by('product_size.position', 'ASC');
+
     $rs = $this->db->get();
 
-    if($rs->num_rows() >0)
+    if($rs->num_rows() > 0)
     {
       return $rs->result();
     }
 
-    return FALSE;
+    return NULL;
   }
 
 
   public function get_detail($id)
   {
-    $rs = $this->db->where('id', $id)->get('consign_order_detail');
+    $rs = $this->db->where('id', $id)->get($this->td);
+    
     if($rs->num_rows() === 1)
     {
       return $rs->row();
     }
 
-    return FALSE;
+    return NULL;
   }
 
 
@@ -156,7 +172,8 @@ class Consign_order_model extends CI_Model
     ->where('discount', $discountLabel)
     ->where('input_type', $input_type)
     ->where('status', 0)
-    ->get('consign_order_detail');
+    ->get($this->td);
+
     if($rs->num_rows() === 1)
     {
       return $rs->row();
@@ -169,19 +186,19 @@ class Consign_order_model extends CI_Model
 
   public function delete_detail($id)
   {
-    return $this->db->where('id', $id)->delete('consign_order_detail');
+    return $this->db->where('id', $id)->delete($this->td);
   }
 
 
   public function drop_details($code)
   {
-    return $this->db->where('consign_code', $code)->delete('consign_order_detail');
+    return $this->db->where('consign_code', $code)->delete($this->td);
   }
 
 
   public function get_sum_amount($code)
   {
-    $rs = $this->db->select_sum('amount')->where('consign_code', $code)->get('consign_order_detail');
+    $rs = $this->db->select_sum('amount')->where('consign_code', $code)->get($this->td);
 
     return $rs->row()->amount === NULL ? 0 : $rs->row()->amount;
   }
@@ -194,7 +211,7 @@ class Consign_order_model extends CI_Model
     ->select_sum('qty')
     ->where('consign_code', $code)
     ->where('product_code', $product_code)
-    ->get('consign_order_detail');
+    ->get($this->td);
 
     if($rs->num_rows() === 1)
     {
@@ -238,7 +255,7 @@ class Consign_order_model extends CI_Model
     ->where('price', $price, FALSE)
     ->where('discount', $discount)
     ->where('status', 0)
-    ->get('consign_order_detail');
+    ->get($this->td);
 
     return $rs->row()->qty === NULL ? 0 : $rs->row()->qty;
   }
@@ -250,7 +267,7 @@ class Consign_order_model extends CI_Model
     $this->db
     ->set('status', $status)
     ->where('id', $id);
-    return $this->db->update('consign_order_detail');
+    return $this->db->update($this->td);
   }
 
   public function change_all_detail_status($code, $status)
@@ -258,7 +275,7 @@ class Consign_order_model extends CI_Model
     $this->db
     ->set('status', $status)
     ->where('consign_code', $code);
-    return $this->db->update('consign_order_detail');
+    return $this->db->update($this->td);
   }
 
 
@@ -269,7 +286,7 @@ class Consign_order_model extends CI_Model
     ->set('inv_code', NULL)
     ->set('update_user', get_cookie('uname'))
     ->where('code', $code);
-    return $this->db->update('consign_order');
+    return $this->db->update($this->tb);
   }
 
 
@@ -282,25 +299,25 @@ class Consign_order_model extends CI_Model
     }
 
     //--- document date
-    if(!empty($ds['from_date']) && !empty($ds['to_date']))
+    if( ! empty($ds['from_date']) && !empty($ds['to_date']))
     {
       $this->db->where('date_add >=', from_date($ds['from_date']))->where('date_add <=', to_date($ds['to_date']));
     }
 
 
-    if(!empty($ds['code']))
+    if( ! empty($ds['code']))
     {
       $this->db->like('code', $ds['code']);
     }
 
     //--- อ้างอิงเลขที่กระทบยอดสินค้า
-    if(!empty($ds['ref_code']))
+    if( ! empty($ds['ref_code']))
     {
       $this->db->like('ref_code', $ds['ref_code']);
     }
 
 
-    if(!empty($ds['customer']))
+    if( ! empty($ds['customer']))
     {
       $this->db
       ->group_start()
@@ -309,7 +326,7 @@ class Consign_order_model extends CI_Model
       ->group_end();
     }
 
-    if(!empty($ds['zone']))
+    if( ! empty($ds['zone']))
     {
       $this->db
       ->group_start()
@@ -348,13 +365,13 @@ class Consign_order_model extends CI_Model
 
     $this->db->order_by('date_add', 'DESC');
 
-    if(!empty($perpage))
+    if( ! empty($perpage))
     {
       $offset = $offset === NULL ? 0 : $offset;
       $this->db->limit($perpage, $offset);
     }
 
-    $rs = $this->db->get('consign_order');
+    $rs = $this->db->get($this->tb);
 
     if($rs->num_rows() > 0)
     {
@@ -374,25 +391,25 @@ class Consign_order_model extends CI_Model
     }
 
     //--- document date
-    if(!empty($ds['from_date']) && !empty($ds['to_date']))
+    if( ! empty($ds['from_date']) && !empty($ds['to_date']))
     {
       $this->db->where('date_add >=', from_date($ds['from_date']))->where('date_add <=', to_date($ds['to_date']));
     }
 
 
-    if(!empty($ds['code']))
+    if( ! empty($ds['code']))
     {
       $this->db->like('code', $ds['code']);
     }
 
     //--- อ้างอิงเลขที่กระทบยอดสินค้า
-    if(!empty($ds['ref_code']))
+    if( ! empty($ds['ref_code']))
     {
       $this->db->like('ref_code', $ds['ref_code']);
     }
 
 
-    if(!empty($ds['customer']))
+    if( ! empty($ds['customer']))
     {
       $this->db
       ->group_start()
@@ -401,7 +418,7 @@ class Consign_order_model extends CI_Model
       ->group_end();
     }
 
-    if(!empty($ds['zone']))
+    if( ! empty($ds['zone']))
     {
       $this->db
       ->group_start()
@@ -438,7 +455,7 @@ class Consign_order_model extends CI_Model
       $this->db->where('is_etax', $ds['is_etax']);
     }
 
-    return $this->db->count_all_results('consign_order');
+    return $this->db->count_all_results($this->tb);
   }
 
 
@@ -458,7 +475,7 @@ class Consign_order_model extends CI_Model
       $this->db->where('code !=', $old_code);
     }
 
-    $rs = $this->db->where('code', $code)->get('consign_order');
+    $rs = $this->db->where('code', $code)->get($this->tb);
     if($rs->num_rows() > 0)
     {
       return TRUE;
@@ -473,7 +490,7 @@ class Consign_order_model extends CI_Model
     $count = $this->db
     ->where('pos_ref', $pos_ref)
     ->where('status !=', 2)
-    ->count_all_results('consign_order');
+    ->count_all_results($this->tb);
 
     return $count > 0 ? TRUE : FALSE;
   }
@@ -487,7 +504,7 @@ class Consign_order_model extends CI_Model
     ->where('status', 1)
     ->where('inv_code IS NULL', NULL, FALSE)
     ->limit($limit)
-    ->get('consign_order');
+    ->get($this->tb);
 
     if($rs->num_rows() > 0)
     {
@@ -500,7 +517,7 @@ class Consign_order_model extends CI_Model
 
 	public function update_inv($code, $doc_num)
   {
-    return $this->db->set('inv_code', $doc_num)->where('code', $code)->update('consign_order');
+    return $this->db->set('inv_code', $doc_num)->where('code', $code)->update($this->tb);
   }
 
 } //--- end class
