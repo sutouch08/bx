@@ -9,7 +9,8 @@ class PS_Controller extends CI_Controller
   public $isViewer;
 	public $_user;
 	public $_SuperAdmin = FALSE;
-  
+  public $error;
+
   public function __construct()
   {
     parent::__construct();

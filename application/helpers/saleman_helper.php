@@ -2,9 +2,10 @@
 
 function select_saleman($id = "")
 {
-  $CI =& get_instance();
-  $CI->load->model('masters/slp_model');
-  $result = $CI->slp_model->get_data();
+  $ci =& get_instance();
+  $ci->load->model('masters/slp_model');
+  $active = 1;
+  $result = $ci->slp_model->get_all($active);
   $ds = '';
   if(!empty($result))
   {
