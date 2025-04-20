@@ -1,101 +1,89 @@
+var click = 0;
+
 $('#date_add').datepicker({
   dateFormat:'dd-mm-yy'
 });
 
 
-function send_to_sap(){
-  var code = $('#code').val();
-  $.ajax({
-    url:HOME + 'manual_export',
-    type:'POST',
-    cache:false,
-    data:{
-      'code' : code
-    },
-    success:function(rs){
-      var rs = $.trim(rs);
-      if(rs === 'success'){
-        swal({
-          title:'Success',
-          type:'success',
-          timer:1000
-        });
-      }else{
-        swal({
-          title:'Error!',
-          text:rs,
-          type:'error'
-        });
-      }
-    }
-  })
-}
-
-
 function saveAdjust(){
-  var code = $('#code').val();
-  var reference = $('#transform_code').val();
-  var items = [];
-  var count = $('.input-qty').length;
-	var err = 0;
-  if(count)
-  {
-    $('.input-qty').each(function(){
-			let no = $(this).data('no');
+  if(click == 0) {
+    click = 1;
+    clearErrorByClass('input-qty');
+
+    var code = $('#code').val();
+    var reference = $('#transform_code').val();
+    var items = [];
+    var count = $('.input-qty').length;
+  	var err = 0;
+
+    $('.input-qty').each(function() {
+      let no = $(this).data('no');
       let pdCode = $(this).data('product');
       let qty = parseDefault(parseInt($(this).val()), 0);
-			let limit = parseDefault(parseInt($('#limit-'+no).val()), 0);
+      let limit = parseDefault(parseInt($('#limit-'+no).val()), 0);
 
-			if(qty > limit || qty == 0) {
-				$(this).addClass('has-error');
-				err++;
-			}
-			else {
-				$(this).removeClass('has-error');
-			}
-
-      items.push({"product_code" : pdCode, "qty" : qty});
-      count--;
-
-      if(count === 0)
-      {
-				if(err == 0) {
-					load_in();
-	        $.ajax({
-	          url:HOME + 'save',
-	          type:'POST',
-	          cache:false,
-	          data:{
-	            "code" : code,
-	            "transform_code" : reference,
-	            "items" : JSON.stringify(items)
-	          },
-	          success:function(rs){
-	            load_out();
-	            var rs = $.trim(rs);
-	            if(rs === 'success'){
-	              swal({
-	                title:"Success",
-	                type:"success",
-	                timer:1000
-	              });
-
-	              setTimeout(function(){
-	                goDetail(code);
-	              }, 1500);
-	            }
-	          }
-	        });
-				}
-				else {
-					return false;
-				}
+      if(qty > limit || qty == 0) {
+        $(this).addClass('has-error');
+        err++;
       }
+      else {
+        items.push({"product_code" : pdCode, "qty" : qty});
+      }
+    });
 
+    if(err > 0) {
+      click = 0;
+      beep();
+      swal("พบรายการที่ไม่ถูกต้อง");
+      return false;
+    }
+
+    if(items.length == 0) {
+      click = 0;
+      beep();
+      swal("ไม่พบรายการ");
+      return false;
+    }
+
+    load_in();
+
+    $.ajax({
+      url:HOME + 'save',
+      type:'POST',
+      cache:false,
+      data:{
+        "code" : code,
+        "transform_code" : reference,
+        "items" : JSON.stringify(items)
+      },
+      success:function(rs){
+        click = 0;
+        load_out();
+
+        if(rs.trim() === 'success'){
+          swal({
+            title:"Success",
+            type:"success",
+            timer:1000
+          });
+
+          setTimeout(function(){
+            goDetail(code);
+          }, 1500);
+        }
+        else {
+          beep();
+          showError(rs);
+        }
+      },
+      error:function(rs) {
+        click = 0;
+        beep();
+        showError(rs);
+      }
     });
   }
 }
-
 
 
 function getEdit(){
@@ -105,7 +93,6 @@ function getEdit(){
   $('#btn-edit').addClass('hide');
   $('#btn-update').removeClass('hide');
 }
-
 
 
 function updateHeader(){
@@ -148,7 +135,6 @@ function updateHeader(){
     }
   })
 }
-
 
 
 function add(){

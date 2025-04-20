@@ -1,18 +1,11 @@
 <?php $this->load->view('include/header'); ?>
 <div class="row">
-	<div class="col-sm-6 col-xs-6 padding-5">
-    	<h3 class="title" >
-        <?php echo $this->title; ?>
-      </h3>
+	<div class="col-lg-6 col-md-6 col-sm-6 col-xs-12 padding-5 padding-top-5">
+		<h3 class="title" ><?php echo $this->title; ?></h3>
 	</div>
-    <div class="col-sm-6 col-xs-6 padding-5">
-      	<p class="pull-right top-p">
-			    <button type="button" class="btn btn-sm btn-warning" onclick="goBack()"><i class="fa fa-arrow-left"></i> กลับ</button>
-				<?php if($doc->status == 1 && empty($doc->issue_code)) : ?>
-					<button type="button" class="btn btn-sm btn-success" onclick="send_to_sap()"><i class="fa fa-send"></i> ส่งข้อมูลไป SAP</button>
-				<?php endif; ?>
-        </p>
-    </div>
+	<div class="col-lg-6 col-md-6 col-sm-6 col-xs-12 padding-5 text-right">
+		<button type="button" class="btn btn-sm btn-warning top-btn" onclick="goBack()"><i class="fa fa-arrow-left"></i> กลับ</button>
+	</div>
 </div>
 <hr class="padding-5" />
 
@@ -37,14 +30,15 @@
 			<label class="not-show">โซนแปรสภาพ</label>
 			<input type="text" class="form-control input-sm" id="zoneName" value="<?php echo $doc->zone_name; ?>" disabled />
 		</div>
+		<?php $status = $doc->status == '2' ? 'Canceled' : ($doc->status == '1' ? 'Saved' : 'Draft'); ?>
 		<div class="col-lg-1-harf col-md-1-harf col-sm-1-harf col-xs-6 padding-5">
-			<label>Goods Issue</label>
-			<input type="text" class="form-control input-sm text-center" id="issue_code" value="<?php echo $doc->issue_code; ?>" disabled />
+			<label>สถานะ</label>
+			<input type="text" class="form-control input-sm text-center" value="<?php echo $status; ?>" disabled />
 		</div>
 
 		<div class="col-lg-2 col-md-2 col-sm-2 col-xs-6 padding-5">
-			<label>พนักงาน</label>
-			<input type="text" class="form-control input-sm" id="user" value="<?php echo $doc->user_name; ?>" disabled />
+			<label>User</label>
+			<input type="text" class="form-control input-sm" id="user" value="<?php echo $doc->user; ?>" disabled />
 		</div>
 		<div class="col-lg-10 col-md-8-harf col-sm-8-harf col-xs-12 padding-5">
 	   	<label>หมายเหตุ</label>

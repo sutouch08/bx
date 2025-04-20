@@ -1,10 +1,3 @@
-var HOME = BASE_URL + 'inventory/adjust_transform/';
-//--- กลับหน้าหลัก
-function goBack(){
-  window.location.href = HOME;
-}
-
-
 function goAdd(){
   window.location.href = HOME + 'add_new';
 }

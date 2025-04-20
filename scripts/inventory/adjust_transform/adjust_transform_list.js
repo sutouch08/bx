@@ -27,18 +27,18 @@ function cancle(code)
 
   load_in();
 
-  $.ajax({
-    url:HOME + 'cancle/'+code,
-    type:"POST",
-    cache:"false",
-    data:{
-      "reason" : reason
-    },
-    success: function(rs) {
-      load_out();
-      var rs = $.trim(rs);
-      if( rs == 'success' ) {
-        setTimeout(() => {
+  setTimeout(() => {
+    $.ajax({
+      url:HOME + 'cancle/'+code,
+      type:"POST",
+      cache:"false",
+      data:{
+        "reason" : reason
+      },
+      success: function(rs) {
+        load_out();
+
+        if( rs.trim() == 'success' ) {
           swal({
             title:'Success',
             text: 'ยกเลิกเอกสารเรียบร้อยแล้ว',
@@ -49,17 +49,20 @@ function cancle(code)
           setTimeout(function(){
             goBack();
           }, 1200);
-        }, 200);
-
+        }
+        else {
+          beep();
+          showError(rs);
+        }
+      },
+      error:function(rs) {
+        beep();
+        showError(rs);
       }
-      else {
-        setTimeout(() => {
-          swal("ข้อผิดพลาด", rs, "error");
-        }, 200);
-      }
-    }
-  });
+    });
+  }, 100);
 }
+
 
 function doCancle() {
 	let code = $('#cancle-code').val();
@@ -76,34 +79,9 @@ function doCancle() {
 }
 
 
-
 $('#cancle-modal').on('shown.bs.modal', function() {
 	$('#cancle-reason').focus();
 });
-
-
-function getSearch(){
-  $("#searchForm").submit();
-}
-
-
-
-
-
-function clearFilter(){
-  $.get(HOME + 'clear_filter', function(){ goBack(); });
-}
-
-
-
-
-
-$(".search").keyup(function(e){
-  if(e.keyCode == 13){
-    getSearch();
-  }
-});
-
 
 
 $("#fromDate").datepicker({
@@ -119,11 +97,4 @@ $("#toDate").datepicker({
   onClose:function(sd){
     $("#fromDate").datepicker("option", "maxDate", sd);
   }
-});
-
-
-
-$(document).ready(function() {
-	//---	reload ทุก 5 นาที
-	setTimeout(function(){ goBack(); }, 300000);
 });

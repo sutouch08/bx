@@ -1,6 +1,9 @@
 <?php
 class Adjust_transform_model extends CI_Model
 {
+  private $tb = "adjust_transform";
+  private $td = "adjust_transform_detail";
+
   public function __construct()
   {
     parent::__construct();
@@ -9,28 +12,28 @@ class Adjust_transform_model extends CI_Model
 
   public function get($code)
   {
-    if(!empty($code))
+    if( ! empty($code))
     {
-      $rs = $this->db->where('code', $code)->get('adjust_transform');
+      $rs = $this->db->where('code', $code)->get($this->tb);
       if($rs->num_rows() === 1)
       {
         return $rs->row();
       }
     }
 
-    return FALSE;
+    return NULL;
   }
 
 
 	public function get_sum_qty($code)
 	{
-		if(!empty($code))
+		if( ! empty($code))
 		{
-			$rs = $this->db->select_sum('qty')->where('adjust_code', $code)->get('adjust_transform_detail');
+			$rs = $this->db->select_sum('qty')->where('adjust_code', $code)->get($this->td);
 
 			if($rs->num_rows() === 1)
 			{
-				return $rs->row()->qty;
+				return get_zero($rs->row()->qty);
 			}
 		}
 
@@ -51,17 +54,16 @@ class Adjust_transform_model extends CI_Model
 
 		if($rs->num_rows() == 1)
 		{
-			return $rs->row()->qty;
+			return get_zero($rs->row()->qty);
 		}
 
 		return 0;
 	}
 
 
-
   public function get_details($code)
   {
-    if(!empty($code))
+    if( ! empty($code))
     {
       $rs = $this->db
       ->select('adjust_transform_detail.*')
@@ -77,106 +79,164 @@ class Adjust_transform_model extends CI_Model
       }
     }
 
-    return FALSE;
+    return NULL;
   }
 
 
   public function add(array $ds = array())
   {
-    if(!empty($ds))
+    if( ! empty($ds))
     {
-      return $this->db->insert('adjust_transform', $ds);
+      return $this->db->insert($this->tb, $ds);
     }
 
     return FALSE;
   }
-
 
 
   public function add_detail(array $ds = array())
   {
-    if(!empty($ds))
+    if( ! empty($ds))
     {
-      return $this->db->insert('adjust_transform_detail', $ds);
+      return $this->db->insert($this->td, $ds);
     }
 
     return FALSE;
   }
 
 
-
   public function update($code, array $ds = array())
   {
-    if(!empty($ds))
+    if( ! empty($ds))
     {
-      return $this->db->where('code', $code)->update('adjust_transform', $ds);
+      return $this->db->where('code', $code)->update($this->tb, $ds);
     }
   }
 
 
   public function update_detail($id, $arr)
   {
-    return $this->db->where('id', $id)->update('adjust_transform_detail', $arr);
+    return $this->db->where('id', $id)->update($this->td, $arr);
   }
-
 
 
   public function update_detail_qty($id, $qty)
   {
-    return $this->db->set("qty", "qty + {$qty}", FALSE)->where("id", $id)->update("adjust_transform_detail");
+    return $this->db->set("qty", "qty + {$qty}", FALSE)->where("id", $id)->update($this->td);
   }
-
 
 
   public function delete_detail($id)
   {
-    return $this->db->where('id', $id)->delete('adjust_transform_detail');
+    return $this->db->where('id', $id)->delete($this->td);
   }
 
 
   public function delete_details($code)
   {
-    return $this->db->where('adjust_code', $code)->delete('adjust_transform_detail');
+    return $this->db->where('adjust_code', $code)->delete($this->td);
   }
-
-
 
 
   public function valid_detail($id)
   {
-    return $this->db->set('valid', '1')->where('id', $id)->update('adjust_transform_detail');
+    return $this->db->set('valid', '1')->where('id', $id)->update($this->td);
   }
 
 
   public function unvalid_details($code)
   {
-    return $this->db->set('valid', '0')->where('adjust_code', $code)->update('adjust_transform_detail');
+    return $this->db->set('valid', '0')->where('adjust_code', $code)->update($this->td);
   }
 
 
   public function cancle_details($code)
   {
-    return $this->db->set('is_cancle', 1)->where('adjust_code', $code)->update('adjust_transform_detail');
+    return $this->db->set('is_cancle', 1)->where('adjust_code', $code)->update($this->td);
   }
 
 
   public function change_status($code, $status)
   {
-    return $this->db->set('status', $status)->set('update_user', get_cookie('uname'))->where('code', $code)->update('adjust_transform');
+    return $this->db->set('status', $status)->set('update_user', get_cookie('uname'))->where('code', $code)->update($this->tb);
   }
 
 
-
-  public function get_non_issue_code($limit = 100)
+  public function count_rows(array $ds = array())
   {
-    $rs = $this->db
-    ->select('code')
-    ->from('adjust_transform')
-    ->where('status', 1)
-    ->where('issue_code IS NULL', NULL, FALSE)
-    ->order_by('code', 'ASC')
-    ->limit($limit)
-    ->get();
+    if( ! empty($ds['code']))
+    {
+      $this->db->like('code', $ds['code']);
+    }
+
+    if( ! empty($ds['reference']))
+    {
+      $this->db->like('reference', $ds['reference']);
+    }
+
+    if( isset($ds['user']) && $ds['user'] != 'all')
+    {
+      $this->db->where('user', $ds['user']);
+    }
+
+    if( ! empty($ds['from_date']) && !empty($ds['to_date']))
+    {
+      $this->db->where('date_add >=', from_date($ds['from_date']));
+      $this->db->where('date_add <=', to_date($ds['to_date']));
+    }
+
+    if( ! empty($ds['remark']))
+    {
+      $this->db->like('remark', $ds['remark']);
+    }
+
+    if($ds['status'] !== 'all')
+    {
+      $this->db->where('status', $ds['status']);
+    }
+
+    return $this->db->count_all_results($this->tb);    
+  }
+
+
+  public function get_list(array $ds = array(), $perpage = 20, $offset = 0)
+  {
+    if( ! empty($ds['code']))
+    {
+      $this->db->like('code', $ds['code']);
+    }
+
+    if( ! empty($ds['reference']))
+    {
+      $this->db->like('reference', $ds['reference']);
+    }
+
+    if( isset($ds['user']) && $ds['user'] != 'all')
+    {
+      $this->db->where('user', $ds['user']);
+    }
+
+    if( ! empty($ds['from_date']) && !empty($ds['to_date']))
+    {
+      $this->db->where('date_add >=', from_date($ds['from_date']));
+      $this->db->where('date_add <=', to_date($ds['to_date']));
+    }
+
+    if( ! empty($ds['remark']))
+    {
+      $this->db->like('remark', $ds['remark']);
+    }
+
+    if($ds['status'] !== 'all')
+    {
+      $this->db->where('status', $ds['status']);
+    }
+
+    $this->db->order_by('code', 'DESC');
+
+    $this->db->limit($perpage, $offset);
+
+    $rs = $this->db->get($this->tb);
 
     if($rs->num_rows() > 0)
     {
@@ -187,139 +247,13 @@ class Adjust_transform_model extends CI_Model
   }
 
 
-  public function update_issue_code($code, $issue_code)
-  {
-    if(!empty($issue_code))
-    {
-      return $this->db->set('issue_code', $issue_code)->where('code', $code)->update('adjust_transform');
-    }
-
-    return FALSE;
-  }
-
-
-
-  public function count_rows(array $ds = array())
-  {
-    if(!empty($ds))
-    {
-      $this->db
-      ->from('adjust_transform')
-      ->join('user', 'adjust_transform.user = user.uname','left');
-
-      if(!empty($ds['code']))
-      {
-        $this->db->like('adjust_transform.code', $ds['code']);
-      }
-
-      if(!empty($ds['reference']))
-      {
-        $this->db->like('adjust_transform.reference', $ds['reference']);
-      }
-
-      if(!empty($ds['user']))
-      {
-        $this->db->group_start();
-        $this->db->like('user.uname', $ds['user']);
-        $this->db->or_like('user.name', $ds['user']);
-        $this->db->group_end();
-      }
-
-      if(!empty($ds['from_date']) && !empty($ds['to_date']))
-      {
-        $this->db->where('adjust_transform.date_add >=', from_date($ds['from_date']));
-        $this->db->where('adjust_transform.date_add <=', to_date($ds['to_date']));
-      }
-
-      if(!empty($ds['remark']))
-      {
-        $this->db->like('adjust_transform.remark', $ds['remark']);
-      }
-
-
-      if($ds['status'] !== 'all')
-      {
-        $this->db->where('adjust_transform.status', $ds['status']);
-      }
-
-      return $this->db->count_all_results();
-    }
-
-    return FALSE;
-  }
-
-
-  public function get_list(array $ds = array(), $perpage = 20, $offset = 0)
-  {
-    if(!empty($ds))
-    {
-
-      $this->db
-      ->select('adjust_transform.*')
-      ->select('user.name AS user_name')
-      ->from('adjust_transform')
-      ->join('user', 'adjust_transform.user = user.uname', 'left');
-
-      if(!empty($ds['code']))
-      {
-        $this->db->like('adjust_transform.code', $ds['code']);
-      }
-
-      if(!empty($ds['reference']))
-      {
-        $this->db->like('adjust_transform.reference', $ds['reference']);
-      }
-
-      if(!empty($ds['user']))
-      {
-        $this->db->group_start();
-        $this->db->like('user.uname', $ds['user']);
-        $this->db->or_like('user.name', $ds['user']);
-        $this->db->group_end();
-      }
-
-      if(!empty($ds['from_date']) && !empty($ds['to_date']))
-      {
-        $this->db->where('adjust_transform.date_add >=', from_date($ds['from_date']));
-        $this->db->where('adjust_transform.date_add <=', to_date($ds['to_date']));
-      }
-
-      if(!empty($ds['remark']))
-      {
-        $this->db->like('adjust_transform.remark', $ds['remark']);
-      }
-
-
-      if($ds['status'] !== 'all')
-      {
-        $this->db->where('adjust_transform.status', $ds['status']);
-      }
-
-
-      $this->db->order_by('adjust_transform.code', 'DESC');
-
-      $this->db->limit($perpage, $offset);
-
-      $rs = $this->db->get();
-
-      if($rs->num_rows() > 0)
-      {
-        return $rs->result();
-      }
-
-    }
-
-    return FALSE;
-  }
-
-
   public function get_max_code($code)
   {
     $rs = $this->db
     ->select_max('code')
     ->like('code', $code, 'after')
     ->order_by('code', 'DESC')
-    ->get('adjust_transform');
+    ->get($this->tb);
 
     return $rs->row()->code;
   }
@@ -327,7 +261,7 @@ class Adjust_transform_model extends CI_Model
 
   public function is_exists_code($code)
   {
-    $rs = $this->db->where('code', $code)->count_all_results('adjust_transform');
+    $rs = $this->db->where('code', $code)->count_all_results($this->tb);
 
     if($rs > 0)
     {
