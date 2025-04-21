@@ -145,7 +145,7 @@ class Products_model extends CI_Model
       {
         $this->db->group_start();
         $this->db->like('products.code', $ds['code']);
-        $this->db->or_like('products.old_code', $ds['code']);
+        //$this->db->or_like('products.old_code', $ds['code']);
         $this->db->group_end();
       }
 
@@ -250,9 +250,10 @@ class Products_model extends CI_Model
       }
     }
 
-    $this->db->order_by('style_code', 'ASC');
-    $this->db->order_by('color_code', 'ASC');
-    $this->db->order_by('product_size.position', 'ASC');
+    // $this->db->order_by('style_code', 'ASC');
+    // $this->db->order_by('color_code', 'ASC');
+    // $this->db->order_by('product_size.position', 'ASC');
+    $this->db->order_by('products.id','DESC');
     $this->db->limit($perpage, $offset);
 
     $rs = $this->db->get();
@@ -870,6 +871,6 @@ class Products_model extends CI_Model
 		return NULL;
 	}
 
-  
+
 }
 ?>

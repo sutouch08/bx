@@ -1,18 +1,13 @@
-var HOME = BASE_URL + 'masters/items/';
-
 function addNew(){
   window.location.href = HOME + 'add_new';
 }
 
-
-
-function goBack(){
-  window.location.href = HOME;
-}
-
-
 function getEdit(id){
 	window.location.href = HOME + 'edit/'+id;
+}
+
+function viewDetail(id) {
+  window.location.href = HOME + 'view_detail/'+id;
 }
 
 
@@ -27,7 +22,7 @@ function add() {
 	data.code = $('#code').val().trim();
 	data.old_code = $('#old_code').val().trim();
 	data.name = $('#name').val().trim(); // required
-	data.style = $('#style').val().trim(); // required
+	data.style = $('#style').val().trim();
 	data.old_style = $('#old_style').val().trim();
 	data.color_code = $('#color').val().trim(); // required
 	data.size_code = $('#size').val().trim(); // required
@@ -59,10 +54,10 @@ function add() {
 		error++;
 	}
 
-	if(data.style.length === 0) {
-		set_error($('#style'), $('#style-error'), "required");
-		error++;
-	}
+	// if(data.style.length === 0) {
+	// 	set_error($('#style'), $('#style-error'), "required");
+	// 	error++;
+	// }
 
 	if(data.color_code.length === 0) {
 		set_error($('#color'), $('#color-error'), "required");
@@ -170,10 +165,10 @@ function update() {
 		error++;
 	}
 
-	if(data.style.length === 0) {
-		set_error($('#style'), $('#style-error'), "required");
-		error++;
-	}
+	// if(data.style.length === 0) {
+	// 	set_error($('#style'), $('#style-error'), "required");
+	// 	error++;
+	// }
 
 	if(data.color_code.length === 0) {
 		set_error($('#color'), $('#color-error'), "required");
@@ -290,11 +285,11 @@ function addDuplicate() {
 		set_error($('#name'), $('#name-error'), "required");
 		error++;
 	}
-
-	if(data.style.length === 0) {
-		set_error($('#style'), $('#style-error'), "required");
-		error++;
-	}
+  //
+	// if(data.style.length === 0) {
+	// 	set_error($('#style'), $('#style-error'), "required");
+	// 	error++;
+	// }
 
 	if(data.color_code.length === 0) {
 		set_error($('#color'), $('#color-error'), "required");

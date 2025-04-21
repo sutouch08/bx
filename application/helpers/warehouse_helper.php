@@ -1,17 +1,18 @@
 <?php
-function select_warehouse_role($se = 0)
+function select_warehouse_role($se = NULL)
 {
-  $sc = '';
-  $CI =& get_instance();
-  $CI->load->model('masters/warehouse_model');
-  $options = $CI->warehouse_model->get_all_role();
+  $roles = array(
+    ['role' => '1', 'name' => 'คลังซื้อขาย'],
+    ['role' => '2', 'name' => 'คลังฝากขาย'],
+    ['role' => '7', 'name' => 'คลังระหว่างทำ'],
+    ['role' => '8', 'name' => 'คลังยืมสินค้า']
+  );
 
-  if(!empty($options))
+  $sc = "";
+
+  foreach($roles as $role)
   {
-    foreach($options as $rs)
-    {
-      $sc .= '<option value="'.$rs->id.'" '.is_selected($se, $rs->id).'>'.$rs->name.'</option>';
-    }
+    $sc .= '<option value="'.$role['role'].'" '.is_selected($se, $role['role']).'>'.$role['name'].'</option>';
   }
 
   return $sc;
@@ -23,13 +24,14 @@ function select_warehouse($se = 0)
   $sc = '';
   $ci =& get_instance();
   $ci->load->model('masters/warehouse_model');
-  $options = $ci->warehouse_model->get_list();
+
+  $options = $ci->warehouse_model->get_all(1);
 
   if(!empty($options))
   {
     foreach($options as $rs)
     {
-      $sc .= '<option value="'.$rs->code.'" '.is_selected($se, $rs->code).'>'.$rs->code." : ".$rs->name.'</option>';
+      $sc .= '<option value="'.$rs->code.'" data-role="'.$rs->role.'" '.is_selected($se, $rs->code).'>'.$rs->code." : ".$rs->name.'</option>';
     }
   }
 
@@ -41,9 +43,9 @@ function select_warehouse($se = 0)
 function select_sell_warehouse($se = NULL)
 {
   $sc = '';
-  $CI =& get_instance();
-  $CI->load->model('masters/warehouse_model');
-  $options = $CI->warehouse_model->get_sell_warehouse_list();
+  $ci =& get_instance();
+  $ci->load->model('masters/warehouse_model');
+  $options = $ci->warehouse_model->get_sell_warehouse_list();
 
   $se = empty($se) ? getConfig('DEFAULT_WAREHOUSE') : $se;
 

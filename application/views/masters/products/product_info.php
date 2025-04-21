@@ -16,7 +16,7 @@
 		<div class="help-block col-xs-12 col-sm-reset inline red" id="name-error"></div>
 	</div>
 
-	<div class="form-group">
+	<div class="form-group hide">
 		<label class="col-sm-3 control-label no-padding-right">รหัสรุ่นเก่า</label>
 		<div class="col-xs-12 col-sm-3">
 			<input type="text" name="old_style" id="old_style" class="width-100" value="" placeholder="รหัสรุ่นเก่า (ไม่บังคับ)" />

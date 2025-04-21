@@ -1,26 +1,161 @@
-var HOME = BASE_URL + 'masters/warehouse';
+var click = 0;
 
-function goBack(){
-  window.location.href = HOME;
+function addNew() {
+  window.location.href = HOME + 'add_new';
 }
-
-function getSearch(){
-  $('#searchForm').submit();
-}
-
-
-function clearFilter(){
-  $.get(HOME +'/clear_filter', function(){
-    goBack();
-  });
-}
-
 
 
 function getEdit(code){
-  window.location.href = HOME + '/edit/'+code;
+  window.location.href = HOME + 'edit/'+code;
 }
 
+
+function add() {
+  if(click == 0) {
+    click = 1;
+    clearErrorByClass('e');
+
+    let h = {
+      'code' : $('#code').val().trim(),
+      'name' : $('#name').val().trim(),
+      'role' : $('#role').val(),
+      'sell' : $('#sell').is(':checked') ? 1 : 0,
+      'lend' : $('#lend').is(':checked') ? 1 : 0,
+      'prepare' : $('#prepare').is(':checked') ? 1 : 0,
+      'active' : $('#active').is(':checked') ? 1 : 0
+    }
+
+    if(h.code.length == 0) {
+      click = 0;
+      $('#code').hasError('Required');
+      return false;
+    }
+
+    if(h.name.length == 0) {
+      click = 0;
+      $('#name').hasError('Required');
+      return false;
+    }
+
+    if(h.role == '') {
+      click = 0;
+      $('#role').hasError();
+      return false;
+    }
+
+    load_in();
+
+    $.ajax({
+      url:HOME + 'add',
+      type:'POST',
+      cache:false,
+      data: {
+        'data' : JSON.stringify(h)
+      },
+      success:function(rs) {
+        click = 0;
+        load_out();
+
+        if(rs.trim() === 'success') {
+          swal({
+            title:'Success',
+            text:'เพิ่มข้อมูลเรียบร้อยแล้ว ต้องการเพิ่มอีกหรือไม่ ?',
+            type:'success',
+            html:true,
+            showCancelButton:true,
+            cancelButtonText:'No',
+            confirmButtonText:'Yes',
+            closeOnConfirm:true
+          }, function(isConfirm) {
+            if(isConfirm) {
+              addNew();
+            }
+            else {
+              goBack();
+            }
+          })
+        }
+        else {
+          beep();
+          showError(rs);
+        }
+      },
+      error:function(rs) {
+        click = 0;
+        beep();
+        showError(rs);
+      }
+    })
+  }
+}
+
+
+function update() {
+  if(click == 0) {
+    click = 1;
+    clearErrorByClass('e');
+
+    let h = {
+      'code' : $('#code').val().trim(),
+      'name' : $('#name').val().trim(),
+      'role' : $('#role').val(),
+      'sell' : $('#sell').is(':checked') ? 1 : 0,
+      'lend' : $('#lend').is(':checked') ? 1 : 0,
+      'prepare' : $('#prepare').is(':checked') ? 1 : 0,
+      'active' : $('#active').is(':checked') ? 1 : 0
+    }
+
+    if(h.code.length == 0) {
+      click = 0;
+      $('#code').hasError('Required');
+      return false;
+    }
+
+    if(h.name.length == 0) {
+      click = 0;
+      $('#name').hasError('Required');
+      return false;
+    }
+
+    if(h.role == '') {
+      click = 0;
+      $('#role').hasError();
+      return false;
+    }
+
+    load_in();
+
+    $.ajax({
+      url:HOME + 'update',
+      type:'POST',
+      cache:false,
+      data: {
+        'data' : JSON.stringify(h)
+      },
+      success:function(rs) {
+        click = 0;
+        load_out();
+
+        if(rs.trim() === 'success') {
+          swal({
+            title:'Success',
+            type:'success',
+            timer:1000
+          });
+        }
+        else {
+          beep();
+          showError(rs);
+        }
+      },
+      error:function(rs) {
+        click = 0;
+        beep();
+        showError(rs);
+      }
+    })
+  }
+}
 
 
 function getDelete(code){
@@ -33,170 +168,42 @@ function getDelete(code){
 		confirmButtonText: 'ใช่, ฉันต้องการลบ',
 		cancelButtonText: 'ยกเลิก',
 		closeOnConfirm: false
-  },function(){
-    $.ajax({
-      url: HOME + '/delete/' + code,
-      type:'GET',
-      cache:false,
-      success:function(rs){
-        if(rs === 'success'){
-          swal({
-            title:'Deleted',
-            text:'ลบคลัง '+code+' เรียบร้อยแล้ว',
-            type:'success',
-            timer:1000
-          });
-          $('#row-'+code).remove();
-          reIndex();
-        }else{
-          swal({
-            title:'Error!',
-            text:rs,
-            type:'error'
-          });
-        }
-      }
-    })
+  },function() {
+    setTimeout(() => {
+      $.ajax({
+        url: HOME + 'delete',
+        type:'POST',
+        cache:false,
+        data:{
+          'code' : code
+        },
+        success:function(rs) {
+          if(rs.trim() === 'success') {
+            swal({
+              title:'Deleted',
+              text:'ลบคลัง '+code+' เรียบร้อยแล้ว',
+              type:'success',
+              timer:1000
+            });
 
+            $('#row-'+code).remove();
+
+            reIndex();
+          }
+          else {
+            beep();
+            showError(rs);
+          }
+        },
+        error:function(rs) {
+          beep();
+          showError(rs);
+        }
+      })
+    }, 100);
   })
 }
 
-function toggleConsignment(option)
-{
-  $('#is_consignment').val(option);
-  if(option == 1){
-    $('#btn-cm-yes').addClass('btn-success');
-    $('#btn-cm-no').removeClass('btn-danger');
-  }
-  else
-  {
-    $('#btn-cm-yes').removeClass('btn-success');
-    $('#btn-cm-no').addClass('btn-danger');
-  }
-}
-
-
-function toggleSell(option)
-{
-  $('#sell').val(option);
-  if(option == 1){
-    $('#btn-sell-yes').addClass('btn-success');
-    $('#btn-sell-no').removeClass('btn-danger');
-  }
-  else
-  {
-    $('#btn-sell-yes').removeClass('btn-success');
-    $('#btn-sell-no').addClass('btn-danger');
-  }
-}
-
-
-function togglePrepare(option)
-{
-  $('#prepare').val(option);
-  if(option == 1){
-    $('#btn-prepare-yes').addClass('btn-success');
-    $('#btn-prepare-no').removeClass('btn-danger');
-  }
-  else
-  {
-    $('#btn-prepare-yes').removeClass('btn-success');
-    $('#btn-prepare-no').addClass('btn-danger');
-  }
-}
-
-
-function toggleLend(option)
-{
-  $('#lend').val(option);
-  if(option == 1){
-    $('#btn-lend-yes').addClass('btn-success');
-    $('#btn-lend-no').removeClass('btn-danger');
-  }
-  else
-  {
-    $('#btn-lend-yes').removeClass('btn-success');
-    $('#btn-lend-no').addClass('btn-danger');
-  }
-}
-
-function toggleAuz(option)
-{
-  $('#auz').val(option);
-  if(option == 1){
-    $('#btn-auz-yes').addClass('btn-success');
-    $('#btn-auz-no').removeClass('btn-danger');
-  }
-  else
-  {
-    $('#btn-auz-yes').removeClass('btn-success');
-    $('#btn-auz-no').addClass('btn-danger');
-  }
-}
-
-
-function toggleIsPos(option)
-{
-  $('#is_pos').val(option);
-
-  if(option == 1) {
-    $('#btn-pos-yes').addClass('btn-success');
-    $('#btn-pos-no').removeClass('btn-primary');
-  }
-
-  if(option == 0) {
-    $('#btn-pos-no').addClass('btn-primary');
-    $('#btn-pos-yes').removeClass('btn-success');
-  }
-}
-
-function toggleActive(option)
-{
-  $('#active').val(option);
-  if(option == 1){
-    $('#btn-active-yes').addClass('btn-success');
-    $('#btn-active-no').removeClass('btn-danger');
-  }
-  else
-  {
-    $('#btn-active-yes').removeClass('btn-success');
-    $('#btn-active-no').addClass('btn-danger');
-  }
-}
-
-
-function syncData(){
-  load_in();
-  $.get(HOME +'/syncData', function(){
-    load_out();
-    swal({
-      title:'Completed',
-      type:'success',
-      timer:1000
-    });
-    setTimeout(function(){
-      goBack();
-    }, 1500);
-  });
-}
-
-
-function syncAllData() {
-  load_in();
-
-  $.get(HOME + '/syncAllData', function() {
-    load_out();
-    swal({
-      title:'Completed',
-      type:'success',
-      timer:1000
-    });
-
-    setTimeout(function() {
-      goBack();
-    }, 1500);
-  });
-}
 
 function exportFilter(){
   let code = $('#code').val();
@@ -209,7 +216,7 @@ function exportFilter(){
   let auz = $('#auz').val();
   let is_pos = $('#is_pos').val();
 
-  $('#export-code').val(code);  
+  $('#export-code').val(code);
   $('#export-role').val(role);
   $('#export-is-consignment').val(is_consignment);
   $('#export-sell').val(sell);

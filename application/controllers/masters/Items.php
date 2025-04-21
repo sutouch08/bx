@@ -49,55 +49,77 @@ class Items extends PS_Controller
   public function index()
   {
     $filter = array(
-      'code'      => get_filter('code', 'item_code', ''),
-      'name'      => get_filter('name', 'item_name', ''),
-      'barcode'   => get_filter('barcode', 'item_barcode', ''),
-      'color'     => get_filter('color', 'color' ,''),
-      'size'      => get_filter('size', 'size', ''),
-      'group'     => get_filter('group', 'group', 'all'),
+      'code' => get_filter('code', 'item_code', ''),
+      'name' => get_filter('name', 'item_name', ''),
+      'barcode' => get_filter('barcode', 'item_barcode', ''),
+      'color' => get_filter('color', 'color' ,''),
+      'size' => get_filter('size', 'size', ''),
+      'group' => get_filter('group', 'group', 'all'),
       'sub_group' => get_filter('sub_group', 'sub_group', 'all'),
-      'category'  => get_filter('category', 'category', 'all'),
-      'kind'      => get_filter('kind', 'kind', 'all'),
-      'type'      => get_filter('type', 'type', 'all'),
-      'brand'     => get_filter('brand', 'brand', 'all'),
+      'category' => get_filter('category', 'category', 'all'),
+      'kind' => get_filter('kind', 'kind', 'all'),
+      'type' => get_filter('type', 'type', 'all'),
+      'brand' => get_filter('brand', 'brand', 'all'),
       'collection' => get_filter('collection', 'collection', 'all'),
-      'year'      => get_filter('year', 'year', 'all'),
+      'year' => get_filter('year', 'year', 'all'),
       'active' => get_filter('active', 'active', 'all')
     );
 
-		//--- แสดงผลกี่รายการต่อหน้า
-		$perpage = get_rows();
-		//--- หาก user กำหนดการแสดงผลมามากเกินไป จำกัดไว้แค่ 300
-		if($perpage > 300)
-		{
-			$perpage = 20;
-		}
-
-		$segment  = 4; //-- url segment
-		$rows     = $this->products_model->count_rows($filter);
-		//--- ส่งตัวแปรเข้าไป 4 ตัว base_url ,  total_row , perpage = 20, segment = 3
-		$init	    = pagination_config($this->home.'/index/', $rows, $perpage, $segment);
-		$products = $this->products_model->get_list($filter, $perpage, $this->uri->segment($segment));
-    $ds       = array();
-    if( ! empty($products))
+    if($this->input->post('search'))
     {
-      foreach($products as $rs)
-      {
-        $rs->group   = $this->product_group_model->get_name($rs->group_code);
-        $rs->main_group = $this->product_main_group_model->get_name($rs->main_group_code);
-        $rs->sub_group = $this->product_sub_group_model->get_name($rs->sub_group_code);
-        $rs->kind    = $this->product_kind_model->get_name($rs->kind_code);
-        $rs->type    = $this->product_type_model->get_name($rs->type_code);
-        $rs->category  = $this->product_category_model->get_name($rs->category_code);
-        $rs->brand   = $this->product_brand_model->get_name($rs->brand_code);
-        $rs->collection = $this->product_collection_model->get_name($rs->collection_code);
-      }
+      redirect($this->home);
+      exit();
     }
+    else
+    {
+      //--- แสดงผลกี่รายการต่อหน้า
+      $perpage = get_rows();
+      $segment = 4; //-- url segment
+      $rows = $this->products_model->count_rows($filter);
+      //--- ส่งตัวแปรเข้าไป 4 ตัว base_url ,  total_row , perpage = 20, segment = 3
+      $init = pagination_config($this->home.'/index/', $rows, $perpage, $segment);
+      $products = $this->products_model->get_list($filter, $perpage, $this->uri->segment($segment));
+      $ds = array();
 
-    $filter['data'] = $products;
+      if( ! empty($products))
+      {
+        $pg = []; //--- group
+        $pm = []; //--- main group
+        $sg = []; //--- sub group
+        $pk = []; //--- kind
+        $pt = []; //--- type
+        $pc = []; //--- category
+        $pb = []; //--- brand
+        $pl = []; //--- collection
 
-		$this->pagination->initialize($init);
-    $this->load->view('masters/product_items/items_list', $filter);
+        foreach($products as $rs)
+        {
+          $pg[$rs->group_code] = empty($pg[$rs->group_code]) ? $this->product_group_model->get_name($rs->group_code) : $pg[$rs->group_code];
+          $pm[$rs->main_group_code] = empty($pm[$rs->main_group_code]) ? $this->product_main_group_model->get_name($rs->main_group_code) : $pm[$rs->main_group_code];
+          $sg[$rs->sub_group_code] = empty($sg[$rs->sub_group_code]) ? $this->product_sub_group_model->get_name($rs->sub_group_code) : $sg[$rs->sub_group_code];
+          $pk[$rs->kind_code] = empty($pk[$rs->kind_code]) ? $this->product_kind_model->get_name($rs->kind_code) : $pk[$rs->kind_code];
+          $pt[$rs->type_code] = empty($pt[$rs->type_code]) ? $this->product_type_model->get_name($rs->type_code) : $pt[$rs->type_code];
+          $pc[$rs->category_code] = empty($pc[$rs->category_code]) ? $this->product_category_model->get_name($rs->category_code) : $pc[$rs->category_code];
+          $pb[$rs->brand_code] = empty($pb[$rs->brand_code]) ? $this->product_brand_model->get_name($rs->brand_code) : $pb[$rs->brand_code];
+          $pl[$rs->collection_code] = empty($pl[$rs->collection_code]) ? $this->product_collection_model->get_name($rs->collection_code) : $pl[$rs->collection_code];
+
+          $rs->group = $pg[$rs->group_code];
+          $rs->main_group = $pm[$rs->main_group_code];
+          $rs->sub_group = $sg[$rs->sub_group_code];
+          $rs->kind = $pk[$rs->kind_code];
+          $rs->type = $pt[$rs->type_code];
+          $rs->category = $pc[$rs->category_code];
+          $rs->brand = $pb[$rs->brand_code];
+          $rs->collection = $pl[$rs->collection_code];
+        }
+      }
+
+      $filter['data'] = $products;
+
+      $this->pagination->initialize($init);
+      $this->load->view('masters/product_items/items_list', $filter);
+
+    }
   }
 
 
@@ -288,7 +310,7 @@ class Items extends PS_Controller
                     'old_code' => $old_style
                   );
 
-                  $this->product_style_model->add($ds)
+                  $this->product_style_model->add($ds);
                 }
               }
 
@@ -372,7 +394,7 @@ class Items extends PS_Controller
           'code' => $code,
           'name' => trim($ds->name),
           'barcode' => get_null(trim($ds->barcode)),
-          'style_code' => trim($ds->style),
+          'style_code' => get_null($ds->style),
           'color_code' => get_null($ds->color_code),
           'size_code' => get_null($ds->size_code),
           'group_code' => get_null($ds->group_code),
@@ -429,6 +451,20 @@ class Items extends PS_Controller
   }
 
 
+  public function view_detail($id)
+  {
+    $item = $this->products_model->get_by_id($id);
+
+    if( ! empty($item))
+    {
+      $this->load->view('masters/product_items/items_view_detail', $item);
+    }
+    else
+    {
+      $this->page_error();
+    }
+  }
+
 
   public function duplicate($id)
   {
@@ -457,7 +493,7 @@ class Items extends PS_Controller
       $arr = array(
         'name' => trim($ds->name),
         'barcode' => get_null(trim($ds->barcode)),
-        'style_code' => trim($ds->style),
+        'style_code' => get_null($ds->style),
         'color_code' => get_null($ds->color_code),
         'size_code' => get_null($ds->size_code),
         'group_code' => get_null($ds->group_code),

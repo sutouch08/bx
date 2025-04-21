@@ -5,7 +5,7 @@ function zone_in($txt)
   $CI =& get_instance();
   $CI->load->model('masters/zone_model');
   $zone = $CI->zone_model->search($txt);
-  if(!empty($zone))
+  if( ! empty($zone))
   {
     foreach($zone as $rs)
     {

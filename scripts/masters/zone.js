@@ -1,24 +1,153 @@
-var HOME = BASE_URL + 'masters/zone';
+var click = 0;
 
-
-function goBack(){
-  window.location.href = HOME;
+function addNew() {
+  window.location.href = HOME + 'add_new';
 }
-
-function getSearch(){
-  $('#searchForm').submit();
-}
-
-
-function clearFilter(){
-  $.get(HOME +'/clear_filter', function(){
-    goBack();
-  });
-}
-
 
 function getEdit(code){
-  window.location.href = HOME + '/edit/'+code;
+  window.location.href = HOME + 'edit/'+code;
+}
+
+
+function add() {
+  if(click == 0) {
+    click = 1;
+    clearErrorByClass('e');
+    let h = {
+      'code' : $('#code').val().trim(),
+      'name' : $('#name').val().trim(),
+      'warehouse_code' : $('#warehouse').val(),
+      'active' : $('#active').is(':checked') ? 1 : 0,
+      'is_pickface' : $('#is_pickface').is(':checked') ? 1 : 0
+    }
+
+    if(h.warehouse_code == '') {
+      click = 0;
+      $('#warehouse').hasError('Please select');
+      return false;
+    }
+
+    if(h.code.length == 0) {
+      click = 0;
+      $('#code').hasError('Required');
+      return false;
+    }
+
+    if(h.name.length == 0) {
+      click = 0;
+      $('#name').hasError('Required');
+      return false;
+    }
+
+    load_in();
+
+    $.ajax({
+      url:HOME + 'add',
+      type:'POST',
+      cache:false,
+      data:{
+        'data' : JSON.stringify(h)
+      },
+      success:function(rs) {
+        click = 0;
+        load_out();
+        if(rs.trim() === 'success') {
+          swal({
+            title:'Success',
+            text:'เพิ่มข้อมูลเรียบร้อยแล้ว ต้องการเพิ่มอีกหรือไม่ ?',
+            type:'success',
+            html:true,
+            showCancelButton:true,
+            cancelButtonText:'No',
+            confirmButtonText:'Yes',
+            closeOnConfirm:true
+          }, function(isConfirm) {
+            if(isConfirm) {
+              $('#name').val('');
+              $('#code').val('').focus();
+            }
+            else {
+              goBack();
+            }
+          });
+        }
+        else {
+          beep();
+          showError(rs);
+        }
+      },
+      error:function(rs) {
+        click = 0;
+        beep();
+        showError(rs);
+      }
+    });
+  }
+}
+
+
+function update() {
+  if(click == 0) {
+    click = 1;
+    clearErrorByClass('e');
+    let h = {
+      'id' : $('#id').val(),
+      'code' : $('#code').val().trim(),
+      'name' : $('#name').val().trim(),
+      'warehouse_code' : $('#warehouse').val(),
+      'active' : $('#active').is(':checked') ? 1 : 0,
+      'is_pickface' : $('#is_pickface').is(':checked') ? 1 : 0
+    }
+
+    if(h.warehouse_code == '') {
+      click = 0;
+      $('#warehouse').hasError('Please select');
+      return false;
+    }
+
+    if(h.code.length == 0) {
+      click = 0;
+      $('#code').hasError('Required');
+      return false;
+    }
+
+    if(h.name.length == 0) {
+      click = 0;
+      $('#name').hasError('Required');
+      return false;
+    }
+
+    load_in();
+
+    $.ajax({
+      url:HOME + 'update',
+      type:'POST',
+      cache:false,
+      data:{
+        'data' : JSON.stringify(h)
+      },
+      success:function(rs) {
+        click = 0;
+        load_out();
+        if(rs.trim() === 'success') {
+          swal({
+            title:'Success',
+            type:'success',
+            timer:1000
+          });
+        }
+        else {
+          beep();
+          showError(rs);
+        }
+      },
+      error:function(rs) {
+        click = 0;
+        beep();
+        showError(rs);
+      }
+    });
+  }
 }
 
 
@@ -32,48 +161,13 @@ function toggleCheckAll() {
 }
 
 
-function togglePosApi(id) {
-  let is_api = $('#is-api-'+id).val();
-
-  is_api = is_api == '1' ? '0' : '1';
-
-  $.ajax({
-    url:HOME + '/update_pos_api/',
-    type:'POST',
-    cache:false,
-    data:{
-      'id' : id,
-      'is_api' : is_api
-    },
-    success:function(rs) {
-      if(rs == 'success') {
-        $('#is-api-'+id).val(is_api);
-        if(is_api == '1') {
-          $('#pos-api-label-'+id).text('Yes');
-        }
-        else {
-          $('#pos-api-label-'+id).html('No');
-        }
-      }
-      else {
-        swal({
-          title:'Failed !',
-          text:rs,
-          type:'error'
-        })
-      }
-    }
-  })
-}
-
-
 function togglePickface(id) {
   let is_pickface = $('#is-pickface-'+id).val();
 
   is_pickface = is_pickface == '1' ? '0' : '1';
 
   $.ajax({
-    url:HOME + '/update_pickface/',
+    url:HOME + 'update_pickface/',
     type:'POST',
     cache:false,
     data:{
@@ -102,48 +196,6 @@ function togglePickface(id) {
 }
 
 
-function saveUpdate() {
-  let code = $('#zone_code').val();
-  let user_id = $('#user_id').val();
-  let pos_api = $('#pos-api').val();
-  let is_pickface = $('#is-pickface').val();
-
-  $.ajax({
-    url:HOME + '/update',
-    type:'POST',
-    cache:false,
-    data:{
-      'zone_code' : code,
-      'user_id' : user_id,
-      'pos_api' : pos_api,
-      'is_pickface' : is_pickface
-    },
-    success:function(rs) {
-      if(rs == 'success') {
-        swal({
-          title:'Success',
-          type:'success',
-          timer:1000
-        });
-
-        $('#user_id').attr('disabled', 'disabled');
-        $('#pos-api').attr('disabled', 'disabled');
-        $('#is-pickface').attr('disabled', 'disabled');
-        $('#btn-u-update').addClass('hide');
-        $('#btn-u-edit').removeClass('hide');
-      }
-      else {
-        swal({
-          title:'Error!',
-          text:rs,
-          type:'error'
-        })
-      }
-    }
-  })
-}
-
-
 function addEmployee() {
   let code = $('#zone_code').val();
   let empID = $('#empID').val();
@@ -161,7 +213,7 @@ function addEmployee() {
   load_in();
 
   $.ajax({
-    url:HOME + '/add_employee',
+    url:HOME + 'add_employee',
     type:'POST',
     cache:false,
     data:{
@@ -236,7 +288,7 @@ function addCustomer(){
   load_in();
 
   $.ajax({
-    url:HOME + '/add_customer',
+    url:HOME + 'add_customer',
     type:'POST',
     cache:false,
     data:{
@@ -280,7 +332,7 @@ function getDelete(code){
 		closeOnConfirm: false
   },function(){
     $.ajax({
-      url: HOME + '/delete/' + code,
+      url: HOME + 'delete/' + code,
       type:'GET',
       cache:false,
       success:function(rs){
@@ -319,7 +371,7 @@ function deleteCustomer(id,code){
 		closeOnConfirm: false
   },function(){
     $.ajax({
-      url: HOME + '/delete_customer/' + id,
+      url: HOME + 'delete_customer/' + id,
       type:'GET',
       cache:false,
       success:function(rs){
@@ -359,7 +411,7 @@ function deleteEmployee(id,name){
 		closeOnConfirm: false
   },function(){
     $.ajax({
-      url: HOME + '/delete_employee/' + id,
+      url: HOME + 'delete_employee/' + id,
       type:'GET',
       cache:false,
       success:function(rs){
@@ -384,22 +436,6 @@ function deleteEmployee(id,name){
     })
 
   })
-}
-
-
-function syncData(){
-  load_in();
-  $.get(HOME +'/syncData', function(){
-    load_out();
-    swal({
-      title:'Completed',
-      type:'success',
-      timer:1000
-    });
-    setTimeout(function(){
-      goBack();
-    }, 1500);
-  });
 }
 
 
@@ -446,7 +482,7 @@ function generateQrcode() {
       var mapForm = document.createElement('form');
       mapForm.target = "Map";
       mapForm.method = "POST";
-      mapForm.action = HOME + "/generate_qrcode";
+      mapForm.action = HOME + "generate_qrcode";
 
       var mapInput = document.createElement("input");
       mapInput.type = "hidden";

@@ -1,6 +1,8 @@
 <?php
 class Zone_model extends CI_Model
 {
+  private  $tb = "zone";
+
   public function __construct()
   {
     parent::__construct();
@@ -9,9 +11,9 @@ class Zone_model extends CI_Model
   //--- add new zone (use with sync only)
   public function add(array $ds = array())
   {
-    if(!empty($ds))
+    if( ! empty($ds))
     {
-      return $this->db->insert('zone', $ds);
+      return $this->db->insert($this->tb, $ds);
     }
 
     return FALSE;
@@ -21,9 +23,9 @@ class Zone_model extends CI_Model
   //--- update zone with sync only
   public function update($id, $ds = array())
   {
-    if(!empty($ds))
+    if( ! empty($ds))
     {
-      return $this->db->where('id', $id)->update('zone', $ds);
+      return $this->db->where('id', $id)->update($this->tb, $ds);
     }
 
     return FALSE;
@@ -33,7 +35,7 @@ class Zone_model extends CI_Model
   //--- add new customer to zone
   public function add_customer(array $ds = array())
   {
-    if(!empty($ds))
+    if( ! empty($ds))
     {
       return $this->db->insert('zone_customer', $ds);
     }
@@ -45,7 +47,7 @@ class Zone_model extends CI_Model
   //--- add new customer to zone
   public function add_employee(array $ds = array())
   {
-    if(!empty($ds))
+    if( ! empty($ds))
     {
       return $this->db->insert('zone_employee', $ds);
     }
@@ -68,86 +70,59 @@ class Zone_model extends CI_Model
   }
 
 
-  //---- delete zone  must use only mistake on sap and delete zone in SAP already
   public function delete($code)
   {
-    return $this->db->where('code', $code)->delete('zone');
+    return $this->db->where('code', $code)->delete($this->tb);
   }
 
 
-  //--- check zone exists or not
   public function is_exists($code)
   {
-    if($this->db->where('code', $code)->count_all_results('zone') > 0)
-    {
-      return TRUE;
-    }
+    $count = $this->db->where('code', $code)->count_all_results($this->tb);
 
-    return FALSE;
+    return $count > 0 ? TRUE : FALSE;
   }
 
 
-  //--- check zone exists by id
-  public function is_exists_id($id)
+  public function is_exists_name($name, $code = NULL)
   {
-    if($this->db->where('id', $id)->count_all_results('zone') > 0)
+    if( ! empty($code))
     {
-      return TRUE;
+      $this->db->where('code !=', $code);
     }
 
-    return FALSE;
+    $count = $this->db->where('name', $name)->count_all_results($this->tb);
+
+    return $count > 0 ? TRUE : FALSE;
   }
 
 
   //--- check customer exists in zone or not
   public function is_exists_customer($zone_code, $customer_code)
   {
-    $rs = $this->db
+    $count = $this->db
     ->where('zone_code', $zone_code)
     ->where('customer_code', $customer_code)
     ->count_all_results('zone_customer');
 
-    if($rs > 0)
-    {
-      return TRUE;
-    }
-
-    return FALSE;
+    return $count > 0 ? TRUE : FALSE;
   }
 
 
-  //--- check customer exists in zone or not
   public function is_exists_employee($zone_code, $empID)
   {
-    $rs = $this->db
+    $count = $this->db
     ->where('zone_code', $zone_code)
     ->where('empID', $empID)
     ->count_all_results('zone_employee');
 
-    if($rs > 0)
-    {
-      return TRUE;
-    }
-
-    return FALSE;
-  }
-
-
-  public function is_sap_exists($code)
-  {
-    if($this->ms->where('BinCode', $code)->count_all_results('OBIN') > 0)
-    {
-      return TRUE;
-    }
-
-    return FALSE;
+    return $count > 0 ? TRUE : FALSE;
   }
 
 
   public function count_rows(array $ds = array())
   {
-
-    if(!empty($ds['customer']))
+    if( ! empty($ds['customer']))
     {
       return $this->count_rows_customer($ds);
     }
@@ -156,7 +131,7 @@ class Zone_model extends CI_Model
     ->from('zone AS z')
     ->join('user AS u', 'z.user_id = u.id', 'left');
 
-    if(!empty($ds['code']))
+    if( ! empty($ds['code']))
     {
       $this->db
       ->group_start()
@@ -165,7 +140,7 @@ class Zone_model extends CI_Model
       ->group_end();
     }
 
-    if(!empty($ds['uname']))
+    if( ! empty($ds['uname']))
     {
       $this->db
       ->group_start()
@@ -174,7 +149,7 @@ class Zone_model extends CI_Model
       ->group_end();
     }
 
-    if(!empty($ds['warehouse']))
+    if( ! empty($ds['warehouse']))
     {
       $this->db->where('z.warehouse_code', $ds['warehouse']);
     }
@@ -203,7 +178,7 @@ class Zone_model extends CI_Model
     ->like('customers.code', $ds['customer'])
     ->or_like('customers.name', $ds['customer']);
 
-    if(!empty($ds['code']))
+    if( ! empty($ds['code']))
     {
       $this->db
       ->group_start()
@@ -212,7 +187,7 @@ class Zone_model extends CI_Model
       ->group_end();
     }
 
-    if(!empty($ds['uname']))
+    if( ! empty($ds['uname']))
     {
       $this->db
       ->group_start()
@@ -221,7 +196,7 @@ class Zone_model extends CI_Model
       ->group_end();
     }
 
-    if(!empty($ds['warehouse']))
+    if( ! empty($ds['warehouse']))
     {
       $this->db->where('zone.warehouse_code', $ds['warehouse']);
     }
@@ -246,12 +221,12 @@ class Zone_model extends CI_Model
   }
 
 
-  public function get_list(array $ds = array(), $perpage = NULL, $offset = NULL)
+  public function get_list(array $ds = array(), $perpage = 20, $offset = 0)
   {
     //--- if search for customer
     if(! empty($ds['customer']))
     {
-      return $this->get_list_customer($ds);
+      return $this->get_list_customer($ds, $perpage, $offset);
     }
 
     $this->db
@@ -262,7 +237,7 @@ class Zone_model extends CI_Model
     ->join('warehouse', 'warehouse.code = zone.warehouse_code', 'left')
     ->join('user', 'zone.user_id = user.id', 'left');
 
-    if(!empty($ds['code']))
+    if( ! empty($ds['code']))
     {
       $this->db
       ->group_start()
@@ -271,7 +246,7 @@ class Zone_model extends CI_Model
       ->group_end();
     }
 
-    if(!empty($ds['uname']))
+    if( ! empty($ds['uname']))
     {
       $this->db
       ->group_start()
@@ -280,7 +255,7 @@ class Zone_model extends CI_Model
       ->group_end();
     }
 
-    if(!empty($ds['warehouse']))
+    if( ! empty($ds['warehouse']))
     {
       $this->db->where('zone.warehouse_code', $ds['warehouse']);
     }
@@ -303,20 +278,14 @@ class Zone_model extends CI_Model
     $this->db->order_by('zone.date_upd', 'DESC');
     $this->db->order_by('zone.code', 'ASC');
 
-    if(!empty($perpage))
-    {
-      $offset = $offset === NULL ? 0 : $offset;
-      $this->db->limit($perpage, $offset);
-    }
-
-    $rs = $this->db->get();
+    $rs = $this->db->limit($perpage, $offset)->get();
 
     if($rs->num_rows() > 0)
     {
       return $rs->result();
     }
 
-    return FALSE;
+    return NULL;
   }
 
 
@@ -341,7 +310,7 @@ class Zone_model extends CI_Model
       ->group_end();
     }
 
-    if(!empty($ds['code']))
+    if( ! empty($ds['code']))
     {
       $this->db
       ->group_start()
@@ -350,7 +319,7 @@ class Zone_model extends CI_Model
       ->group_end();
     }
 
-    if(!empty($ds['uname']))
+    if( ! empty($ds['uname']))
     {
       $this->db
       ->group_start()
@@ -359,7 +328,7 @@ class Zone_model extends CI_Model
       ->group_end();
     }
 
-    if(!empty($ds['warehouse']))
+    if( ! empty($ds['warehouse']))
     {
       $this->db->where('zone.warehouse_code', $ds['warehouse']);
     }
@@ -371,7 +340,7 @@ class Zone_model extends CI_Model
 
     $this->db->group_by('zone.code');
 
-    if(!empty($perpage))
+    if( ! empty($perpage))
     {
       $offset = $offset === NULL ? 0 : $offset;
       $this->db->limit($perpage, $offset);
@@ -404,7 +373,7 @@ class Zone_model extends CI_Model
       return $rs->result();
     }
 
-    return FALSE;
+    return NULL;
   }
 
 
@@ -418,14 +387,14 @@ class Zone_model extends CI_Model
       return $rs->result();
     }
 
-    return FALSE;
+    return NULL;
   }
 
 
   public function get($code)
   {
     $rs = $this->db
-    ->select('zone.id, zone.code, zone.name, zone.warehouse_code, zone.user_id, zone.is_pos_api, zone.is_pickface')
+    ->select('zone.id, zone.code, zone.name, zone.warehouse_code, zone.active, zone.user_id, zone.is_pos_api, zone.is_pickface')
     ->select('warehouse.name AS warehouse_name, warehouse.role, warehouse_role.name AS role_name, warehouse.is_consignment')
     ->select('user.uname, user.name AS display_name')
     ->from('zone')
@@ -446,7 +415,7 @@ class Zone_model extends CI_Model
 
   public function get_warehouse_code($zone_code)
   {
-    $rs = $this->db->select('warehouse_code')->where('code', $zone_code)->get('zone');
+    $rs = $this->db->select('warehouse_code')->where('code', $zone_code)->get($this->tb);
 
     if($rs->num_rows() == 1)
     {
@@ -459,7 +428,7 @@ class Zone_model extends CI_Model
 
   public function get_name($code)
   {
-    $rs = $this->db->select('name')->where('code', $code)->get('zone');
+    $rs = $this->db->select('name')->where('code', $code)->get($this->tb);
     if($rs->num_rows() === 1)
     {
       return $rs->row()->name;
@@ -477,14 +446,14 @@ class Zone_model extends CI_Model
     ->where('code', $code)
     ->or_where('old_code', $code)
     ->group_end()
-    ->get('zone');
+    ->get($this->tb);
 
     if($rs->num_rows() === 1)
     {
       return $rs->row();
     }
 
-    return FALSE;
+    return NULL;
   }
 
 
@@ -501,7 +470,7 @@ class Zone_model extends CI_Model
     ->where('code', $code)
     ->or_where('old_code', $code)
     ->group_end()
-    ->get('zone');
+    ->get($this->tb);
 
     if($rs->num_rows() === 1)
     {
@@ -515,7 +484,7 @@ class Zone_model extends CI_Model
   public function search($txt, $warehouse_code = NULL)
   {
     $limit = 50;
-    if(!empty($warehouse_code))
+    if( ! empty($warehouse_code))
     {
       $this->db->where('warehouse_code', $warehouse_code);
     }
@@ -528,34 +497,7 @@ class Zone_model extends CI_Model
     }
 
     $this->db->order_by('code', 'ASC');
-    $rs = $this->db->limit($limit)->get('zone');
-
-    if($rs->num_rows() > 0)
-    {
-      return $rs->result();
-    }
-
-    return FALSE;
-  }
-
-
-  public function get_last_sync_date()
-  {
-    $rs = $this->db->select_max('last_sync')->get('zone');
-    if($rs->num_rows() === 1)
-    {
-      return $rs->row()->last_sync === NULL ? date('2019-01-01 00:00:00') : $rs->row()->last_sync;
-    }
-
-    return date('2019-01-01 00:00:00');
-  }
-
-
-  public function get_new_data($last_sync)
-  {
-    $qr = "SELECT AbsEntry AS id, BinCode AS code, Descr AS name, WhsCode AS warehouse_code, SL1Code AS old_code, Disabled ";
-    $qr .= "FROM OBIN WHERE CreateDate >= '{$last_sync}' OR (UpdateDate IS NOT NULL AND UpdateDate >= '{$last_sync}')";
-    $rs = $this->ms->query($qr);
+    $rs = $this->db->limit($limit)->get($this->tb);
 
     if($rs->num_rows() > 0)
     {
@@ -563,40 +505,26 @@ class Zone_model extends CI_Model
     }
 
     return NULL;
-  }
-
-
-  public function get_all_zone()
-  {
-    $this->ms->select('AbsEntry AS id, BinCode AS code, Descr AS name, SL1Code AS old_code, WhsCode AS warehouse_code, Disabled');
-    $this->ms->select('createDate, updateDate');
-    //$this->ms->where('SysBin', 'N');
-    $rs = $this->ms->get('OBIN');
-    if($rs->num_rows() > 0)
-    {
-      return $rs->result();
-    }
-
-    return FALSE;
   }
 
 
   //--- ใช้จัดสินค้า
   public function get_zone_code($barcode)
   {
-    $rs = $this->db->select('code')->where('old_code', $barcode)->or_where('code', $barcode)->get('zone');
+    $rs = $this->db->select('code')->where('old_code', $barcode)->or_where('code', $barcode)->get($this->tb);
+
     if($rs->num_rows() === 1)
     {
       return $rs->row()->code;
     }
 
-    return FALSE;
+    return NULL;
   }
 
 
   public function get_pickface_zone()
   {
-    $rs = $this->db->where('is_pickface', 1)->where('active', 1)->get('zone');
+    $rs = $this->db->where('is_pickface', 1)->where('active', 1)->get($this->tb);
 
     if($rs->num_rows() > 0)
     {
@@ -604,6 +532,38 @@ class Zone_model extends CI_Model
     }
 
     return NULL;
+  }
+
+
+  public function has_customer($code)
+  {
+    $count = $this->db->where('zone_code', $code)->count_all_results('zone_customer');
+
+    return $count > 0 ? TRUE : FALSE;
+  }
+
+
+  public function has_employee($code)
+  {
+    $count = $this->db->where('zone_code', $code)->count_all_results('zone_employee');
+
+    return $count > 0 ? TRUE : FALSE;
+  }
+
+
+  public function has_stock($code)
+  {
+    $count = $this->db->where('zone_code', $code)->where('qty >', 0)->count_all_results('stock');
+
+    return $count > 0 ? TRUE : FALSE;
+  }
+
+
+  public function has_transection($code)
+  {
+    $count = $this->db->where('zone_code', $code)->count_all_results('stock_movement');
+
+    return $count > 0 ? TRUE : FALSE;
   }
 } //--- end class
 

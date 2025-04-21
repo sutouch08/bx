@@ -58,6 +58,75 @@ class Zone extends PS_Controller
   }
 
 
+  public function add_new()
+  {
+    if($this->pm->can_add)
+    {
+      $this->load->view('masters/zone/zone_add');
+    }
+    else
+    {
+      $this->deny_page();
+    }
+  }
+
+
+  public function add()
+  {
+    $sc = TRUE;
+
+    if($this->pm->can_add)
+    {
+      $ds = json_decode($this->input->post('data'));
+
+      if( ! empty($ds) && ! empty($ds->code) && ! empty($ds->name) && ! empty($ds->warehouse_code))
+      {
+        if($this->zone_model->is_exists($ds->code))
+        {
+          $sc = FALSE;
+          set_error('exists', $ds->code);
+        }
+
+        if($sc === TRUE && $this->zone_model->is_exists_name($ds->name))
+        {
+          $sc = FALSE;
+          set_error('exists', $ds->name);
+        }
+
+        if($sc === TRUE)
+        {
+          $arr = array(
+            'code' => $ds->code,
+            'name' => $ds->name,
+            'warehouse_code' => $ds->warehouse_code,
+            'active' => $ds->active == 0 ? 0 : 1,
+            'is_pickface' => $ds->is_pickface == 1 ? 1 : 0,
+            'user' => $this->_user->uname
+          );
+
+          if( ! $this->zone_model->add($arr))
+          {
+            $sc = FALSE;
+            set_error('insert');
+          }
+        }
+      }
+      else
+      {
+        $sc = FALSE;
+        set_error('required');
+      }
+    }
+    else
+    {
+      $sc = FALSE;
+      set_error('permission');
+    }
+
+    $this->_response($sc);
+  }
+
+
   public function generate_qrcode()
   {
     $ds = json_decode($this->input->post('data'));
@@ -95,6 +164,7 @@ class Zone extends PS_Controller
     }
   }
 
+
   public function edit($code)
   {
     if($this->pm->can_edit)
@@ -124,42 +194,48 @@ class Zone extends PS_Controller
   {
     $sc = TRUE;
 
-    if($this->input->post('zone_code'))
+    if($this->pm->can_edit)
     {
-      $zone_code = $this->input->post('zone_code');
-      $user_id = get_null($this->input->post('user_id'));
-      $pos_api = $this->input->post('pos_api') == 1 ? 1 : 0;
-      $pickface = $this->input->post('is_pickface') == 1 ? 1 : 0;
+      $ds = json_decode($this->input->post('data'));
 
-      $zone = $this->zone_model->get($zone_code);
-
-      if( ! empty($zone))
+      if( ! empty($ds) && ! empty($ds->id) && ! empty($ds->name) && ! empty($ds->warehouse_code))
       {
-        $arr = array(
-          'user_id' => $user_id,
-          'is_pos_api' => $pos_api,
-          'is_pickface' => $pickface
-        );
-
-        if( ! $this->zone_model->update($zone->id, $arr))
+        if($this->zone_model->is_exists_name($ds->name, $ds->code))
         {
           $sc = FALSE;
-          $this->error = "Update data failed";
+          set_error('exists', $ds->code);
+        }
+
+        if($sc === TRUE)
+        {
+          $arr = array(
+            'name' => $ds->name,
+            'warehouse_code' => $ds->warehouse_code,
+            'active' => $ds->active == 0 ? 0 : 1,
+            'is_pickface' => $ds->is_pickface == 1 ? 1 : 0,
+            'update_user' => $this->_user->uname
+          );
+
+          if( ! $this->zone_model->update($ds->id, $arr))
+          {
+            $sc = FALSE;
+            set_error('update');
+          }
         }
       }
       else
       {
         $sc = FALSE;
-        $this->error = "Invalid Zone Code";
+        set_error('required');
       }
     }
     else
     {
       $sc = FALSE;
-      $this->error = "Missing required parameter : zone_code";
+      set_error('permission');
     }
 
-    echo $sc === TRUE ? 'success' : $this->error;
+    $this->_response($sc);
   }
 
 
@@ -202,20 +278,31 @@ class Zone extends PS_Controller
   public function delete($code)
   {
     $sc = TRUE;
+
     if($this->pm->can_delete)
     {
-      if($this->zone_model->count_customer($code) > 0)
+      if($sc === TRUE && $this->zone_model->has_stock($code))
+      {
+        $sc = FALSE;
+        $this->error = "ไม่สามารถลบโซนได้เนื่องจากมีสต็อกคงเหลือในโซน";
+      }
+
+      if($sc === TRUE && $this->zone_model->has_customer($code))
       {
         $sc = FALSE;
         $this->error = "ไม่สามารถลบโซนได้เนื่องจากมีการเชื่อมโยงลูกค้าไว้";
       }
-      else
+
+      if($sc === TRUE && $this->zone_model->has_employee($code))
       {
-        if($this->zone_model->is_sap_exists($code))
-        {
-          $sc = FALSE;
-          $this->error = "กรุณาลบโซนใน SAP ก่อน";
-        }
+        $sc = FALSE;
+        $this->error = "ไม่สามารถลบโซนได้เนื่องจากมีการเชื่อมโยงพนักงานไว้";
+      }
+
+      if($sc === TRUE && $this->zone_model->has_transection($code))
+      {
+        $sc = FALSE;
+        set_error('transection');
       }
 
       if($sc === TRUE)
@@ -223,21 +310,18 @@ class Zone extends PS_Controller
         if( ! $this->zone_model->delete($code))
         {
           $sc = FALSE;
-          $this->error = "ลบโซนไม่สำเร็จ";
+          set_error('delete');
         }
       }
-
     }
     else
     {
       $sc = FALSE;
-      $this->error = "คุณไมมีสิทธิ์ลบโซน";
+      set_error('permission');
     }
 
-    echo $sc === TRUE ? 'success' : $this->error;
+    $this->_response($sc);
   }
-
-
 
 
   public function add_customer()
@@ -296,7 +380,6 @@ class Zone extends PS_Controller
   }
 
 
-
   public function delete_customer($id)
   {
     $sc = TRUE;
@@ -317,7 +400,6 @@ class Zone extends PS_Controller
 
     echo $sc === TRUE ? 'success' : $this->error;
   }
-
 
 
   public function add_employee()
@@ -388,7 +470,6 @@ class Zone extends PS_Controller
   }
 
 
-
   public function delete_employee($id)
   {
     $sc = TRUE;
@@ -410,52 +491,6 @@ class Zone extends PS_Controller
     echo $sc === TRUE ? 'success' : $this->error;
   }
 
-
-  public function syncData()
-  {
-    ini_set('memory_limit','512M'); // This also needs to be increased in some cases. Can be changed to a higher value as per need)
-    ini_set('sqlsrv.ClientBufferMaxKBSize','524288'); // Setting to 512M
-    ini_set('pdo_sqlsrv.client_buffer_max_kb_size','524288'); // Setting to 512M - for pdo_sqlsrv
-
-    $last_sync = $this->zone_model->get_last_sync_date();
-    $newData = $this->zone_model->get_new_data($last_sync);
-
-    if( ! empty($newData))
-    {
-      foreach($newData as $rs)
-      {
-        if($this->zone_model->is_exists_id($rs->id))
-        {
-          $ds = array(
-            'code' => $rs->code,
-            'name' => is_null($rs->name) ? '' : $rs->name,
-						'warehouse_code' => $rs->warehouse_code,
-            'old_code' => $rs->old_code,
-            'active' => $rs->Disabled == 'N' ? 1 : 0,
-            'last_sync' => date('Y-m-d H:i:s'),
-          );
-
-          $this->zone_model->update($rs->id, $ds);
-        }
-        else
-        {
-          $ds = array(
-            'id' => $rs->id,
-            'code' => $rs->code,
-            'name' => is_null($rs->name) ? '' : $rs->name,
-            'warehouse_code' => $rs->warehouse_code,
-            'active' => $rs->Disabled == 'N' ? 1 : 0,
-            'last_sync' => date('Y-m-d H:i:s'),
-            'old_code' => $rs->old_code
-          );
-
-          $this->zone_model->add($ds);
-        }
-      }
-    }
-
-    echo 'done';
-  }
 
   //---- for prepare product
   public function get_zone()
@@ -501,7 +536,6 @@ class Zone extends PS_Controller
 
     echo $sc === TRUE ? $code : 'not_exists';
   }
-
 
 
   public function get_warehouse_zone()
