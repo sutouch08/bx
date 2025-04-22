@@ -79,7 +79,7 @@ function unsave(){
 
 var click = 0;
 
-function save() {
+function save(save_type) {
 	if(click == 0) {
 		click = 1;
 		clearErrorByClass('input-qty');
@@ -144,7 +144,7 @@ function save() {
 		load_in();
 
 		$.ajax({
-			url:HOME + 'add_details/' + code,
+			url:HOME + 'add_details/' + code +'/'+save_type,
 			type:'POST',
 			cache:false,
 			data: {
@@ -173,6 +173,175 @@ function save() {
 						beep();
 						showError(ds.message);
 					}
+				}
+				else {
+					beep();
+					showError(rs);
+				}
+			},
+			error:function(rs) {
+				click = 0;
+				beep();
+				showError(rs);
+			}
+		})
+	}
+}
+
+
+function saveAsDraft() {
+	let error = 0;
+	clearErrorByClass('input-qty');
+
+	swal({
+		title:'บันทึกชั่วคราว',
+		text:"การบันทึกชั่วคราว จะบันทึกเฉพาะข้อมูลการรับไว้เท่านั้น ยังไม่มีผลกับสต็อก <br/>ต้องการดำเนินการต่อหรือไม่ ?",
+		type:'info',
+		html:true,
+		showCancelButton:true,
+		cancelButtonText:'No',
+		confirmButtonText:'Yes',
+		closeOnConfirm:true
+	}, function() {
+		setTimeout(() => {
+			let error = 0;
+			let h = {
+				'code' : $('#code').val().trim(),
+				'rows' : []
+			}
+
+			$('.input-qty').each(function() {
+				let el = $(this);
+				let qty = parseDefault(parseFloat(el.data('sold')), 0);
+				let receive_qty = parseDefault(parseFloat(el.val()), 0);
+
+				if(qty < receive_qty || receive_qty < 0) {
+					el.hasError();
+					error++;
+				}
+				else {
+					h.rows.push({
+						'id' : el.data('id'),
+						'receive_qty' : receive_qty
+					});
+				}
+			});
+
+			if(error > 0) {
+				beep();
+				swal("พบรายการที่ไม่ถูกต้อง");
+				return false;
+			}
+
+			if(h.rows.length == 0) {
+				beep();
+				swal("ไม่พบรายการรับเข้า");
+				return false;
+			}
+
+			load_in();
+
+			$.ajax({
+				url:HOME + 'save_as_draft',
+				type:'POST',
+				cache:false,
+				data:{
+					data:JSON.stringify(h)
+				},
+				success:function(rs) {
+					load_out();
+
+					if(rs.trim() === 'success') {
+						swal({
+							title:'Success',
+							type:'success',
+							timer:1000
+						});
+
+						setTimeout(() => {
+							viewDetail(h.code);
+						}, 1200)
+					}
+					else {
+						beep();
+						showError(rs);
+					}
+				},
+				error:function(rs) {
+					beep();
+					showError(rs);
+				}
+			})
+		}, 100)
+	})
+}
+
+
+function saveReturn() {
+	if(click == 0) {
+		click = 1;
+		let error = 0;
+		clearErrorByClass('input-qty');
+
+		let h = {
+			'code' : $('#code').val().trim(),
+			'rows' : []
+		}
+
+		$('.input-qty').each(function() {
+			let el = $(this);
+			let qty = parseDefault(parseFloat(el.data('sold')), 0);
+			let receive_qty = parseDefault(parseFloat(el.val()), 0);
+
+			if(receive_qty <= 0 || receive_qty != qty) {
+				el.hasError();
+				error++;
+			}
+			else {
+				h.rows.push({
+					'id' : el.data('id'),
+					'product_code' : el.data('pdcode'),
+					'receive_qty' : receive_qty
+				});
+			}
+		});
+
+		if(error > 0) {
+			click = 0;
+			beep();
+			swal("พบรายการที่ไม่ถูกต้อง");
+			return false;
+		}
+
+		if(h.rows.length == 0) {
+			click = 0;
+			beep();
+			swal("ไม่พบรายการรับเข้า");
+			return false;
+		}
+		
+		load_in();
+
+		$.ajax({
+			url:HOME + 'save_return',
+			type:'POST',
+			cache:false,
+			data:{
+				data:JSON.stringify(h)
+			},
+			success:function(rs) {
+				click = 0;
+				load_out();
+				if(rs.trim() === 'success') {
+					swal({
+						title:'Success',
+						type:'success',
+						timer:1000
+					});
+
+					setTimeout(() => {
+						viewDetail(h.code);
+					}, 1200)
 				}
 				else {
 					beep();
@@ -383,6 +552,7 @@ function updateHeader(){
 $('#date-add').datepicker({
 	dateFormat:'dd-mm-yy'
 });
+
 
 $('#shipped-date').datepicker({
 	dateFormat:'dd-mm-yy'
@@ -616,7 +786,8 @@ function recalTotal() {
 
 
 function removeRow(no, id){
-	if(id != '' && id != '0' && id != 0){
+	if(id != '' && id != '0' && id != 0) {
+
 		$.ajax({
 			url:HOME + 'delete_detail/'+id,
 			type:'GET',

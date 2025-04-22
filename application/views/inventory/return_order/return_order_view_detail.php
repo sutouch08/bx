@@ -12,10 +12,10 @@
 		<?php if($doc->status == 1 && $doc->is_approve == 0 && $this->pm->can_edit) : ?>
 			<button type="button" class="btn btn-xs btn-danger top-btn" onclick="unsave()">ยกเลิกการบันทึก</button>
 		<?php endif; ?>
-		<?php if($doc->status == 1 && $doc->is_approve == 0 && $this->pm->can_approve) : ?>
+		<?php if(($doc->status == 1 OR $doc->status == 3) && $doc->is_approve == 0 && $this->pm->can_approve) : ?>
 			<button type="button" class="btn btn-xs btn-primary top-btn btn-100" onclick="approve()"><i class="fa fa-check"></i> อนุมัติ</button>
 		<?php endif; ?>
-		<?php if(($doc->status == 1 OR $doc->status == 4) && $doc->is_approve == 1 && $doc->is_pos_api == 0 && $this->pm->can_approve) : ?>
+		<?php if(($doc->status == 1 OR $doc->status == 3) && $doc->is_approve == 1 && $doc->is_pos_api == 0 && $this->pm->can_approve) : ?>
 			<button type="button" class="btn btn-xs btn-danger top-btn" onclick="unapprove()"><i class="fa fa-refresh"></i> ยกเลิกอนุมัติ</button>
 		<?php endif; ?>
 		<button type="button" class="btn btn-xs btn-info top-btn" onclick="printReturn()"><i class="fa fa-print"></i> พิมพ์</button>
@@ -116,7 +116,7 @@ else
 		$this->load->view('cancle_watermark');
 	}
 
-	if($doc->status == 3)
+	if($doc->status == 3 && $doc->is_approve == 1)
 	{
 		$this->load->view('on_process_watermark');
 	}
@@ -161,7 +161,7 @@ else
 				<tr class="font-size-11" style="<?php echo $hilight; ?>">
 					<td class="middle text-center no"><?php echo $no; ?></td>
 					<td class="middle"><?php echo $rs->product_code; ?></td>
-					<td class="middle"><input type="text" class="form-control input-sm text-label" style="font-size:11px !important;" value="<?php echo $rs->product_name; ?>" readonly/></td>
+					<td class="middle"><?php echo $rs->product_name; ?></td>
 					<td class="middle text-center"><?php echo $doc->is_pos_api ? $rs->bill_code : $rs->invoice_code; ?></td>
 					<td class="middle text-right"><?php echo number($rs->price, 2); ?></td>
 					<td class="middle text-right"><?php echo $rs->discount_percent; ?> %</td>

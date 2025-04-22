@@ -4,13 +4,11 @@
 		<h3 class="title"><?php echo $this->title; ?></h3>
 	</div>
 	<div class="col-lg-6 col-md-6 col-sm-6 col-xs-12 padding-5 text-right">
-		<button type="button" class="btn btn-sm btn-warning" onclick="goBack()"><i class="fa fa-arrow-left"></i> กลับ</button>
+		<button type="button" class="btn btn-white btn-default" onclick="goBack()"><i class="fa fa-arrow-left"></i> กลับ</button>
 		<?php if($doc->status == 0 && ($this->pm->can_add OR $this->pm->can_edit)) : ?>
-			<button type="button" class="btn btn-sm btn-success" id="btn-save" onclick="save()"><i class="fa fa-save"></i> บันทึก</button>
-		<?php endif; ?>
-		<?php if($doc->status == 1 && $this->pm->can_approve) : ?>
-			<button type="button" class="btn btn-sm btn-primary" id="btn-approve" onclick="approve()"><i class="fa fa-save"></i> อนุมัติ</button>
-		<?php endif; ?>
+			<button type="button" class="btn btn-white btn-purple" onclick="save(3)"><i class="fa fa-save"></i> บันทึกรอรับ</button>
+			<button type="button" class="btn btn-white btn-success" onclick="save(1)"><i class="fa fa-save"></i> บันทึกรับทันที</button>
+		<?php endif; ?>		
   </div>
 </div>
 <hr />

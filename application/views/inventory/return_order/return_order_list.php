@@ -91,7 +91,7 @@
     </p>
   </div>
   <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 padding-5 table-responsive">
-    <table class="table table-striped border-1" style="min-width:1240px;">
+    <table class="table table-striped border-1" style="min-width:1260px;">
       <thead>
         <tr class="font-size-11">
           <th class="fix-width-100"></th>
@@ -120,6 +120,9 @@
           <?php endif; ?>
           <?php if(($this->pm->can_delete && $rs->status != 2 && $rs->is_pos_api == 0) OR ($rs->status != 2 && $this->_SuperAdmin)) : ?>
               <button type="button" class="btn btn-minier btn-danger" onclick="goDelete('<?php echo $rs->code; ?>')"><i class="fa fa-trash"></i></button>
+          <?php endif; ?>
+          <?php if($this->pm->can_edit && $rs->status == 3 && $rs->is_approve == 1) : ?>
+              <button type="button" class="btn btn-minier btn-purple top-btn" onclick="goProcess('<?php echo $rs->code; ?>')">รับสินค้า</button>
           <?php endif; ?>
             </td>
             <td class="middle text-center no"><?php echo $no; ?></td>

@@ -16,8 +16,7 @@ function goDelete(code){
 }
 
 
-function cancle_return(code)
-{
+function cancle_return(code){
 	let reason = $.trim($('#cancle-reason').val());
 	let force_cancel = $('#force-cancel').is(':checked') ? 1 : 0;
 
@@ -97,6 +96,10 @@ function goEdit(code){
 	window.location.href = HOME + 'edit/'+ code;
 }
 
+
+function goProcess(code) {
+	window.location.href = HOME + 'process/'+code;
+}
 
 function viewDetail(code){
 	window.location.href = HOME + 'view_detail/'+ code;

@@ -434,9 +434,10 @@ class Return_order extends PS_Controller
   }
 
 
-  public function add_details($code)
+  public function add_details($code, $save_type = 1)
   {
     $sc = TRUE;
+    $save_type = $save_type == 1 ? 1 : 3;
 
     $data = json_decode($this->input->post('data'));
 
@@ -469,7 +470,7 @@ class Return_order extends PS_Controller
                 $disc_amount = $discount == 0 ? 0 : $rs->qty * ($price * ($discount * 0.01));
                 $amount = ($rs->qty * $price) - $disc_amount;
 
-                $receive_qty = $rs->qty;
+                $receive_qty = $save_type == 1 ? $rs->qty : 0;
 
                 $arr = array(
                   'return_code' => $code,
@@ -503,7 +504,7 @@ class Return_order extends PS_Controller
 
           if($sc === TRUE)
           {
-            if( ! $this->return_order_model->set_status($code, 1))
+            if( ! $this->return_order_model->set_status($code, $save_type))
             {
               $sc = FALSE;
               $this->error = "Failed to change document status";
@@ -544,6 +545,218 @@ class Return_order extends PS_Controller
     );
 
     echo json_encode($arr);
+  }
+
+
+  public function save_as_draft()
+  {
+    $sc = TRUE;
+
+    $ds = json_decode($this->input->post('data'));
+
+    if( ! empty($ds) && ! empty($ds->code) && ! empty($ds->rows))
+    {
+      $doc = $this->return_order_model->get($ds->code);
+
+      if( ! empty($doc))
+      {
+        if($doc->status == 3)
+        {
+          $this->db->trans_begin();
+
+          if( ! empty($ds->rows))
+          {
+            foreach($ds->rows as $rs)
+            {
+              if($sc === FALSE) { break; }
+
+              $row = $this->return_order_model->get_detail($rs->id);
+
+              if( ! empty($row))
+              {
+                $price = $row->price;
+                $disc = $row->discount_percent;
+                $receive_qty = $rs->receive_qty;
+
+                $disc_amount = $disc == 0 ? 0 : $receive_qty * ($price * ($disc * 0.01));
+                $amount = ($receive_qty * $price) - $disc_amount;
+
+                $arr = array(
+                  'receive_qty' => $receive_qty,
+                  'amount' => $amount,
+                  'vat_amount' => get_vat_amount($amount)
+                );
+
+                if( ! $this->return_order_model->update_detail($rs->id, $arr))
+                {
+                  $sc = FALSE;
+                  $this->error = "Failed to update receive qty at {$row->product_code}";
+                }
+              }
+            }
+          }
+
+          if($sc === TRUE)
+          {
+            $this->db->trans_commit();
+          }
+          else
+          {
+            $this->db->trans_rollback();
+          }
+        }
+        else
+        {
+          $sc = FALSE;
+          set_error('status');
+        }
+      }
+      else
+      {
+        $sc = FALSE;
+        set_error('notfound');
+      }
+    }
+    else
+    {
+      $sc = FALSE;
+      set_error('required');
+    }
+
+    $this->_response($sc);
+  }
+
+
+  public function save_return()
+  {
+    $sc = TRUE;
+
+    $ds = json_decode($this->input->post('data'));
+
+    if( ! empty($ds) && ! empty($ds->code) && ! empty($ds->rows))
+    {
+      $doc = $this->return_order_model->get($ds->code);
+
+      if( ! empty($doc))
+      {
+        if($doc->status == 3)
+        {
+          $this->load->model('stock/stock_model');
+          $this->load->model('inventory/movement_model');
+
+          $shipped_date = getConfig('ORDER_SOLD_DATE') === 'D' ? $doc->date_add : now();
+
+          $this->db->trans_begin();
+
+          if( ! empty($ds->rows))
+          {
+            foreach($ds->rows as $rs)
+            {
+              if($sc === FALSE) { break; }
+
+              $row = $this->return_order_model->get_detail($rs->id);
+
+              if( ! empty($row))
+              {
+                $price = $row->price;
+                $disc = $row->discount_percent;
+                $receive_qty = $rs->receive_qty;
+
+                $disc_amount = $disc == 0 ? 0 : $receive_qty * ($price * ($disc * 0.01));
+                $amount = ($receive_qty * $price) - $disc_amount;
+
+                $arr = array(
+                  'receive_qty' => $receive_qty,
+                  'amount' => $amount,
+                  'vat_amount' => get_vat_amount($amount),
+                  'valid' => 1
+                );
+
+                if( ! $this->return_order_model->update_detail($rs->id, $arr))
+                {
+                  $sc = FALSE;
+                  $this->error = "Failed to update receive qty at {$row->product_code}";
+                }
+
+                if($sc === TRUE)
+                {
+                  if( ! $this->stock_model->update_stock_zone($doc->zone_code, $row->product_code, $receive_qty))
+                  {
+                    $sc = FALSE;
+                    $this->error = "เพิ่มสต็อกเข้าโซนไม่สำเร็จ";
+                  }
+                }
+
+                if($sc === TRUE)
+                {
+                  $arr = array(
+                    'reference' => $doc->code,
+                    'warehouse_code' => $doc->warehouse_code,
+                    'zone_code' => $doc->zone_code,
+                    'product_code' => $row->product_code,
+                    'move_in' => $receive_qty,
+                    'date_add' => $shipped_date
+                  );
+
+                  if( ! $this->movement_model->add($arr))
+                  {
+                    $sc = FALSE;
+                    $this->error = "บันทึก movement ไม่สำเร็จ";
+                  }
+                }
+              }
+              else
+              {
+                $sc = FALSE;
+                $this->error = "ไม่พบรายการตั้งต้น : {$rs->product_code} จำนวน {$rs->receive_qty}";
+              }
+            }
+          }
+
+          if($sc === TRUE)
+          {
+            $arr = array(
+              'status' => 1,
+              'shipped_date' => $shipped_date,
+              'is_complete' => 1,
+              'update_user' => $this->_user->uname
+            );
+
+            if( ! $this->return_order_model->update($doc->code, $arr))
+            {
+              $sc = FALSE;
+              $this->error = "เปลียนสถานะเอกสารไม่สำเร็จ";
+            }
+          }
+
+          if($sc === TRUE)
+          {
+            $this->db->trans_commit();
+          }
+          else
+          {
+            $this->db->trans_rollback();
+          }
+        }
+        else
+        {
+          $sc = FALSE;
+          set_error('status');
+        }
+      }
+      else
+      {
+        $sc = FALSE;
+        set_error('notfound');
+      }
+    }
+    else
+    {
+      $sc = FALSE;
+      set_error('required');
+    }
+
+    $this->_response($sc);
   }
 
 
@@ -678,18 +891,29 @@ class Return_order extends PS_Controller
 
 			if( ! empty($doc))
 			{
-				if($doc->status == 1 ) //--- status บันทึกแล้วเท่านั้น
+				if(($doc->status == 1 OR $doc->status == 3) && $doc->is_approve == 0) //--- status บันทึกแล้วเท่านั้น หรือ รอรับเท่านั้น
 				{
           $this->db->trans_begin();
 
           $shipped_date = getConfig('ORDER_SOLD_DATE') === 'D' ? $doc->date_add : now();
 
-          $arr = array(
-            'is_approve' => 1,
-            'approver' => $this->_user->uname,
-            'shipped_date' => $shipped_date,
-            'is_complete' => 1
-          );
+          if($doc->status == 1)
+          {
+            $arr = array(
+              'is_approve' => 1,
+              'approver' => $this->_user->uname,
+              'shipped_date' => $shipped_date,
+              'is_complete' => 1
+            );
+          }
+
+          if($doc->status == 3)
+          {
+            $arr = array(
+              'is_approve' => 1,
+              'approver' => $this->_user->uname
+            );
+          }
 
           if( ! $this->return_order_model->update($code, $arr))
           {
@@ -697,7 +921,7 @@ class Return_order extends PS_Controller
             $this->error = "Approve Faiiled";
           }
 
-					if($sc === TRUE)
+					if($sc === TRUE && $doc->status == 1)
 					{
             $details = $this->return_order_model->get_details($doc->code);
 
@@ -785,22 +1009,25 @@ class Return_order extends PS_Controller
 
       if( ! empty($doc))
       {
-        if($doc->status == 1 && $doc->is_approve == 1)
+        if(($doc->status == 1 OR $doc->status == 3) && $doc->is_approve == 1)
         {
-          $details = $this->return_order_model->get_details($code);
-
-          if( ! empty($details))
+          if($doc->status == 1)
           {
-            foreach($details as $rs)
+            $details = $this->return_order_model->get_details($code);
+
+            if( ! empty($details))
             {
-              if($sc === FALSE) { break; }
-
-              $stock = $this->stock_model->get_stock_zone($doc->zone_code, $rs->product_code);
-
-              if($stock < $rs->receive_qty)
+              foreach($details as $rs)
               {
-                $sc = FALSE;
-                $this->error = "สต็อกคงเหลือในโซนไม่เพียงพอ";
+                if($sc === FALSE) { break; }
+
+                $stock = $this->stock_model->get_stock_zone($doc->zone_code, $rs->product_code);
+
+                if($stock < $rs->receive_qty)
+                {
+                  $sc = FALSE;
+                  $this->error = "สต็อกคงเหลือในโซนไม่เพียงพอ";
+                }
               }
             }
           }
@@ -809,25 +1036,28 @@ class Return_order extends PS_Controller
           {
             $this->db->trans_begin();
 
-            if( ! empty($details))
+            if($doc->status == 1)
             {
-              foreach($details as $rs)
+              if( ! empty($details))
               {
-                if($sc === FALSE) { break; }
-
-                if( ! $this->stock_model->update_stock_zone($doc->zone_code, $rs->product_code, ($rs->receive_qty * -1)))
+                foreach($details as $rs)
                 {
-                  $sc = FALSE;
-                  $this->error = "ตัดสต็อกออกจากโซนไม่สำเร็จ";
+                  if($sc === FALSE) { break; }
+
+                  if( ! $this->stock_model->update_stock_zone($doc->zone_code, $rs->product_code, ($rs->receive_qty * -1)))
+                  {
+                    $sc = FALSE;
+                    $this->error = "ตัดสต็อกออกจากโซนไม่สำเร็จ";
+                  }
                 }
-              }
 
-              if($sc === TRUE)
-              {
-                if( ! $this->movement_model->drop_movement($doc->code))
+                if($sc === TRUE)
                 {
-                  $sc = FALSE;
-                  $this->error = "ลบ movement ไม่สำเร็จ";
+                  if( ! $this->movement_model->drop_movement($doc->code))
+                  {
+                    $sc = FALSE;
+                    $this->error = "ลบ movement ไม่สำเร็จ";
+                  }
                 }
               }
             }
@@ -1022,6 +1252,62 @@ class Return_order extends PS_Controller
       if($doc->status == 0)
       {
         $this->load->view('inventory/return_order/return_order_edit', $ds);
+      }
+      else
+      {
+        $this->load->view('inventory/return_order/return_order_view_detail', $ds);
+      }
+    }
+    else
+    {
+      $this->error_page();
+    }
+  }
+
+
+  public function process($code)
+  {
+    $this->load->helper('discount');
+
+    $doc = $this->return_order_model->get($code);
+
+    if( ! empty($doc))
+    {
+      $doc->customer_name = $this->customers_model->get_name($doc->customer_code);
+      $doc->zone_name = $this->zone_model->get_name($doc->zone_code);
+      $doc->warehouse_name = $this->warehouse_model->get_name($doc->warehouse_code);
+      $details = $this->return_order_model->get_details($code);
+      $barcode_list = array();
+
+      if( ! empty($details))
+      {
+        foreach($details as $rs)
+        {
+          $barcode = $this->products_model->get_barcode($rs->product_code);
+          $barcode = empty($barcode) ? $rs->product_code : $barcode;
+          $rs->barcode = md5($barcode);
+
+          if( empty($barcode_list[$rs->product_code]))
+          {
+            $bc = (object) array(
+              'barcode' => $rs->barcode,
+              'product_code' => $rs->product_code
+            );
+
+            $barcode_list[$rs->product_code] = $bc;
+          }
+        }
+      }
+
+      $ds = array(
+        'doc' => $doc,
+        'details' => $details,
+        'barcode_list' => $barcode_list
+      );
+
+      if($doc->status == 3)
+      {
+        $this->load->view('inventory/return_order/return_order_process', $ds);
       }
       else
       {

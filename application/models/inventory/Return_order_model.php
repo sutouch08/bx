@@ -100,6 +100,19 @@ class Return_order_model extends CI_Model
   }
 
 
+  public function get_detail($id)
+  {
+    $rs = $this->db->where('id', $id)->get($this->td);
+
+    if($rs->num_rows() === 1)
+    {
+      return $rs->row();
+    }
+
+    return NULL;
+  }
+
+
   public function get_details($code)
   {
     $rs = $this->db->where('return_code', $code)->get($this->td);
