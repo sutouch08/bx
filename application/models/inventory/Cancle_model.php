@@ -28,7 +28,7 @@ class Cancle_model extends CI_Model
     ->from('cancle')
     ->join('zone', 'cancle.zone_code = zone.code', 'left')
     ->join('orders', 'cancle.order_code = orders.code', 'left')
-    ->join('order_state', 'orders.state = order_state.state');
+    ->join('order_state', 'orders.state = order_state.state', 'left');
 
     if(!empty($ds['order_code']))
     {

@@ -1474,7 +1474,10 @@ td.one-attribute{
     padding-right : 15px !important;
   }
 
-
+  .no-border-xs {
+    border:0px !important
+  }
+  
 	.cart-modal {
 		width:100%;
 		height: 100%;

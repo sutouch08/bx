@@ -14,6 +14,7 @@ class Cancle extends PS_Controller
     parent::__construct();
     $this->home = base_url().'inventory/cancle';
     $this->load->model('inventory/cancle_model');
+    $this->load->helper('warehouse');
   }
 
 
@@ -22,42 +23,44 @@ class Cancle extends PS_Controller
     $filter = array(
       'order_code' => get_filter('order_code', 'order_code', ''),
       'zone_code' => get_filter('zone_code', 'zone_code', ''),
-      'pd_code' => get_filter('pd_code', 'pd_code'),
+      'warehouse' => get_filter('warehouse', 'warehouse', 'all'),
+      'pd_code' => get_filter('pd_code', 'pd_code', ''),
       'from_date' => get_filter('from_date', 'from_date', ''),
       'to_date' => get_filter('to_date', 'to_date', '')
     );
 
-		//--- แสดงผลกี่รายการต่อหน้า
-		$perpage = get_rows();
-		//--- หาก user กำหนดการแสดงผลมามากเกินไป จำกัดไว้แค่ 300
-		if($perpage > 300)
-		{
-			$perpage = 20;
-		}
-
-		$segment  = 4; //-- url segment
-		$rows     = $this->cancle_model->count_rows($filter);
-		//--- ส่งตัวแปรเข้าไป 4 ตัว base_url ,  total_row , perpage = 20, segment = 3
-		$init	    = pagination_config($this->home.'/index/', $rows, $perpage, $segment);
-		$ds   = $this->cancle_model->get_data($filter, $perpage, $this->uri->segment($segment));
-
-    $filter['data'] = $ds;
-
-		$this->pagination->initialize($init);
-    $this->load->view('inventory/cancle/cancle_view', $filter);
+    if($this->input->post('search'))
+    {
+      redirect($this->home);
+      exit();
+    }
+    else
+    {
+      $perpage = get_rows();
+      $segment  = 4; //-- url segment
+      $rows = $this->cancle_model->count_rows($filter);
+      $filter['data'] = $this->cancle_model->get_data($filter, $perpage, $this->uri->segment($segment));
+      $init = pagination_config($this->home.'/index/', $rows, $perpage, $segment);
+      $this->pagination->initialize($init);
+      $this->load->view('inventory/cancle/cancel_list', $filter);
+    }
   }
 
 
-  public function move_back($id)
+  public function move_back()
   {
     $sc = TRUE;
+    $id = $this->input->post('id');
+
     $this->load->model('stock/stock_model');
+
     $rs = $this->cancle_model->get($id);
-    if(!empty($rs))
+
+    if( ! empty($rs))
     {
       $this->db->trans_begin();
       //---- add stock back to original zone
-      if(! $this->stock_model->update_stock_zone($rs->zone_code, $rs->product_code, $rs->qty))
+      if( ! $this->stock_model->update_stock_zone($rs->zone_code, $rs->product_code, $rs->qty))
       {
         $sc = FALSE;
         $this->error = 'เพิ่มสต็อกกลับโซนเดิมไม่สำเร็จ';
@@ -79,23 +82,51 @@ class Cancle extends PS_Controller
         $this->db->trans_rollback();
       }
     }
+    else
+    {
+      $sc = FALSE;
+      set_error('notfound');
+    }
 
-    echo $sc === TRUE ? 'success' : $this->error;
+    $this->_response($sc);
   }
 
 
   //--- Just delete
-  public function delete($id)
+  public function delete()
   {
-    $rs = $this->cancle_model->delete($id);
+    $sc = TRUE;
 
-    echo $rs === TRUE ? 'success' : 'failed';
+    if($this->pm->can_delete)
+    {
+      $id = $this->input->post('id');
+      if( ! empty($id))
+      {
+        if( ! $this->cancle_model->delete($id))
+        {
+          $sc = FALSE;
+          $this->error = 'ลบรายการไม่สำเร็จ';
+        }
+      }
+      else
+      {
+        $sc = FALSE;
+        set_error('required');
+      }
+    }
+    else
+    {
+      $sc = FALSE;
+      set_error('permission');
+    }
+
+    $this->_response($sc);
   }
 
 
   function clear_filter(){
-    $filter = array('order_code', 'pd_code', 'zone_code', 'from_date', 'to_date');
-    clear_filter($filter);
+    $filter = array('order_code', 'pd_code', 'zone_code', 'warehouse', 'from_date', 'to_date');
+    return clear_filter($filter);
   }
 
 
