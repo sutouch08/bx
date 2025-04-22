@@ -30,17 +30,17 @@ class Cancle_model extends CI_Model
     ->join('orders', 'cancle.order_code = orders.code', 'left')
     ->join('order_state', 'orders.state = order_state.state', 'left');
 
-    if(!empty($ds['order_code']))
+    if( ! empty($ds['order_code']))
     {
       $this->db->like('cancle.order_code',$ds['order_code']);
     }
 
-    if(!empty($ds['pd_code']))
+    if( ! empty($ds['pd_code']))
     {
       $this->db->like('cancle.product_code', $ds['pd_code']);
     }
 
-    if(!empty($ds['zone_code']))
+    if( ! empty($ds['zone_code']))
     {
       $this->db->group_start();
       $this->db->like('cancle.zone_code', $ds['zone_code']);
@@ -48,7 +48,12 @@ class Cancle_model extends CI_Model
       $this->db->group_end();
     }
 
-    if(!empty($ds['from_date']) && !empty($ds['to_date']))
+    if(isset($ds['warehouse']) && $ds['warehouse'] != 'all')
+    {
+      $this->db->where('cancle.warehouse_code', $ds['warehouse']);
+    }
+
+    if( ! empty($ds['from_date']) && !empty($ds['to_date']))
     {
       $this->db->where('cancle.date_upd >=', from_date($ds['from_date']));
       $this->db->where('cancle.date_upd <=', to_date($ds['to_date']));
@@ -77,19 +82,19 @@ class Cancle_model extends CI_Model
     ->from('cancle')
     ->join('zone', 'cancle.zone_code = zone.code', 'left')
     ->join('orders', 'cancle.order_code = orders.code', 'left')
-    ->join('order_state', 'orders.state = order_state.state');
+    ->join('order_state', 'orders.state = order_state.state', 'left');
 
-    if(!empty($ds['order_code']))
+    if( ! empty($ds['order_code']))
     {
       $this->db->like('cancle.order_code',$ds['order_code']);
     }
 
-    if(!empty($ds['pd_code']))
+    if( ! empty($ds['pd_code']))
     {
       $this->db->like('cancle.product_code', $ds['pd_code']);
     }
 
-    if(!empty($ds['zone_code']))
+    if( ! empty($ds['zone_code']))
     {
       $this->db->group_start();
       $this->db->like('cancle.zone_code', $ds['zone_code']);
@@ -97,7 +102,12 @@ class Cancle_model extends CI_Model
       $this->db->group_end();
     }
 
-    if(!empty($ds['from_date']) && !empty($ds['to_date']))
+    if(isset($ds['warehouse']) && $ds['warehouse'] != 'all')
+    {
+      $this->db->where('cancle.warehouse_code', $ds['warehouse']);
+    }
+
+    if( ! empty($ds['from_date']) && !empty($ds['to_date']))
     {
       $this->db->where('cancle.date_upd >=', from_date($ds['from_date']));
       $this->db->where('cancle.date_upd <=', to_date($ds['to_date']));

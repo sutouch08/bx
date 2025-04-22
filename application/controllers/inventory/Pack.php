@@ -26,33 +26,33 @@ class Pack extends PS_Controller
       'to_date' => get_filter('to_date', 'to_date', '')
     );
 
-		//--- แสดงผลกี่รายการต่อหน้า
-		$perpage = get_rows();
-		//--- หาก user กำหนดการแสดงผลมามากเกินไป จำกัดไว้แค่ 300
-		if($perpage > 300)
-		{
-			$perpage = 20;
-		}
+    if($this->input->post('search'))
+    {
+      redirect($this->home);
+      exit();
+    }
+    else
+    {
+      //--- แสดงผลกี่รายการต่อหน้า
+      $perpage = get_rows();
+      $segment  = 4; //-- url segment
+      $rows = $this->pack_model->count_rows($filter);
+      $filter['data'] = $this->pack_model->get_data($filter, $perpage, $this->uri->segment($segment));
 
-		$segment  = 4; //-- url segment
-		$rows     = $this->pack_model->count_rows($filter);
-		//--- ส่งตัวแปรเข้าไป 4 ตัว base_url ,  total_row , perpage = 20, segment = 3
-		$init	    = pagination_config($this->home.'/index/', $rows, $perpage, $segment);
-		$ds   = $this->pack_model->get_data($filter, $perpage, $this->uri->segment($segment));
+      $init = pagination_config($this->home.'/index/', $rows, $perpage, $segment);
+      $this->pagination->initialize($init);
+      $this->load->view('inventory/pack/pack_list', $filter);
 
-    $filter['data'] = $ds;
-
-		$this->pagination->initialize($init);
-    $this->load->view('inventory/pack/pack_view', $filter);
+    }
   }
-
 
 
 	public function delete_row()
 	{
 		$sc = TRUE;
 		$id = trim($this->input->post('id'));
-		if(!empty($id))
+
+		if( ! empty($id))
 		{
 			$rs = $this->pack_model->delete($id);
 			if(!$rs)
@@ -73,8 +73,7 @@ class Pack extends PS_Controller
 
   function clear_filter(){
     $filter = array('order_code', 'pd_code', 'from_date', 'to_date');
-
-    clear_filter($filter);
+    return clear_filter($filter);
   }
 
 

@@ -829,42 +829,61 @@ class Prepare extends PS_Controller
     $item_code = $this->input->post('product_code');
     $detail_id = $this->input->post('order_detail_id');
 
-    $this->db->trans_begin();
+    $bf = $this->buffer_model->get_buffer_by_order_and_product($order_code, $item_code, $detail_id);
 
-    if( ! $this->buffer_model->remove_buffer($order_code, $item_code, $detail_id))
+    if( ! empty($bf))
     {
-      $sc = FALSE;
-      $this->error = "Failed to delete buffer";
-    }
+      $this->db->trans_begin();
 
-    if( $sc === TRUE)
-    {
-      if( ! $this->prepare_model->remove_prepare($order_code, $item_code, $detail_id))
+      if( ! $this->stock_model->update_stock_zone($bf->zone_code, $bf->product_code, $bf->qty))
       {
         $sc = FALSE;
-        $this->error = "Failed to delete prepare logs";
+        $this->error = "ย้ายสต็อกกลับโซนไม่สำเร็จ";
       }
-    }
 
-    if($sc === TRUE)
-    {
-      if( ! $this->orders_model->unvalid_detail($detail_id) )
+      if($sc === TRUE)
       {
-        $sc = FALSE;
-        $this->error = "Failed to rollback item status (unvalid)";
+        if( ! $this->buffer_model->delete($bf->id))
+        {
+          $sc = FALSE;
+          $this->error = "Failed to delete buffer";
+        }
       }
-    }
 
-    if($sc === TRUE)
-    {
-      $this->db->trans_commit();
+      if($sc === TRUE)
+      {
+        if( ! $this->prepare_model->remove_prepare($order_code, $item_code, $detail_id))
+        {
+          $sc = FALSE;
+          $this->error = "Failed to delete prepare logs";
+        }
+      }
+
+      if($sc === TRUE)
+      {
+        if( ! $this->orders_model->unvalid_detail($detail_id) )
+        {
+          $sc = FALSE;
+          $this->error = "Failed to rollback item status (unvalid)";
+        }
+      }
+
+      if($sc === TRUE)
+      {
+        $this->db->trans_commit();
+      }
+      else
+      {
+        $this->db->trans_rollback();
+      }
     }
     else
     {
-      $this->db->trans_rollback();
+      $sc = FALSE;
+      set_error('notfound');
     }
 
-    echo $sc === TRUE ? 'success' : $this->error;
+    $this->_response($sc);
   }
 
 

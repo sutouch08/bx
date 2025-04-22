@@ -57,8 +57,8 @@
 			<tr class="font-size-11">
 				<th class="fix-width-50 text-center hidden-xs">#</th>
 				<th class="fix-width-100 text-center hidden-xs">วันที่</th>
-				<th class="fix-width-100 text-center hidden-xs">เลขที่เอกสาร</th>
-				<th class="min-width-150 text-center hidden-xs">สินค้า</th>
+				<th class="fix-width-100 hidden-xs">เลขที่เอกสาร</th>
+				<th class="min-width-150 hidden-xs">สินค้า</th>
 				<th class="fix-width-80 text-center hidden-xs">จำนวน</th>
 				<th class="fix-width-100 text-center hidden-xs">สถานะ</th>
 				<th class="fix-width-150 hidden-xs">โซน</th>
@@ -72,7 +72,7 @@
 						<tr class="font-size-11" id="row-<?php echo $rs->id; ?>">
 							<td class="text-center no hidden-xs"><?php echo $no; ?></td>
 							<td class="text-center hidden-xs"><?php echo thai_date($rs->date_upd); ?></td>
-							<td class="text-center hidden-xs"><?php echo $rs->order_code; ?></td>
+							<td class="hidden-xs"><?php echo $rs->order_code; ?></td>
 							<td class="hidden-xs"><?php echo $rs->product_code; ?></td>
 							<td class="text-center hidden-xs"><?php echo number($rs->qty); ?></td>
 							<td class="text-center hidden-xs"><?php echo $rs->state_name; ?></td>
