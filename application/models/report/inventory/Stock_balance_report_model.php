@@ -14,7 +14,7 @@ class Stock_balance_report_model extends CI_Model
     ->select('z.code AS warehouse_code, z.name AS zone_name')
     ->from('stock AS s')
     ->join('products AS p', 's.product_code = p.code', 'left')
-    ->joinn('zone AS z', 's.zone_code = z.code', 'left')
+    ->join('zone AS z', 's.zone_code = z.code', 'left')
     ->where('s.qty !=', 0, FALSE);
 
     if($allProduct == 0 && ! empty($pdFrom) && !  empty($pdTo))
