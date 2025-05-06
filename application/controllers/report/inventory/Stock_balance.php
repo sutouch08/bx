@@ -18,7 +18,7 @@ class Stock_balance extends PS_Controller
   public function index()
   {
     $this->load->model('masters/warehouse_model');
-    $whList = $this->warehouse_model->get_all_warehouse();
+    $whList = $this->warehouse_model->get_all();
     $ds['whList'] = $whList;
     $this->load->view('report/inventory/report_stock_balance', $ds);
   }
