@@ -131,7 +131,7 @@
     height: 68px;
     padding: 8px;
     line-height: 20;
-    background-color: #438eb9;
+    background-color: #696969;
     opacity: 0.9;
     z-index: 11;
   }
