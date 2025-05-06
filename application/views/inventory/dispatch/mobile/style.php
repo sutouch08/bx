@@ -16,7 +16,7 @@ li {
 		padding: 8px;
 		padding-bottom: 15px;
 		line-height: 20px;
-		background-color:#438eb9;
+		background-color:#696969;
 }
 
 

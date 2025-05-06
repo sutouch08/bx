@@ -45,7 +45,7 @@
 							<input type="hidden" id="success" value="<?php echo $this->session->flashdata('success'); ?>" />
 		<?php endif; ?>
 		<!-- #section:basics/navbar.layout -->
-		<div id="navbar" class="navbar navbar-default">
+		<div id="navbar" class="navbar navbar-default" style="background-color:#696969;">
 			<script type="text/javascript">
 				var BASE_URL = '<?php echo base_url(); ?>';
 				var HOME = '<?php echo $this->home.'/'; ?>';
@@ -53,7 +53,7 @@
 			<div class="navbar-container" id="navbar-container">
 				<?php if(! isset($_GET['nomenu'])) : ?>
 				<!-- #section:basics/sidebar.mobile.toggle -->
-				<button type="button" class="navbar-toggle menu-toggler pull-left" id="menu-toggler" data-target="#sidebar">
+				<button type="button" class="navbar-toggle menu-toggler pull-left" id="menu-toggler" data-target="#sidebar" style="background-color:#696969;">
 					<span class="sr-only">Toggle sidebar</span>
 					<span class="icon-bar"></span>
 					<span class="icon-bar"></span>
@@ -80,7 +80,7 @@
 					<ul class="nav ace-nav">
 
 						<li class="light-blue">
-							<a data-toggle="dropdown" href="#" class="dropdown-toggle">
+							<a data-toggle="dropdown" href="#" class="dropdown-toggle" style="background-color:#696969;">
 
 								<span class="user-info">
 									<small>Welcome</small>
