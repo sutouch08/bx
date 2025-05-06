@@ -9,24 +9,25 @@ class Inventory_report_model extends CI_Model
 
   public function getStock($option, $limit = 100, $offset = 0)
   {
-    $this->ms
-    ->select('OITW.ItemCode')
-    ->select_sum('OITW.OnHand')
-    ->from('OITW')
-    ->join('OITM', 'OITW.ItemCode = OITM.ItemCode', 'left')
-    ->where('OITW.OnHand >', 0, FALSE);
+    $this->db
+    ->select('s.product_code AS ItemCode, s.zone_code')
+    ->select_sum('s.qty', 'OnHand')
+    ->from('stock AS s')
+    ->join('products AS p', 's.product_code = p.code', 'left')
+    ->join('zone AS z', 's.zone_code = z.code', 'left')
+    ->where('s.qty >', 0, FALSE);
 
     if($option->allProduct == 0 && ! empty($option->pdFrom) && ! empty($option->pdTo))
     {
-      $this->ms->where('OITM.U_MODEL >=', $option->pdFrom)->where('OITM.U_MODEL <=', $option->pdTo);
+      $this->db->where('p.style_code >=', $option->pdFrom)->where('p.style_code <=', $option->pdTo);
     }
 
     if($option->allWhouse == 0 && ! empty($option->whsList))
     {
-      $this->ms->where_in('OITW.WhsCode', $option->whsList);
+      $this->db->where_in('z.warehouse_code', $option->whsList);
     }
 
-    $rs = $this->ms->group_by('OITW.ItemCode')->order_by('OITW.ItemCode', 'ASC')->limit($limit, $offset)->get();
+    $rs = $this->db->group_by('s.product_code')->order_by('s.product_code', 'ASC')->limit($limit, $offset)->get();
 
     if($rs->num_rows() > 0)
     {
@@ -39,33 +40,36 @@ class Inventory_report_model extends CI_Model
 
   public function get_current_stock_balance($allProduct, $pdFrom, $pdTo, $allWhouse, $warehouse)
   {
-    $this->ms
-    ->select('OITW.ItemCode AS product_code')
-    ->select_sum('OITW.OnHand', 'qty')
-    ->from('OITW')
-    ->join('OITM', 'OITW.ItemCode = OITM.ItemCode', 'left')
-    ->where('OITW.OnHand >', 0, FALSE);
+    $this->db
+    ->select('s.*')
+    ->select_sum('s.qty')
+    ->from('stock AS s')
+    ->join('products AS p', 's.product_code = p.code', 'left')
+    ->join('zone AS z', 's.zone_code = z.code', 'left')
+    ->where('s.qty >', 0, FALSE);
 
-    if($allProduct == 0 && !empty($pdFrom) && !empty($pdTo))
+    if($allProduct == 0 && ! empty($pdFrom) && ! empty($pdTo))
     {
-      $this->ms->where('OITM.U_MODEL >=', $pdFrom)->where('OITM.U_MODEL <=', $pdTo);
+      $this->db
+      ->where('p.stylel_code >=', $pdFrom)
+      ->where('p.style_code <=', $pdTo);
     }
 
-    if($allWhouse == 0 && !empty($warehouse))
+    if($allWhouse == 0 && ! empty($warehouse))
     {
-      $this->ms->where_in('OITW.WhsCode', $warehouse);
+      $this->db->where_in('z.warehouse_code', $warehouse);
     }
 
-    $this->ms->group_by('OITW.ItemCode');
-    $this->ms->order_by('OITW.ItemCode', 'ASC');
-    $rs = $this->ms->get();
+    $this->db->group_by('s.product_code')->order_by('s.product_code', 'ASC');
+
+    $rs = $this->db->get();
 
     if($rs->num_rows() > 0)
     {
       return $rs->result();
     }
 
-    return FALSE;
+    return NULL;
   }
 
 

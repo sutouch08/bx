@@ -16,7 +16,7 @@
 		<p class="pull-right top-p">
       <button type="button" class="btn btn-xs btn-success" onclick="getReport()"><i class="fa fa-bar-chart"></i> รายงาน</button>
 			<button type="button" class="btn btn-xs btn-primary" onclick="doExport()"><i class="fa fa-file-excel-o"></i> ส่งออก</button>
-			<button type="button" class="btn btn-xs btn-purple" onclick="exportToCheck()"><i class="fa fa-file-excel-o"></i> ส่งออกยอดตั้งต้น</button>
+			<!-- <button type="button" class="btn btn-xs btn-purple" onclick="exportToCheck()"><i class="fa fa-file-excel-o"></i> ส่งออกยอดตั้งต้น</button> -->
 		</p>
 	</div>
 </div><!-- End Row -->
