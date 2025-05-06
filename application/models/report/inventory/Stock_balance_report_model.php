@@ -8,51 +8,44 @@ class Stock_balance_report_model extends CI_Model
 
   public function get_stock_balance_zone($allProduct, $pdFrom, $pdTo, $allWhouse, $warehouse, $allZone, $zoneCode)
   {
-    $this->ms
-    ->select('OITM.ItemCode AS product_code')
-    ->select('OITM.ItemName AS product_name')
-    ->select('ITM1.Price AS price')
-    ->select('OBIN.WhsCode AS warehouse_code')
-    ->select('OBIN.BinCode AS zone_code')
-    ->select('OBIN.Descr AS zone_name')
-    ->select('OIBQ.OnHandQty AS qty')
-    ->from('OIBQ')
-    ->join('OITM', 'OIBQ.ItemCode = OITM.ItemCode', 'left')
-    ->join('ITM1', 'OITM.ItemCode = ITM1.ItemCode AND ITM1.PriceList = 11')
-    ->join('OBIN', 'OIBQ.BinAbs = OBIN.AbsEntry','left')
-    ->where('OIBQ.OnHandQty !=', 0, FALSE);
+    $this->db
+    ->select('s.*')
+    ->select('p.code AS product_code, p.name AS product_name, p.cost AS price, p.style_code')
+    ->select('z.code AS warehouse_code, z.name AS zone_name')
+    ->from('stock AS s')
+    ->join('products AS p', 's.product_code = p.code', 'left')
+    ->joinn('zone AS z', 's.zone_code = z.code', 'left')
+    ->where('s.qty !=', 0, FALSE);
 
-    if($allProduct == 0 && !empty($pdFrom) && !empty($pdTo))
+    if($allProduct == 0 && ! empty($pdFrom) && !  empty($pdTo))
     {
-      $this->ms->where('OITM.U_MODEL >=', $pdFrom)->where('OITM.U_MODEL <=', $pdTo);
+      $this->db->where('p.style_code >=', $pdFrom)->where('p.style_code <=', $pdTo);
     }
 
     if($allZone == 1 && empty($zoneCode))
     {
-      if($allWhouse == 0 && !empty($warehouse))
+      if($allWhouse == 0 && ! empty($warehouse))
       {
-        $this->ms->where_in('OIBQ.WhsCode', $warehouse);
+        $this->db->where_in('z.warehouse_code', $warehouse);
       }
     }
 
-    if($allZone == 0 && !empty($zoneCode))
+    if($allZone == 0 && ! empty($zoneCode))
     {
-      $this->ms->where('OBIN.BinCode', $zoneCode);
+      $this->db->where('s.zone_code', $zoneCode);
     }
 
-		 $this->ms->order_by('OITM.ItemCode', 'ASC');
-    $this->ms->order_by('OBIN.WhsCode', 'ASC');
-    $this->ms->order_by('OBIN.BinCode', 'ASC');
+    $this->db->order_by('s.product_code', 'ASC')->order_by('z.warehouse_code', 'ASC')->order_by('s.zone_code', 'ASC');
 
 
-    $rs = $this->ms->get();
+    $rs = $this->db->get();
 
     if($rs->num_rows() > 0)
     {
       return $rs->result();
     }
 
-    return FALSE;
+    return NULL;
   }
 
 
