@@ -19,12 +19,6 @@
 			<div class="help-block col-xs-12 col-sm-reset inline grey e" id="code-error">Allow only [a-z, A-Z, 0-9, "-", "_" ]</div>
 		</div>
 
-		<div class="form-group hide">
-			<label class="col-sm-3 control-label no-padding-right">รหัสเก่า</label>
-			<div class="col-xs-12 col-sm-3">
-				<input type="text" name="old_code" id="old_code" class="width-100 r" value="" placeholder="รหัสเก่า (ไม่บังคับ)" />
-			</div>
-		</div>
 		<div class="form-group">
 			<label class="col-sm-3 control-label no-padding-right">ชื่อ</label>
 			<div class="col-xs-12 col-sm-3">
@@ -40,15 +34,7 @@
 			</div>
 			<div class="help-block col-xs-12 col-sm-reset inline red e" id="style-error"></div>
 		</div>
-
-		<div class="form-group hide">
-			<label class="col-sm-3 control-label no-padding-right">รุ่นเก่า</label>
-			<div class="col-xs-12 col-sm-3">
-				<input type="text" name="old_style" id="old_style" class="width-100" value="" placeholder="รหัสรุ่นเก่า (ไม่บังคับ)"/>
-			</div>
-		</div>
-
-
+		
 		<div class="form-group">
 			<label class="col-sm-3 control-label no-padding-right">สี</label>
 			<div class="col-xs-12 col-sm-3">

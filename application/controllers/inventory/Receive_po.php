@@ -460,6 +460,15 @@ class Receive_po extends PS_Controller
               }
             }
 
+            //--- if all po details was received close the po
+            if($sc === TRUE)
+            {
+              if($this->po_model->is_all_done($doc->po_code))
+              {
+                $this->po_model->update($doc->po_code, ['status' => 'C']);
+              }
+            }
+
             if($sc === TRUE)
             {
               $this->db->trans_commit();

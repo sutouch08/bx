@@ -388,8 +388,6 @@ class Items extends PS_Controller
 
       if($sc === TRUE)
       {
-        $user = $this->_user->uname;
-
         $arr = array(
           'code' => $code,
           'name' => trim($ds->name),
@@ -408,15 +406,17 @@ class Items extends PS_Controller
           'year' => $ds->year,
           'cost' => round($ds->cost, 2),
           'price' => round($ds->price, 2),
-          'unit_code' => $ds->unit_code,
           'count_stock' => $ds->count_stock == 0 ? 0 : 1,
           'can_sell' => $ds->can_sell == 0 ? 0 : 1,
           'active' => $ds->active == 0 ? 0 : 1,
           'is_api' => $ds->is_api == 0 ? 0 : 1,
-          'update_user' => $user,
-          'old_style' => get_null($ds->old_style),
-          'old_code' => get_null($ds->old_code)
+          'update_user' => $this->_user->uname
         );
+
+        if( ! empty($ds->unit_code))
+        {
+          $arr['unit_code'] = $ds->unit_code;
+        }
 
         if( ! $this->products_model->add($arr))
         {
@@ -507,14 +507,12 @@ class Items extends PS_Controller
         'year' => $ds->year,
         'cost' => round($ds->cost, 2),
         'price' => round($ds->price, 2),
-        'unit_code' => $ds->unit_code,
+        'unit_code' => empty($ds->unit_code) ? 'PCS' : $ds->unit_code,
         'count_stock' => empty($ds->count_stock) ? 0 : 1,
         'can_sell' => empty($ds->can_sell) ? 0 : 1,
         'active' => empty($ds->active) ? 0 : 1,
         'is_api' => empty($ds->is_api) ? 0 : 1,
-        'update_user' => $this->_user->uname,
-        'old_style' => get_null($ds->old_style),
-        'old_code' => get_null($ds->old_code)
+        'update_user' => $this->_user->uname
       );
 
       if( ! $this->products_model->update($code, $arr))

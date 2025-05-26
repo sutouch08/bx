@@ -361,7 +361,7 @@ class Receive_po_model extends CI_Model
     ->where('po_code', $po_code)
     ->where('po_detail_id', $po_detail_id)
     ->where('product_code', $product_code)
-    ->where('line_status !=', 'D')
+    ->where('line_status', 'O')
     ->get($this->td);
 
     if($rs->num_rows() === 1)

@@ -20,13 +20,6 @@
 		</div>
 
 		<div class="form-group">
-			<label class="col-sm-3 control-label no-padding-right">รหัสเก่า</label>
-			<div class="col-xs-12 col-sm-3">
-				<input type="text" name="old_code" id="old_code" class="width-100" value="<?php echo $old_code; ?>" placeholder="รหัสเก่า (ไม่บังคับ)" />
-			</div>
-		</div>
-
-		<div class="form-group">
 			<label class="col-sm-3 control-label no-padding-right">ชื่อ</label>
 			<div class="col-xs-12 col-sm-3">
 				<input type="text" name="name" id="name" class="width-100 r" value="<?php echo $name; ?>" required />
@@ -43,21 +36,12 @@
 		</div>
 
 		<div class="form-group">
-			<label class="col-sm-3 control-label no-padding-right">รุ่นเก่า</label>
-			<div class="col-xs-12 col-sm-3">
-				<input type="text" name="old_style" id="old_style" class="width-100" value="<?php echo $old_style; ?>" placeholder="รหัสรุ่นเก่า (ไม่บังคับ)"/>
-			</div>
-		</div>
-
-
-		<div class="form-group">
 			<label class="col-sm-3 control-label no-padding-right">สี</label>
 			<div class="col-xs-12 col-sm-3">
 				<input type="text" name="color" id="color" class="width-100 r" value="<?php echo $color_code; ?>" required />
 			</div>
 			<div class="help-block col-xs-12 col-sm-reset inline red e" id="color-error"></div>
 		</div>
-
 
 		<div class="form-group">
 			<label class="col-sm-3 control-label no-padding-right">ไซส์</label>
@@ -67,7 +51,6 @@
 			<div class="help-block col-xs-12 col-sm-reset inline red e" id="size-error"></div>
 		</div>
 
-
 		<div class="form-group">
 			<label class="col-sm-3 control-label no-padding-right">บาร์โค้ด</label>
 			<div class="col-xs-12 col-sm-3">
@@ -75,7 +58,6 @@
 			</div>
 			<div class="help-block col-xs-12 col-sm-reset inline red" id="barcode-error"></div>
 		</div>
-
 
 		<div class="form-group">
 			<label class="col-sm-3 control-label no-padding-right">ราคาทุน</label>
