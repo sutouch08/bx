@@ -21,6 +21,7 @@
 		$tab4 = $tab == 'inventory' ? 'active in' : '';
 		$tab5 = $tab == 'order' ? 'active in' : '';
 		$tab6 = $tab == 'document' ? 'active in' : '';
+		$tab7 = $tab == 'ix' ? 'active in' : '';
 		?>
 		<ul id="myTab1" class="setting-tabs" style="margin-left:0;">
 			<li class="li-block <?php echo $tab2; ?>" onclick="changeURL('company')"><a href="#company" data-toggle="tab">ข้อมูลบริษัท</a></li>
@@ -28,6 +29,7 @@
 			<li class="li-block <?php echo $tab4; ?>" onclick="changeURL('inventory')"><a href="#inventory" data-toggle="tab">คลังสินค้า</a></li>
 			<li class="li-block <?php echo $tab5; ?>" onclick="changeURL('order')"><a href="#order" data-toggle="tab">ออเดอร์</a></li>
 			<li class="li-block <?php echo $tab6; ?>" onclick="changeURL('document')"><a href="#document" data-toggle="tab">เลขที่เอกสาร</a></li>
+			<li class="li-block <?php echo $tab7; ?>" onclick="changeURL('ix')"><a href="#ix" data-toggle="tab">ข้อมูล IX API</a></li>
 		</ul>
 	</div>
 	<div class="col-lg-10 col-md-10 col-sm-10 border-1" style="padding-top:15px; border-top:0px !important; height:600px; overflow:auto;">
@@ -50,7 +52,10 @@
 			<!---  ตั้งค่าเอกสาร  --------------------------------------------------->
 			<div class="tab-pane fade <?php echo $tab6; ?>" id="document">
 				<?php $this->load->view('setting/setting_document'); ?>
-			</div>			
+			</div>
+			<div class="tab-pane fade <?php echo $tab7; ?>" id="ix">
+				<?php $this->load->view('setting/setting_ix_api'); ?>
+			</div>
 		</div><!--/ tab-content-->
 	</div><!--/ col-sm-9  -->
 </div><!--/ row  -->

@@ -267,10 +267,6 @@ class Orders extends REST_Controller
       //---- check duplicate order number
       $order = $this->orders_model->get_active_order_by_reference($data->order_number);
 
-      //--- รหัสเล่มเอกสาร [อ้างอิงจาก SAP]
-      //--- ถ้าเป็นฝากขายแบบโอนคลัง ยืมสินค้า เบิกแปรสภาพ เบิกสินค้า (ไม่เปิดใบกำกับ เปิดใบโอนคลังแทน) นอกนั้น เปิด SO
-      $bookcode = getConfig('BOOK_CODE_ORDER');
-
       $role = 'S';
 
       $date_add = date('Y-m-d H:i:s');
@@ -322,8 +318,7 @@ class Orders extends REST_Controller
         //--- เตรียมข้อมูลสำหรับเพิ่มเอกสารใหม่
         $ds = array(
           'code' => $order_code,
-          'role' => $role,
-          'bookcode' => $bookcode,
+          'role' => $role,          
           'reference' => $data->order_number,
           'customer_code' => $data->customer_code,
           'customer_name' => $data->customer_name,
