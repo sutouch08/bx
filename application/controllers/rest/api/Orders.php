@@ -303,7 +303,6 @@ class Orders extends REST_Controller
       $tax_status = empty($data->tax_status) ? 0 : ($data->tax_status == 'Y' ? 1 : 0);
       $is_etax = empty($data->ETAX) ? 0 : ($data->ETAX == 'Y' && $tax_status == 1 ? 1 : 0);
       $bill_to = empty($data->bill_to) ? NULL : (array) $data->bill_to;
-      $ship_to = empty($data->ship_to) ? NULL : (array) $data->ship_to;
       $customer_ref = empty(trim($data->customer_ref)) ? NULL : get_null(trim($data->customer_ref));
 
       $taxType = array(
@@ -318,7 +317,7 @@ class Orders extends REST_Controller
         //--- เตรียมข้อมูลสำหรับเพิ่มเอกสารใหม่
         $ds = array(
           'code' => $order_code,
-          'role' => $role,          
+          'role' => $role,
           'reference' => $data->order_number,
           'customer_code' => $data->customer_code,
           'customer_name' => $data->customer_name,
@@ -539,7 +538,7 @@ class Orders extends REST_Controller
         $this->order_state_model->add_state($arr);
 
 
-        if( ! empty($customer_ref) && ! empty($ship_to) && ! empty($ship_to->address))
+        if( ! empty($customer_ref) && ! empty($data->ship_to) && ! empty($data->ship_to->address))
         {
           $id_address = $this->address_model->get_id($data->customer_ref, $data->ship_to->address);
 
