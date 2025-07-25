@@ -622,7 +622,7 @@ class Products_model extends CI_Model
     $rs = $this->db
     ->where('style_code', $style)
     ->where('color_code', $color)
-    ->where('size_code', $size)
+    ->where('size_code', strval($size))
     ->limit(1)
     ->get($this->tb);
 
