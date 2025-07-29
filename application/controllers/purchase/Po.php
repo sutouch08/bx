@@ -922,7 +922,7 @@ class Po extends PS_Controller
 		$ds = array(
 			'po' => $po,
 			'details' => $details,
-			'title' => "ใบสั่ซื้อ",
+			'title' => "ใบสั่งซื้อ",
 			'vender' => $this->vender_model->get($po->vender_code)
 		);
 
