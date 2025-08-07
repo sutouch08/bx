@@ -54,6 +54,7 @@
 <?php else : ?>
       <tr><td colspan="6" class="text-center"><h4>ไม่พบรายการ</td></tr>
 <?php endif; ?>
+        
         <tr>
           <td colspan="6" class="text-center">
             <div id="force-bar" class="<?php echo $show_force; ?>">
@@ -68,6 +69,11 @@
             <div class="<?php echo $show_close; ?>" id="close-bar">
               <button type="button" class="btn btn-sm btn-success close-order" id="btn-close" onclick="closeOrder()" <?php echo $disActive; ?>>
                 ตรวจเสร็จแล้ว
+              </button>
+            </div>
+            <div class="hide" id="bill-bar">
+              <button type="button" class="btn btn-sm btn-primary close-order" id="btn-bill" onclick="confirmOrder('<?php echo $order->code; ?>')">
+                เปิดบิลตัดสต็อก
               </button>
             </div>
           </td>
