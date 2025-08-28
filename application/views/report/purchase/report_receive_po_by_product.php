@@ -1,91 +1,87 @@
 <?php $this->load->view('include/header'); ?>
 <div class="row hidden-print">
-	<div class="col-sm-6">
+	<div class="col-lg-6 col-md-6 col-sm-6 col-xs-12 pading-5 padding-top-5">
     <h3 class="title">
       <i class="fa fa-bar-chart"></i>
       <?php echo $this->title; ?>
     </h3>
     </div>
-		<div class="col-sm-6">
-			<p class="pull-right top-p">
-        <button type="button" class="btn btn-sm btn-success" onclick="getReport()"><i class="fa fa-bar-chart"></i> รายงาน</button>
-				<button type="button" class="btn btn-sm btn-primary" onclick="doExport()"><i class="fa fa-file-excel-o"></i> ส่งออก</button>
-			</p>
+		<div class="col-lg-6 col-md-6 col-sm-6 col-xs-12 padding-5 text-right">
+			<button type="button" class="btn btn-sm btn-success top-btn" onclick="getReport()"><i class="fa fa-bar-chart"></i> รายงาน</button>
+			<button type="button" class="btn btn-sm btn-primary top-btn" onclick="doExport()"><i class="fa fa-file-excel-o"></i> ส่งออก</button>
 		</div>
 </div><!-- End Row -->
 <hr class="hidden-print"/>
 <form class="hidden-print" id="reportForm" method="post" action="<?php echo $this->home; ?>/do_export">
 <div class="row">
-	<div class="col-sm-2 padding-5 first">
+	<div class="col-lg-2 col-md-3 col-sm-3 col-xs-12 padding-5" style="height:53px;">
     <label>วันที่</label>
-    <div class="input-daterange input-group width-100">
+    <div class="input-group width-100">
       <input type="text" class="form-control input-sm width-50 text-center from-date" name="fromDate" id="fromDate" placeholder="เริ่มต้น" required />
       <input type="text" class="form-control input-sm width-50 text-center" name="toDate" id="toDate" placeholder="สิ้นสุด" required/>
     </div>
   </div>
 
-	<div class="col-sm-1 col-1-harf padding-5">
+	<div class="col-lg-1-harf col-md-2 col-sm-2-harf col-xs-12 padding-5">
     <label class="display-block">สินค้า</label>
     <div class="btn-group width-100">
       <button type="button" class="btn btn-sm btn-primary width-50" id="btn-pd-all" onclick="toggleAllProduct(1)">ทั้งหมด</button>
       <button type="button" class="btn btn-sm width-50" id="btn-pd-range" onclick="toggleAllProduct(0)">เลือก</button>
     </div>
   </div>
-  <div class="col-sm-2 padding-5">
+  <div class="col-lg-2 col-md-2 col-sm-2 col-xs-12 padding-5">
     <label class="display-block not-show">เริ่มต้น</label>
     <input type="text" class="form-control input-sm text-center" id="pdFrom" name="pdFrom" placeholder="เริ่มต้น" disabled>
   </div>
-  <div class="col-sm-2 padding-5">
+  <div class="col-lg-2 col-md-2 col-sm-2 col-xs-12 padding-5">
     <label class="display-block not-show">สิ้นสุด</label>
     <input type="text" class="form-control input-sm text-center" id="pdTo" name="pdTo" placeholder="สิ้นสุด" disabled>
   </div>
 
-  <div class="col-sm-1 col-1-harf padding-5">
+  <div class="col-lg-1-harf col-md-2 col-sm-2 col-xs-12 padding-5">
     <label class="display-block">เอกสาร</label>
     <div class="btn-group width-100">
       <button type="button" class="btn btn-sm btn-primary width-50" id="btn-doc-all" onclick="toggleAllDocument(1)">ทั้งหมด</button>
       <button type="button" class="btn btn-sm width-50" id="btn-doc-range" onclick="toggleAllDocument(0)">เลือก</button>
     </div>
   </div>
-  <div class="col-sm-1 col-1-harf padding-5">
+  <div class="col-lg-1-harf col-md-1-harf col-sm-1-harf col-xs-12 padding-5">
     <label class="display-block not-show">เริ่มต้น</label>
     <input type="text" class="form-control input-sm text-center" id="docFrom" name="docFrom" placeholder="เริ่มต้น" disabled>
   </div>
-  <div class="col-sm-1 col-1-harf padding-5 last">
+  <div class="col-lg-1-harf col-md-1-harf col-sm-1-harf col-xs-12 padding-5">
     <label class="display-block not-show">สิ้นสุด</label>
     <input type="text" class="form-control input-sm text-center" id="docTo" name="docTo" placeholder="สิ้นสุด" disabled>
   </div>
 
-	<div class="col-sm-1 col-1-harf padding-5 first">
+	<div class="col-lg-1-harf col-md-1-harf col-sm-1-harf col-xs-12 padding-5">
     <label class="display-block">ผู้ขาย</label>
     <div class="btn-group width-100">
-      <button type="button" class="btn btn-sm btn-primary width-50" id="btn-vendor-all" onclick="toggleAllVendor(1)">ทั้งหมด</button>
-      <button type="button" class="btn btn-sm width-50" id="btn-vendor-range" onclick="toggleAllVendor(0)">เลือก</button>
+      <button type="button" class="btn btn-sm btn-primary width-50" id="btn-vender-all" onclick="toggleAllVendor(1)">ทั้งหมด</button>
+      <button type="button" class="btn btn-sm width-50" id="btn-vender-range" onclick="toggleAllVendor(0)">เลือก</button>
     </div>
   </div>
-  <div class="col-sm-1 col-1-harf padding-5">
+  <div class="col-lg-1-harf col-md-1-harf col-sm-1-harf col-xs-12 padding-5">
     <label class="display-block not-show">เริ่มต้น</label>
-    <input type="text" class="form-control input-sm text-center" id="vendorFrom" name="vendorFrom" placeholder="เริ่มต้น" disabled>
+    <input type="text" class="form-control input-sm text-center" id="venderFrom" name="venderFrom" placeholder="เริ่มต้น" disabled>
   </div>
-  <div class="col-sm-1 col-1-harf padding-5">
+  <div class="col-lg-1-harf col-md-1-harf col-sm-1-harf col-xs-12 padding-5">
     <label class="display-block not-show">สิ้นสุด</label>
-    <input type="text" class="form-control input-sm text-center" id="vendorTo" name="vendorTo" placeholder="สิ้นสุด" disabled>
+    <input type="text" class="form-control input-sm text-center" id="venderTo" name="venderTo" placeholder="สิ้นสุด" disabled>
   </div>
 
-
-
-	<div class="col-sm-1 col-1-harf padding-5">
+	<div class="col-lg-1-harf col-md-1-harf col-sm-1-harf col-xs-12 padding-5">
     <label class="display-block">ใบสั่งซื้อ</label>
     <div class="btn-group width-100">
       <button type="button" class="btn btn-sm btn-primary width-50" id="btn-po-all" onclick="toggleAllPO(1)">ทั้งหมด</button>
       <button type="button" class="btn btn-sm width-50" id="btn-po-range" onclick="toggleAllPO(0)">เลือก</button>
     </div>
   </div>
-  <div class="col-sm-1 col-1-harf padding-5">
+  <div class="col-lg-1-harf col-md-1-harf col-sm-1-harf col-xs-12 padding-5">
     <label class="display-block not-show">เริ่มต้น</label>
     <input type="text" class="form-control input-sm text-center" id="poFrom" name="poFrom" placeholder="เริ่มต้น" disabled>
   </div>
-  <div class="col-sm-1 col-1-harf padding-5">
+  <div class="col-lg-1-harf col-md-1-harf col-sm-1-harf col-xs-12 padding-5">
     <label class="display-block not-show">สิ้นสุด</label>
     <input type="text" class="form-control input-sm text-center" id="poTo" name="poTo" placeholder="สิ้นสุด" disabled>
   </div>
@@ -116,7 +112,6 @@
       <th class="width-10 middle text-center">เลขที่เอกสาร</th>
       <th class="width-10 middle text-center">ใบสั่งซื้อ</th>
 			<th class="width-15 middle text-center">ใบส่งของ</th>
-			<th class="width-8 middle text-center">SAP No.</th>
 			<th class="width-10 middle text-center">ผู้ขาย</th>
 			<th class="middle text-center">สินค้า</th>
       <th class="width-8 middle text-right">จำนวน</th>
@@ -125,12 +120,12 @@
 {{#each this}}
   {{#if nodata}}
     <tr>
-      <td colspan="10" align="center"><h4>-----  ไม่พบเอกสารตามเงื่อนไขที่กำหนด  -----</h4></td>
+      <td colspan="9" align="center"><h4>-----  ไม่พบเอกสารตามเงื่อนไขที่กำหนด  -----</h4></td>
     </tr>
   {{else}}
     {{#if @last}}
     <tr class="font-size-14">
-      <td colspan="8" class="text-right">รวม</td>
+      <td colspan="7" class="text-right">รวม</td>
       <td class="text-right">{{ totalQty }}</td>
       <td class="text-right">{{ totalAmount }}</td>
     </tr>
@@ -140,9 +135,8 @@
       <td class="middle text-center">{{ date }}</td>
       <td class="middle">{{ code }}</td>
 			<td class="middle">{{ po }}</td>
-      <td class="middle">{{ invoice }}</td>
-			<td class="middle">{{ sapNo }}</td>
-			<td class="middle">{{ vendor }}</td>
+      <td class="middle">{{ invoice }}</td>			
+			<td class="middle">{{ vender }}</td>
 			<td class="middle">{{ product_code }}</td>
       <td class="middle text-right">{{ qty }}</td>
       <td class="middle text-right">{{ amount }}</td>

@@ -38,13 +38,13 @@ class Receive_po_by_product extends PS_Controller
     $toDate = $this->input->get('toDate');
 
     $allVendor = $this->input->get('allVendor');
-    $vendorFrom = $this->input->get('vendorFrom');
-    $vendorTo = $this->input->get('vendorTo');
+    $venderFrom = $this->input->get('venderFrom');
+    $venderTo = $this->input->get('venderTo');
 
-    if($vendorFrom > $vendorTo){
-      $sp = $vendorTo;
-      $vendorTo = $vendorFrom;
-      $vendorFrom = $sp;
+    if($venderFrom > $venderTo){
+      $sp = $venderTo;
+      $venderTo = $venderFrom;
+      $venderFrom = $sp;
     }
 
     $allPO = $this->input->get('allPO');
@@ -72,8 +72,8 @@ class Receive_po_by_product extends PS_Controller
       'docFrom' => $docFrom,
       'docTo' => $docTo,
       'allVendor' => $allVendor,
-      'vendorFrom' => $vendorFrom,
-      'vendorTo' => $vendorTo,
+      'venderFrom' => $venderFrom,
+      'venderTo' => $venderTo,
       'allPO' => $allPO,
       'poFrom' => $poFrom,
       'poTo' => $poTo,
@@ -98,10 +98,9 @@ class Receive_po_by_product extends PS_Controller
           'no' => number($no),
           'date' => thai_date($rs->date_add, FALSE, '/'),
           'code' => $rs->code,
-          'vendor' => $rs->vendor_code,
+          'vender' => $rs->vender_code,
           'invoice' => $rs->invoice_code,
           'po' => $rs->po_code,
-          'sapNo' => $rs->inv_code,
           'product_code' => $rs->product_code,
           'qty' => number($rs->qty),
           'amount' => number($rs->amount, 2)
@@ -153,13 +152,13 @@ class Receive_po_by_product extends PS_Controller
     $toDate = $this->input->post('toDate');
 
     $allVendor = $this->input->post('allVendor');
-    $vendorFrom = $this->input->post('vendorFrom');
-    $vendorTo = $this->input->post('vendorTo');
+    $venderFrom = $this->input->post('venderFrom');
+    $venderTo = $this->input->post('venderTo');
 
-    if($vendorFrom > $vendorTo){
-      $sp = $vendorTo;
-      $vendorTo = $vendorFrom;
-      $vendorFrom = $sp;
+    if($venderFrom > $venderTo){
+      $sp = $venderTo;
+      $venderTo = $venderFrom;
+      $venderFrom = $sp;
     }
 
     $allPO = $this->input->post('allPO');
@@ -184,7 +183,7 @@ class Receive_po_by_product extends PS_Controller
 
     $title = "รายงาน การรับสินค้า แยกตามสินค้า วันที่ (".thai_date($fromDate, FALSE, '/').") - (".thai_date($toDate, FALSE, '/').")";
     $document = $allDoc == 1 ? 'ทั้งหมด' : "{$docFrom} - {$docTo}";
-    $vendor = $allVendor == 1 ? 'ทั้งหมด' : "{$vendorFrom} - {$vendorTo}";
+    $vender = $allVendor == 1 ? 'ทั้งหมด' : "{$venderFrom} - {$venderTo}";
     $po = $allPO == 1 ? 'ทั้งหมด' : "{$poFrom} - {$poTo}";
     $products = $allProduct == 1 ? 'ทั้งหมด' : "{$pdFrom} - {$pdTo}";
 
@@ -193,8 +192,8 @@ class Receive_po_by_product extends PS_Controller
       'docFrom' => $docFrom,
       'docTo' => $docTo,
       'allVendor' => $allVendor,
-      'vendorFrom' => $vendorFrom,
-      'vendorTo' => $vendorTo,
+      'venderFrom' => $venderFrom,
+      'venderTo' => $venderTo,
       'allPO' => $allPO,
       'poFrom' => $poFrom,
       'poTo' => $poTo,
@@ -215,15 +214,15 @@ class Receive_po_by_product extends PS_Controller
 
     //--- set report title header
     $this->excel->getActiveSheet()->setCellValue('A1', $title);
-    $this->excel->getActiveSheet()->mergeCells('A1:J1');
+    $this->excel->getActiveSheet()->mergeCells('A1:I1');
     $this->excel->getActiveSheet()->setCellValue('A2', "เลขที่เอกสาร : {$document}");
-    $this->excel->getActiveSheet()->mergeCells('A2:J2');
-    $this->excel->getActiveSheet()->setCellValue('A3', "รหัสผู้ขาย : {$vendor}");
-    $this->excel->getActiveSheet()->mergeCells('A3:J3');
+    $this->excel->getActiveSheet()->mergeCells('A2:I2');
+    $this->excel->getActiveSheet()->setCellValue('A3', "รหัสผู้ขาย : {$vender}");
+    $this->excel->getActiveSheet()->mergeCells('A3:I3');
     $this->excel->getActiveSheet()->setCellValue('A4', "ใบสั่งซื้อ : {$po}");
-    $this->excel->getActiveSheet()->mergeCells('A4:J4');
+    $this->excel->getActiveSheet()->mergeCells('A4:I4');
     $this->excel->getActiveSheet()->setCellValue('A5', "สินค้า : {$products}");
-    $this->excel->getActiveSheet()->mergeCells('A5:J5');
+    $this->excel->getActiveSheet()->mergeCells('A5:I5');
 
     //--- set Table header
     $this->excel->getActiveSheet()->setCellValue('A6', 'ลำดับ');
@@ -231,11 +230,10 @@ class Receive_po_by_product extends PS_Controller
     $this->excel->getActiveSheet()->setCellValue('C6', 'เลขที่เอกสาร');
     $this->excel->getActiveSheet()->setCellValue('D6', 'ใบสั่งซื้อ');
     $this->excel->getActiveSheet()->setCellValue('E6', 'ใบส่งของ');
-    $this->excel->getActiveSheet()->setCellValue('F6', 'SAP No.');
-    $this->excel->getActiveSheet()->setCellValue('G6', 'ผู้ขาย');
-    $this->excel->getActiveSheet()->setCellValue('H6', 'สินค้า');
-    $this->excel->getActiveSheet()->setCellValue('I6', 'จำนวน');
-    $this->excel->getActiveSheet()->setCellValue('J6', 'มูลค่า');
+    $this->excel->getActiveSheet()->setCellValue('F6', 'ผู้ขาย');
+    $this->excel->getActiveSheet()->setCellValue('G6', 'สินค้า');
+    $this->excel->getActiveSheet()->setCellValue('H6', 'จำนวน');
+    $this->excel->getActiveSheet()->setCellValue('I6', 'มูลค่า');
 
     $row = 7;
     if(!empty($result))
@@ -250,11 +248,10 @@ class Receive_po_by_product extends PS_Controller
         $this->excel->getActiveSheet()->setCellValue('C'.$row, $rs->code);
         $this->excel->getActiveSheet()->setCellValue('D'.$row, $rs->po_code);
         $this->excel->getActiveSheet()->setCellValue('E'.$row, $rs->invoice_code);
-        $this->excel->getActiveSheet()->setCellValue('F'.$row, $rs->inv_code); //--- SAP No.
-        $this->excel->getActiveSheet()->setCellValue('G'.$row, $rs->vendor_code.' : '.$rs->vendor_name);
-        $this->excel->getActiveSheet()->setCellValue('H'.$row, $rs->product_code);
-        $this->excel->getActiveSheet()->setCellValue('I'.$row, $rs->qty);
-        $this->excel->getActiveSheet()->setCellValue('J'.$row, $rs->amount);
+        $this->excel->getActiveSheet()->setCellValue('F'.$row, $rs->vender_code.' : '.$rs->vender_name);
+        $this->excel->getActiveSheet()->setCellValue('G'.$row, $rs->product_code);
+        $this->excel->getActiveSheet()->setCellValue('H'.$row, $rs->qty);
+        $this->excel->getActiveSheet()->setCellValue('I'.$row, $rs->amount);
         $totalQty += $rs->qty;
         $totalAmount += $rs->amount;
         $no++;
@@ -265,15 +262,14 @@ class Receive_po_by_product extends PS_Controller
 
       $this->excel->getActiveSheet()->setCellValue('A'.$row, 'รวม');
       $this->excel->getActiveSheet()->mergeCells('A'.$row.':H'.$row);
-      $this->excel->getActiveSheet()->setCellValue('I'.$row, $totalQty);
-      $this->excel->getActiveSheet()->setCellValue('J'.$row, $totalAmount);
+      $this->excel->getActiveSheet()->setCellValue('H'.$row, $totalQty);
+      $this->excel->getActiveSheet()->setCellValue('I'.$row, $totalAmount);
 
       $this->excel->getActiveSheet()->getStyle('A'.$row)->getAlignment()->setHorizontal('right');
       $this->excel->getActiveSheet()->getStyle('D6:D'.$row)->getNumberFormat()->setFormatCode('0');
-      $this->excel->getActiveSheet()->getStyle('F6:F'.$row)->getNumberFormat()->setFormatCode('0');
-      $this->excel->getActiveSheet()->getStyle('I6:J'.$row)->getAlignment()->setHorizontal('right');
-      $this->excel->getActiveSheet()->getStyle('I6:I'.$row)->getNumberFormat()->setFormatCode('#,##0');
-      $this->excel->getActiveSheet()->getStyle('J6:J'.$row)->getNumberFormat()->setFormatCode('#,##0.00');
+      $this->excel->getActiveSheet()->getStyle('H6:I'.$row)->getAlignment()->setHorizontal('right');
+      $this->excel->getActiveSheet()->getStyle('H6:H'.$row)->getNumberFormat()->setFormatCode('#,##0');
+      $this->excel->getActiveSheet()->getStyle('I6:I'.$row)->getNumberFormat()->setFormatCode('#,##0.00');
     }
 
     setToken($token);

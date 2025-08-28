@@ -47,21 +47,21 @@ function toggleAllDocument(option){
 function toggleAllVendor(option){
   $('#allVendor').val(option);
   if(option == 1){
-    $('#btn-vendor-all').addClass('btn-primary');
-    $('#btn-vendor-range').removeClass('btn-primary');
-    $('#vendorFrom').val('');
-    $('#vendorFrom').attr('disabled', 'disabled');
-    $('#vendorTo').val('');
-    $('#vendorTo').attr('disabled', 'disabled');
+    $('#btn-vender-all').addClass('btn-primary');
+    $('#btn-vender-range').removeClass('btn-primary');
+    $('#venderFrom').val('');
+    $('#venderFrom').attr('disabled', 'disabled');
+    $('#venderTo').val('');
+    $('#venderTo').attr('disabled', 'disabled');
     return
   }
 
   if(option == 0){
-    $('#btn-vendor-all').removeClass('btn-primary');
-    $('#btn-vendor-range').addClass('btn-primary');
-    $('#vendorFrom').removeAttr('disabled');
-    $('#vendorTo').removeAttr('disabled');
-    $('#vendorFrom').focus();
+    $('#btn-vender-all').removeClass('btn-primary');
+    $('#btn-vender-range').addClass('btn-primary');
+    $('#venderFrom').removeAttr('disabled');
+    $('#venderTo').removeAttr('disabled');
+    $('#venderFrom').focus();
   }
 }
 
@@ -139,43 +139,43 @@ $('#pdTo').autocomplete({
 
 
 
-$('#vendorFrom').autocomplete({
-  source:BASE_URL + 'auto_complete/get_vendor_code_and_name',
+$('#venderFrom').autocomplete({
+  source:BASE_URL + 'auto_complete/get_vender_code_and_name',
   autoFocus:true,
   close:function(){
     var rs = $.trim($(this).val());
 		var arr = rs.split(' | ');
-    var vendor = arr[0];
-    $(this).val(vendor);
-    if(vendor.length){
-      var vendorTo = $('#vendorTo').val();
-      if(vendorTo.length > 0){
-        if(vendor > vendorTo){
-          $('#vendorTo').val(vendor);
-          $(this).val(vendorTo);
+    var vender = arr[0];
+    $(this).val(vender);
+    if(vender.length){
+      var venderTo = $('#venderTo').val();
+      if(venderTo.length > 0){
+        if(vender > venderTo){
+          $('#venderTo').val(vender);
+          $(this).val(venderTo);
         }
       }
     }
 
-    $('#vendorTo').focus();
+    $('#venderTo').focus();
   }
 });
 
 
-$('#vendorTo').autocomplete({
-  source:BASE_URL + 'auto_complete/get_vendor_code_and_name',
+$('#venderTo').autocomplete({
+  source:BASE_URL + 'auto_complete/get_vender_code_and_name',
   autoFocus:true,
   close:function(){
     var rs = $.trim($(this).val());
 		var arr = rs.split(' | ');
-    var vendor = arr[0];
-    $(this).val(vendor);
-    if(vendor.length){
-      var vendorFrom = $('#vendorFrom').val();
-      if(vendorFrom.length > 0){
-        if(vendor < vendorFrom){
-          $('#vendorFrom').val(vendor);
-          $(this).val(vendorFrom);
+    var vender = arr[0];
+    $(this).val(vender);
+    if(vender.length){
+      var venderFrom = $('#venderFrom').val();
+      if(venderFrom.length > 0){
+        if(vender < venderFrom){
+          $('#venderFrom').val(vender);
+          $(this).val(venderFrom);
         }
       }
     }
@@ -215,8 +215,8 @@ function getReport(){
   var docTo = $('#docTo').val();
 
   var allVendor = $('#allVendor').val();
-  var vendorFrom = $('#vendorFrom').val();
-  var vendorTo = $('#vendorTo').val();
+  var venderFrom = $('#venderFrom').val();
+  var venderTo = $('#venderTo').val();
 
   var allPO = $('#allPO').val();
   var poFrom = $('#poFrom').val();
@@ -265,24 +265,24 @@ function getReport(){
   }
 
   if(allVendor == 0){
-    if(vendorFrom.length == 0){
-      $('#vendorFrom').addClass('has-error');
+    if(venderFrom.length == 0){
+      $('#venderFrom').addClass('has-error');
       swal('Error!', 'ผู้ขายไม่ถูกต้อง', 'error');
       return false;
     }else{
-      $('#vendorFrom').removeClass('has-error');
+      $('#venderFrom').removeClass('has-error');
     }
 
-    if(vendorTo.length == 0){
-      $('#vendorTo').addClass('has-error');
+    if(venderTo.length == 0){
+      $('#venderTo').addClass('has-error');
       swal('Error!', 'ผู้ขายไม่ถูกต้อง', 'error');
       return false;
     }else{
-      $('#vendorTo').removeClass('has-error');
+      $('#venderTo').removeClass('has-error');
     }
   }else{
-    $('#vendorFrom').removeClass('has-error');
-    $('#vendorTo').removeClass('has-error');
+    $('#venderFrom').removeClass('has-error');
+    $('#venderTo').removeClass('has-error');
   }
 
 
@@ -333,8 +333,8 @@ function getReport(){
     {'name' : 'fromDate', 'value' : fromDate},
     {'name' : 'toDate', 'value' : toDate},
     {'name' : 'allVendor', 'value' : allVendor},
-    {'name' : 'vendorFrom', 'value' : vendorFrom},
-    {'name' : 'vendorTo', 'value' : vendorTo},
+    {'name' : 'venderFrom', 'value' : venderFrom},
+    {'name' : 'venderTo', 'value' : venderTo},
     {'name' : 'allPO', 'value' : allPO},
     {'name' : 'poFrom', 'value' : poFrom},
     {'name' : 'poTo', 'value' : poTo}
@@ -375,8 +375,8 @@ function doExport(){
   var docTo = $('#docTo').val();
 
   var allVendor = $('#allVendor').val();
-  var vendorFrom = $('#vendorFrom').val();
-  var vendorTo = $('#vendorTo').val();
+  var venderFrom = $('#venderFrom').val();
+  var venderTo = $('#venderTo').val();
 
   var allPO = $('#allPO').val();
   var poFrom = $('#poFrom').val();
@@ -425,24 +425,24 @@ function doExport(){
   }
 
   if(allVendor == 0){
-    if(vendorFrom.length == 0){
-      $('#vendorFrom').addClass('has-error');
+    if(venderFrom.length == 0){
+      $('#venderFrom').addClass('has-error');
       swal('Error!', 'ผู้ขายไม่ถูกต้อง', 'error');
       return false;
     }else{
-      $('#vendorFrom').removeClass('has-error');
+      $('#venderFrom').removeClass('has-error');
     }
 
-    if(vendorTo.length == 0){
-      $('#vendorTo').addClass('has-error');
+    if(venderTo.length == 0){
+      $('#venderTo').addClass('has-error');
       swal('Error!', 'ผู้ขายไม่ถูกต้อง', 'error');
       return false;
     }else{
-      $('#vendorTo').removeClass('has-error');
+      $('#venderTo').removeClass('has-error');
     }
   }else{
-    $('#vendorFrom').removeClass('has-error');
-    $('#vendorTo').removeClass('has-error');
+    $('#venderFrom').removeClass('has-error');
+    $('#venderTo').removeClass('has-error');
   }
 
 

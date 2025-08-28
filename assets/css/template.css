@@ -595,6 +595,10 @@ hr.padding-5 {
 	background-color:rgba(255,255,255,0.1);
 }
 
+.margin-right-0 {
+  margin-right:0px !important;
+}
+
 .margin-5 {
   margin-left:5px !important;
   margin-right:5px !important;
@@ -615,6 +619,10 @@ hr.padding-5 {
 
 .margin-right-15 {
 	margin-right:15px !important;
+}
+
+.margin-top-0 {
+  margin-top:0px !important;
 }
 
 .margin-top-5{
@@ -639,6 +647,10 @@ hr.padding-5 {
 
 .margin-top-30{
 	margin-top:30px !important;
+}
+
+.margin-left-0 {
+  margin-left:0px !important;
 }
 
 .margin-left-5 {
@@ -1183,10 +1195,6 @@ hr.padding-5 {
   margin-top:0px !important;
 }
 
-.btn-top {
-  margin-top:5px;
-}
-
 .top-btn {
 	margin-top:5px;
 }
@@ -1197,6 +1205,10 @@ hr.padding-5 {
 
 .btn-xs {
   height: 31px;
+}
+
+.btn-sm {
+  height:30px;
 }
 
 
@@ -1252,7 +1264,7 @@ hr.padding-5 {
 
 
 .font-size-11 {
-  font-size:11px !important;
+  font-size:11px;
 }
 
 
@@ -1474,10 +1486,7 @@ td.one-attribute{
     padding-right : 15px !important;
   }
 
-  .no-border-xs {
-    border:0px !important
-  }
-  
+
 	.cart-modal {
 		width:100%;
 		height: 100%;
@@ -1872,10 +1881,6 @@ input[type=number]::-webkit-outer-spin-button {
 	padding: 3px !important;
 }
 
-.table-padding-3 tr>td {
-  padding: 3px !important;
-}
-
 .fix-header {
 	z-index: 2;
 }
@@ -1945,4 +1950,8 @@ input[type=number]::-webkit-outer-spin-button {
 
 .select2-container.has-error > .select2-choice {
   border:solid 1px red !important;
+}
+
+.backorder {
+  color:#811818 !important;
 }

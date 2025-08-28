@@ -13,8 +13,8 @@ class Receive_po_by_product_model extends CI_Model
     if(!empty($ds))
     {
       $this->db
-      ->select('rp.code, rp.po_code, rp.invoice_code, rp.inv_code')
-      ->select('rp.vendor_code, rp.vendor_name, rp.date_add')
+      ->select('rp.code, rp.po_code, rp.invoice_code')
+      ->select('rp.vender_code, rp.vender_name, rp.date_add')
       ->select('rd.product_code, rd.qty, rd.amount')
       ->from('receive_product_detail AS rd')
       ->join('receive_product AS rp', 'rd.receive_code = rp.code', 'left')
@@ -22,9 +22,7 @@ class Receive_po_by_product_model extends CI_Model
       ->join('product_size AS si', 'pd.size_code = si.code', 'left')
       ->where('rp.date_add >=', $ds['fromDate'])
       ->where('rp.date_add <=', $ds['toDate'])
-      ->where('rp.inv_code IS NOT NULL', NULL, FALSE)
-      ->where('rp.status', 1)
-      ->where('rd.is_cancle', 0);
+      ->where('rp.status', 'C');
 
       if(empty($ds['allProduct']))
       {
@@ -46,10 +44,10 @@ class Receive_po_by_product_model extends CI_Model
 
       if(empty($ds['allVendor']))
       {
-        if(!empty($ds['vendorFrom']) && !empty($ds['vendorTo']))
+        if(!empty($ds['venderFrom']) && !empty($ds['venderTo']))
         {
-          $this->db->where('rp.vendor_code >=', $ds['vendorFrom']);
-          $this->db->where('rp.vendor_code <=', $ds['vendorTo']);
+          $this->db->where('rp.vender_code >=', $ds['venderFrom']);
+          $this->db->where('rp.vender_code <=', $ds['venderTo']);
         }
       }
 
@@ -74,7 +72,7 @@ class Receive_po_by_product_model extends CI_Model
 
       $this->db
       ->order_by('rp.code', 'ASC')
-      ->order_by('rd.style_code', 'ASC')
+      ->order_by('pd.style_code', 'ASC')
       ->order_by('pd.color_code', 'ASC')
       ->order_by('si.position', 'ASC');
 

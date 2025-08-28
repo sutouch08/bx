@@ -36,17 +36,17 @@
 	<div class="col-lg-2 col-md-2 col-sm-2 col-xs-4 padding-5">
     <label class="display-block">ผู้ขาย</label>
     <div class="btn-group btn-group-30 width-100">
-      <button type="button" class="btn btn-sm btn-primary width-50" id="btn-vendor-all" onclick="toggleAllVendor(1)">ทั้งหมด</button>
-      <button type="button" class="btn btn-sm width-50" id="btn-vendor-range" onclick="toggleAllVendor(0)">เลือก</button>
+      <button type="button" class="btn btn-sm btn-primary width-50" id="btn-vender-all" onclick="toggleAllVendor(1)">ทั้งหมด</button>
+      <button type="button" class="btn btn-sm width-50" id="btn-vender-range" onclick="toggleAllVendor(0)">เลือก</button>
     </div>
   </div>
   <div class="col-lg-2 col-md-2 col-sm-2 col-xs-4 padding-5">
     <label class="display-block not-show">เริ่มต้น</label>
-    <input type="text" class="form-control input-sm text-center" id="vendorFrom" name="vendorFrom" placeholder="เริ่มต้น" disabled>
+    <input type="text" class="form-control input-sm text-center" id="venderFrom" name="venderFrom" placeholder="เริ่มต้น" disabled>
   </div>
   <div class="col-lg-2 col-md-2 col-sm-2 col-xs-4 padding-5">
     <label class="display-block not-show">สิ้นสุด</label>
-    <input type="text" class="form-control input-sm text-center" id="vendorTo" name="vendorTo" placeholder="สิ้นสุด" disabled>
+    <input type="text" class="form-control input-sm text-center" id="venderTo" name="venderTo" placeholder="สิ้นสุด" disabled>
   </div>
 
 	<div class="col-lg-2 col-md-2 col-sm-2 col-xs-4  padding-5">
@@ -115,7 +115,6 @@
       <th class="width-10 middle text-center">เลขที่เอกสาร</th>
       <th class="width-10 middle text-center">ใบสั่งซื้อ</th>
 			<th class="width-15 middle text-center">ใบส่งของ</th>
-			<th class="width-8 middle text-center">SAP No.</th>
 			<th class="middle text-center">ผู้ขาย</th>
       <th class="width-8 middle text-right">จำนวน</th>
       <th class="width-15 text-right middle">มูลค่า</th>
@@ -123,12 +122,12 @@
 {{#each this}}
   {{#if nodata}}
     <tr>
-      <td colspan="9" align="center"><h4>-----  ไม่พบเอกสารตามเงื่อนไขที่กำหนด  -----</h4></td>
+      <td colspan="8" align="center"><h4>-----  ไม่พบเอกสารตามเงื่อนไขที่กำหนด  -----</h4></td>
     </tr>
   {{else}}
     {{#if @last}}
     <tr class="font-size-14">
-      <td colspan="7" class="text-right">รวม</td>
+      <td colspan="6" class="text-right">รวม</td>
       <td class="text-right">{{ totalQty }}</td>
       <td class="text-right">{{ totalAmount }}</td>
     </tr>
@@ -139,8 +138,7 @@
       <td class="middle">{{ code }}</td>
 			<td class="middle">{{ po }}</td>
       <td class="middle">{{ invoice }}</td>
-			<td class="middle">{{ sapNo }}</td>
-			<td class="middle"><input type="text" class="print-row" value="{{ vendor }}"></td>
+			<td class="middle"><input type="text" class="print-row" value="{{ vender }}"></td>
       <td class="middle text-right">{{ qty }}</td>
       <td class="middle text-right">{{ amount }}</td>
     </tr>
@@ -150,5 +148,5 @@
   </table>
 </script>
 
-<script src="<?php echo base_url(); ?>scripts/report/purchase/receive_po_by_doc.js"></script>
+<script src="<?php echo base_url(); ?>scripts/report/purchase/receive_po_by_doc.js?v=<?php echo date('Ymd'); ?>"></script>
 <?php $this->load->view('include/footer'); ?>
