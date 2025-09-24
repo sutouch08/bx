@@ -1,11 +1,13 @@
 <?php $this->load->view('include/header'); ?>
 <div class="row">
-	<div class="col-lg-6 col-md-6 col-sm-6 col-xs-12 padding-5 paddig-top-5">
+	<div class="col-lg-4 col-md-4 col-sm-4 col-xs-12 padding-5 paddig-top-5">
     <h3 class="title"> <?php echo $this->title; ?></h3>
   </div>
-	<div class="col-lg-6 col-md-6 col-sm-6 col-xs-12 padding-5 text-right">
-		<button type="button" class="btn btn-white btn-default top-btn" onclick="goBack()"><i class="fa fa-arrow-left"></i> Back</button>		
+	<div class="col-lg-8 col-md-8 col-sm-8 col-xs-12 padding-5 text-right">
+		<button type="button" class="btn btn-white btn-default top-btn" onclick="goBack()"><i class="fa fa-arrow-left"></i> Back</button>
+		<button type="button" class="btn btn-white btn-purple top-btn btn-100" onclick="getTemplate()"><i class="fa fa-download"></i> &nbsp; Template</button>
 		<?php if(($this->pm->can_add OR $this->pm->can_edit) && $po->status == 'P') : ?>
+			<button type="button" class="btn btn-white btn-primary top-btn btn-100" onclick="getUploadFile()"><i class="fa fa-upload"></i> &nbsp; Import Items</button>
 			<button type="button" class="btn btn-white btn-success btn-100 top-btn" onclick="save()">Save</button>
 		<?php endif; ?>
 	</div>
@@ -56,6 +58,7 @@
 
 <?php if($po->status == 'P') : ?>
 <?php $this->load->view('purchase/po/po_control'); ?>
+<?php $this->load->view('purchase/po/import_po'); ?>
 <?php endif; ?>
 
 <?php $this->load->view('purchase/po/po_detail'); ?>

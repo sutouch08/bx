@@ -930,6 +930,218 @@ class Po extends PS_Controller
   }
 
 
+  public function import_po()
+  {
+    ini_set('max_execution_time', 1200);
+    ini_set('memory_limit','1000M');
+
+    $sc = TRUE;
+
+    $import = 0;
+    $success = 0;
+    $failed = 0;
+    $skip = 0;
+    $code = $this->input->post('code');
+    $file = isset( $_FILES['uploadFile'] ) ? $_FILES['uploadFile'] : FALSE;
+    $path = $this->config->item('upload_path').'po/';
+    $file	= 'uploadFile';
+    $config = array(   // initial config for upload class
+      "allowed_types" => "xlsx",
+      "upload_path" => $path,
+      "file_name"	=> "import-po-".date('YmdHis'),
+      "max_size" => 5120,
+      "overwrite" => TRUE
+    );
+
+    $this->load->library("upload", $config);
+
+    if(! $this->upload->do_upload($file))
+    {
+      $sc = FALSE;
+      $this->error = $this->upload->display_errors();
+    }
+    else
+    {
+      $this->load->library('excel');
+      $info = $this->upload->data();
+      $excel = PHPExcel_IOFactory::load($info['full_path']);
+      $excel->setActiveSheetIndex(0);
+      $sheet = $excel->getSheet(0);
+
+      if( ! empty($sheet))
+      {
+        $rows = $sheet->getHighestRow();
+        $limit = 5001;
+
+        if($rows > $limit)
+        {
+          $sc = FALSE;
+          $this->error = "ไฟล์มีจำนวนรายการเกิน {$limit} บรรทัด";
+        }
+
+        $doc = $this->po_model->get($code);
+
+        if( ! empty($doc))
+        {
+          if($doc->status != 'P')
+          {
+            $sc = FALSE;
+            set_error('status');
+          }
+        }
+        else
+        {
+          $sc = FALSE;
+          set_error('notfound');
+        }
+
+        $ds = [];
+
+        if($sc === TRUE)
+        {
+          $headCol = array(
+            'A' => 'Item Code',
+            'B' => 'Price',
+            'C' => 'Qty'
+          );
+
+          $i = 1;
+
+          while($i < $rows)
+          {
+            if($sc === FALSE)
+            {
+              break;
+            }
+
+            if($i == 1)
+            {
+              foreach($headCol as $col => $field)
+              {
+                $value = $sheet->getCell($col.$i)->getValue();
+
+                if(empty($value) OR $value !== $field)
+                {
+                  $sc = FALSE;
+                  $this->error .= 'Column '.$col.' Should be '.$field.'<br/>';
+                }
+              }
+
+              if($sc === FALSE)
+              {
+                $this->error .= "<br/><br/>You should download new template !";
+                break;
+              }
+
+              $i++;
+            }
+            else
+            {
+              $rs = [];
+
+              foreach($headCol as $col => $field)
+              {
+                $column = $col.$i;
+
+                $rs[$col] = $sheet->getCell($column)->getValue();
+              }
+
+              if($sc === TRUE && ! empty($rs['A']) && ! empty($rs['B']) && ! empty($rs['C']))
+              {
+                $item_code = trim($rs['A']);
+                $price = empty($rs['B']) ? 0.00 : str_replace(",", "", $rs['B']);
+                $price = is_numeric($price) ? $price : 0;
+                $qty = empty(trim($rs['C'])) ? 1 : str_replace(',', '', $rs['C']);
+                $qty = is_numeric($qty) ? $qty : 1;
+
+                $item = $this->products_model->get($item_code);
+
+                if( ! empty($item))
+                {
+                  $ds[] = (object) array(
+                    'po_id' => $doc->id,
+                    'po_code' => $doc->code,
+                    'product_code' => $item->code,
+                    'product_name' => $item->name,
+                    'unit_code' => $item->unit_code,
+                    'price' => $price,
+                    'qty' => $qty,
+                    'open_qty' => $qty,
+                    'line_total' => $qty * $price,
+                    'update_user' => $this->_user->uname
+                  );
+                }
+                else
+                {
+                  $sc = FALSE;
+                  $this->error = "Invalid Item code '{$item_code}' at Line {$i} ";
+                }
+              }
+
+              $i++;
+            } // end if $i == 1
+          } // end while
+
+
+          if($sc === TRUE && ! empty($ds))
+          {
+            $this->db->trans_begin();
+
+            if($this->po_model->delete_all_details($code))
+            {
+              foreach($ds as $rs)
+              {
+                if($sc === FALSE)
+                {
+                  break;
+                }
+
+                $arr = array(
+                  'po_id' => $rs->po_id,
+                  'po_code' => $rs->po_code,
+                  'product_code' => $rs->product_code,
+                  'product_name' => $rs->product_name,
+                  'unit_code' => $rs->unit_code,
+                  'price' => $rs->price,
+                  'qty' => $rs->qty,
+                  'open_qty' => $rs->qty,
+                  'line_total' => $rs->line_total,
+                  'update_user' => $rs->update_user
+                );
+
+                if( ! $this->po_model->add_detail($arr))
+                {
+                  $sc = FALSE;
+                  $this->error = "Failed to insert item row";
+                }
+              }
+
+              if($sc === TRUE)
+              {
+                $this->po_model->recal_total($code);
+              }
+            }
+            else
+            {
+              $sc = FALSE;
+              $this->error = "Failed to delete previous item rows";
+            }
+
+            if($sc === TRUE)
+            {
+              $this->db->trans_commit();
+            }
+            else
+            {
+              $this->db->trans_rollback();
+            }
+          }
+        } //--- if $sc == TRUE
+      }
+    }
+
+    $this->_response($sc);
+  }
 
 
   public function get_new_code($date = '')
@@ -952,6 +1164,32 @@ class Po extends PS_Controller
     }
 
     return $new_code;
+  }
+
+
+  public function get_template_file()
+  {
+    $path = $this->config->item('upload_path').'po/';
+    $file_name = $path."import_po_template.xlsx";
+
+    if(file_exists($file_name))
+    {
+      header('Content-Description: File Transfer');
+      header('Content-Type:Application/octet-stream');
+      header('Cache-Control: no-cache, must-revalidate');
+      header('Expires: 0');
+      header('Content-Disposition: attachment; filename="'.basename($file_name).'"');
+      header('Content-Length: '.filesize($file_name));
+      header('Pragma: public');
+
+      flush();
+      readfile($file_name);
+      die();
+    }
+    else
+    {
+      echo "File Not Found";
+    }
   }
 
   public function clear_filter()
