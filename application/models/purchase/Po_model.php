@@ -180,7 +180,7 @@ class Po_model extends CI_Model
   {
     if( ! empty($ds['code']))
     {
-      $this->db->like('.code', $ds['code']);
+      $this->db->like('code', $ds['code']);
     }
 
     if( ! empty($ds['vender']))
@@ -222,7 +222,7 @@ class Po_model extends CI_Model
   {
     if( ! empty($ds['code']))
     {
-      $this->db->like('.code', $ds['code']);
+      $this->db->like('code', $ds['code']);
     }
 
     if( ! empty($ds['vender']))
