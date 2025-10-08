@@ -23,7 +23,7 @@ function toggleAllProduct(option){
 
 
 $('#pdFrom').autocomplete({
-  source : BASE_URL + 'auto_complete/get_style_code',
+  source : BASE_URL + 'auto_complete/get_item_code_and_name',
   autoFocus:true,
   close:function(){
     var rs = $(this).val();
@@ -42,7 +42,7 @@ $('#pdFrom').autocomplete({
 
 
 $('#pdTo').autocomplete({
-  source:BASE_URL + 'auto_complete/get_style_code',
+  source:BASE_URL + 'auto_complete/get_item_code_and_name',
   autoFocus:true,
   close:function(){
     var rs = $(this).val();
@@ -97,55 +97,39 @@ $('#date').datepicker({
 });
 
 
-function getReport(){
-  var allProduct = $('#allProduct').val();
-  var allWhouse = $('#allWarehouse').val();
-  var pdFrom = $('#pdFrom').val();
-  var pdTo = $('#pdTo').val();
+function getReport() {
+  clearErrorByClass('e');
 
-  if(allProduct == 0){
-    if(pdFrom.length == 0){
-      $('#pdFrom').addClass('has-error');
-      return false;
-    }else{
-      $('#pdFrom').removeClass('has-error');
-    }
+  let h = {
+    'allProduct' : $('#allProduct').val(),
+    'allWhouse' : $('#allWarehouse').val(),
+    'pdFrom' : $('#pdFrom').val().trim(),
+    'pdTo' : $('#pdTo').val().trim(),
+    'date' : $('#date').val(),
+    'warehouse' : []
+  };
 
-    if(pdTo.length == 0){
-      $('#pdTo').addClass('has-error');
-      return false;
-    }else{
-      $('#pdTo').removeClass('has-error');
-    }
-  }else{
-    $('#pdFrom').removeClass('has-error');
-    $('#pdTo').removeClass('has-error');
+  if(h.allProduct == 0 && h.pdFrom.length == 0) {
+    $('#pdFrom').hasError();
+    return false;
   }
 
+  if(h.allProduct == 0 && h.pdTo.length == 0) {
+    $('#pdTo').hasError();
+    return false;
+  }
 
-  if(allWhouse == 0){
-    var count = $('.chk:checked').length;
-    //console.log(count);
-    if(count == 0){
+  if(h.allWhouse == 0) {
+    let count = $('.chk:checked').length;
+    if(count == 0) {
       $('#wh-modal').modal('show');
       return false;
     }
   }
 
-
-  var data = [
-    {'name' : 'allProduct', 'value' : allProduct},
-    {'name' : 'allWhouse' , 'value' : allWhouse},
-    {'name' : 'pdFrom', 'value' : pdFrom},
-    {'name' : 'pdTo', 'value' : pdTo},
-  ];
-
-  if(allWhouse == 0){
-    $('.chk').each(function(index, el) {
-      if($(this).is(':checked')){
-        let names = 'warehouse['+$(this).val()+']';
-        data.push({'name' : names, 'value' : $(this).val() });
-      }
+  if(h.allWhouse == 0) {
+    $('.chk:checked').each(function() {
+      h.warehouse.push($(this).val());
     });
   }
 
@@ -153,101 +137,70 @@ function getReport(){
 
   $.ajax({
     url:HOME + 'get_report',
-    type:'GET',
+    type:'POST',
     cache:'false',
-    data:data,
-    success:function(rs){
+    data: {
+      'data' : JSON.stringify(h)
+    },
+    success:function(rs) {
       load_out();
-      var rs = $.trim(rs);
-      if(isJson(rs)){
-        var source = $('#template').html();
-        var data = $.parseJSON(rs);
-        var output = $('#rs');
+      if(isJson(rs)) {
+        let source = $('#template').html();
+        let data = JSON.parse(rs);
+        let output = $('#rs');
         render(source,  data, output);
       }
+      else {
+        showError(rs);
+      }
+    },
+    error:function(rs) {
+      showError(rs)
     }
   });
-
 }
 
 
-function doExport(){
-  var allProduct = $('#allProduct').val();
-  var allWhouse = $('#allWarehouse').val();
-  var currentDate = $('#currentDate').val();
-  var pdFrom = $('#pdFrom').val();
-  var pdTo = $('#pdTo').val();
-  var date = $('#date').val();
+function doExport() {
+  clearErrorByClass('e');
 
-  if(allProduct == 0){
-    if(pdFrom.length == 0){
-      $('#pdFrom').addClass('has-error');
-      return false;
-    }else{
-      $('#pdFrom').removeClass('has-error');
-    }
+  let h = {
+    'allProduct' : $('#allProduct').val(),
+    'allWhouse' : $('#allWarehouse').val(),
+    'pdFrom' : $('#pdFrom').val().trim(),
+    'pdTo' : $('#pdTo').val().trim(),
+    'date' : $('#date').val(),
+    'warehouse' : []
+  };
 
-    if(pdTo.length == 0){
-      $('#pdTo').addClass('has-error');
-      return false;
-    }else{
-      $('#pdTo').removeClass('has-error');
-    }
-  }else{
-    $('#pdFrom').removeClass('has-error');
-    $('#pdTo').removeClass('has-error');
+  if(h.allProduct == 0 && pdFrom.length == 0) {
+    $('#pdFrom').hasError();
+    return false;
   }
 
+  if(h.allProduct == 0 && pdTo.length == 0) {
+    $('#pdTo').hasError();
+    return false;
+  }
 
-  if(allWhouse == 0){
-    var count = $('.chk:checked').length;
-    console.log(count);
-    if(count == 0){
+  if(h.allWhouse == 0) {
+    let count = $('.chk:checked').length;
+    if(count == 0) {
       $('#wh-modal').modal('show');
       return false;
     }
   }
 
-  if(currentDate == 0){
-    if(date == ''){
-      $('#date').addClass('has-error');
-      return false;
-    }else{
-      $('#date').removeClass('has-error');
-    }
-  }
-  else
-  {
-    $('#date').removeClass('has-error');
-  }
-
-  var data = [
-    {'name' : 'allProduct', 'value' : allProduct},
-    {'name' : 'allWhouse' , 'value' : allWhouse},
-    {'name' : 'currentDate' , 'value' : currentDate},
-    {'name' : 'pdFrom', 'value' : pdFrom},
-    {'name' : 'pdTo', 'value' : pdTo},
-    {'name' : 'date', 'value' : date}
-  ];
-
-  if(allWhouse == 0){
-    $('.chk').each(function(index, el) {
-      if($(this).is(':checked')){
-        let names = 'warehouse['+$(this).val()+']';
-        data.push({'name' : names, 'value' : $(this).val() });
-      }
+  if(h.allWhouse == 0) {
+    $('.chk:checked').each(function() {
+      h.warehouse.push($(this).val());
     });
   }
 
-  $('#reportForm').submit();
-  //
-  // data = $.param(data);
-  //
-  // var token = new Date().getTime();
-  // var target = HOME + 'do_export';
-  // target += '&'+data;
-  // target += '&token='+token;
-  // get_download(token);
-  // window.location.href = target;
+  let token = generateUID();
+  $('#data').val(JSON.stringify(h));
+  $('#token').val(token);
 
+  get_download(token);
+  $('#reportForm').submit();
 }

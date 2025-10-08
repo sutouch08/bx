@@ -5,7 +5,7 @@ class Stock_balance_zone extends PS_Controller
   public $menu_code = 'RICSBZ';
 	public $menu_group_code = 'RE';
   public $menu_sub_group_code = 'REINVT';
-	public $title = 'รายงานสินค้าคงเหลือ แยกตามโซน (SAP)';
+	public $title = 'รายงานสินค้าคงเหลือแยกตามโซน';
   public $filter;
   public $error;
   public function __construct()
@@ -14,11 +14,12 @@ class Stock_balance_zone extends PS_Controller
     $this->home = base_url().'report/inventory/stock_balance_zone';
     $this->load->model('report/inventory/stock_balance_report_model');
     $this->load->model('masters/products_model');
+    $this->load->model('masters/zone_model');
+    $this->load->model('masters/warehouse_model');
   }
 
   public function index()
   {
-    $this->load->model('masters/warehouse_model');
     $whList = $this->warehouse_model->get_all();
     $ds['whList'] = $whList;
     $this->load->view('report/inventory/report_stock_balance_zone', $ds);
@@ -27,91 +28,94 @@ class Stock_balance_zone extends PS_Controller
 
   public function get_report()
   {
-    ini_set('memory_limit','512M'); // This also needs to be increased in some cases. Can be changed to a higher value as per need)
-    ini_set('sqlsrv.ClientBufferMaxKBSize','524288'); // Setting to 512M
-    ini_set('pdo_sqlsrv.client_buffer_max_kb_size','524288'); // Setting to 512M - for pdo_sqlsrv
-
+    ini_set('memory_limit','512M');
     $sc = TRUE;
-    $allProduct = $this->input->get('allProduct');
-    $pdFrom = $this->input->get('pdFrom');
-    $pdTo = $this->input->get('pdTo');
+    $bs = [];
+    $bs['items'] = [];
+    $ds = json_decode($this->input->post('data'));
 
-    $allWhouse = $this->input->get('allWhouse');
-    $warehouse = $this->input->get('warehouse');
-
-    $allZone = $this->input->get('allZone');
-    $zoneCode = $this->input->get('zoneCode');
-    $zoneName = $this->input->get('zoneName');
-
-    $wh_list = '';
-    if(!empty($warehouse) && empty($zoneCode))
+    if( ! empty($ds))
     {
-      $i = 1;
-      foreach($warehouse as $wh)
+      $whs = "";
+
+      if( ! empty($ds->warehouse) && empty($ds->zoneCode))
       {
-        $wh_list .= $i === 1 ? $wh : ', '.$wh;
-        $i++;
+        $i = 1;
+        foreach($ds->warehouse as $wh)
+        {
+          $whs .= $i === 1 ? $wh : ', '.$wh;
+          $i++;
+        }
       }
-    }
 
-    //---  Report title
-    $ds['reportDate'] = thai_date(date('Y-m-d'),FALSE, '/');
-    $ds['whList']   = $allWhouse == 1 ? 'ทั้งหมด' : $wh_list;
-    $ds['zoneList'] = $allZone == 1 ? 'ทั้งหมด' : $zoneCode." - ".$zoneName;
-    $ds['productList']   = $allProduct == 1 ? 'ทั้งหมด' : '('.$pdFrom.') - ('.$pdTo.')';
+      $zoneName = empty($ds->zoneCode) ? NULL : $this->zone_model->get_name($ds->zoneCode);
 
-    $bs = array();
+      //---  Report title
+      $bs['reportDate'] = thai_date($ds->date, FALSE, '/');
+      $bs['whList'] = $ds->allWhouse == 1 ? 'ทั้งหมด' : $whs;
+      $bs['zoneList'] = $ds->allZone == 1 ? 'ทั้งหมด' : $ds->zoneCode." - ".$zoneName;
+      $bs['productList'] = $ds->allProduct == 1 ? 'ทั้งหมด' : '('.$ds->pdFrom.') - ('.$ds->pdTo.')';
 
-    $result = $this->stock_balance_report_model->get_stock_balance_zone($allProduct, $pdFrom, $pdTo, $allWhouse, $warehouse, $allZone, $zoneCode);
+      $date = from_date($ds->date);
+      $today = from_date(now());
 
-    if(!empty($result))
-    {
-      if(count($result) > 2000)
+      if($date == $today)
       {
-        $sc = FALSE;
-        $this->error = "ข้อมูลมีปริมาณมากเกินกว่าจะแสดงผลได้ กรุณาส่งออกข้อมูลแทนการแสดงผลหน้าจอ";
+        $res = $this->stock_balance_report_model->get_current_stock_zone($ds->allProduct, $ds->pdFrom, $ds->pdTo, $ds->allWhouse, $ds->warehouse, $ds->allZone, $ds->zoneCode);
       }
       else
       {
-        $no = 1;
-        $totalQty = 0;
-        $totalAmount = 0;
+        $res = $this->stock_balance_report_model->get_prev_stock_zone($ds->allProduct, $ds->pdFrom, $ds->pdTo, $ds->allWhouse, $ds->warehouse, $ds->allZone, $ds->zoneCode, $date);
+      }
 
-        foreach($result as $rs)
+      if( ! empty($res))
+      {
+        if(count($res) > 2000)
         {
-          $amount = $rs->qty * $rs->price;
-
-          $arr = array(
-            'no' => number($no),
-            'warehouse' => $rs->warehouse_code,
-            'zone' => $rs->zone_name,
-            'pdCode' => $rs->product_code,
-            'pdName' => $rs->product_name,
-            'price' => number($rs->price, 2),
-            'qty' => number($rs->qty),
-            'amount' => number($amount, 2)
-          );
-
-          array_push($bs, $arr);
-          $totalQty += $rs->qty;
-          $totalAmount += $amount;
-
-          $no++;
+          $sc = FALSE;
+          $this->error = "ข้อมูลมีปริมาณมากเกินกว่าจะแสดงผลได้ กรุณาส่งออกข้อมูลแทนการแสดงผลหน้าจอ";
         }
+        else
+        {
+          $no = 1;
+          $totalQty = 0;
+          $totalAmount = 0;
 
-        $arr = array( 'totalQty' => number($totalQty), 'totalAmount' => number($totalAmount, 2));
-        array_push($bs, $arr);
+          foreach($res as $rs)
+          {
+            $amount = $rs->qty * $rs->price;
+            $bs['items'][] = array(
+              'no' => number($no),
+              'warehouse' => $rs->warehouse_code,
+              'zone' => $rs->zone_name,
+              'pdCode' => $rs->product_code,
+              'pdName' => $rs->product_name,
+              'price' => number($rs->price, 2),
+              'qty' => number($rs->qty),
+              'amount' => number($amount, 2)
+            );
+
+            $totalQty += $rs->qty;
+            $totalAmount += $amount;
+            $no++;
+          }
+
+          $bs['totalQty'] = number($totalQty);
+          $bs['totalAmount'] = number($totalAmount, 2);
+        }
+      }
+      else
+      {
+        $bs['items'][] = ['nodata' => 'nodata'];
       }
     }
     else
     {
-      $arr = array('nodata' => 'nodata');
-      array_push($bs, $arr);
+      $sc = FALSE;
+      set_error('required');
     }
 
-    $ds['bs'] = $bs;
-
-    echo $sc === TRUE ? json_encode($ds) : $this->error;
+    echo $sc === TRUE ? json_encode($bs) : $this->error;
   }
 
 
@@ -120,44 +124,40 @@ class Stock_balance_zone extends PS_Controller
 
   public function do_export()
   {
-    ini_set('memory_limit','512M'); // This also needs to be increased in some cases. Can be changed to a higher value as per need)
-    ini_set('sqlsrv.ClientBufferMaxKBSize','524288'); // Setting to 512M
-    ini_set('pdo_sqlsrv.client_buffer_max_kb_size','524288'); // Setting to 512M - for pdo_sqlsrv
-
-    $sc = TRUE;
-    $allProduct = $this->input->post('allProduct');
-    $pdFrom = $this->input->post('pdFrom');
-    $pdTo = $this->input->post('pdTo');
-
-    $allWhouse = $this->input->post('allWhouse');
-    $warehouse = $this->input->post('warehouse');
-
-    $allZone = $this->input->post('allZone');
-    $zoneCode = $this->input->post('zoneCode');
-    $zoneName = $this->input->post('zoneName');
-
+    ini_set('memory_limit','512M');    
+    $ds = json_decode($this->input->post('data'));
     $token = $this->input->post('token');
 
-    $wh_list = '';
-    if(!empty($warehouse) && empty($zoneCode))
+    $whs = "";
+
+    if( ! empty($ds->warehouse) && empty($ds->zoneCode))
     {
       $i = 1;
-      foreach($warehouse as $wh)
+      foreach($ds->warehouse as $wh)
       {
-        $wh_list .= $i === 1 ? $wh : ', '.$wh;
+        $whs .= $i === 1 ? $wh : ', '.$wh;
         $i++;
       }
     }
 
-    //---  Report title
-    $report_title = "รายงานสินค้าคงเหลือแยกตามโซน ณ วันที่ ".date('d/m/Y');
-    $whList = $allWhouse == 1 ? 'ทั้งหมด' : $wh_list;
-    $zoneList = $allZone == 1 ? 'ทั้งหมด' : $zoneCode." - ".$zoneName;
-    $productList  = $allProduct == 1 ? 'ทั้งหมด' : '('.$pdFrom.') - ('.$pdTo.')';
+    $zoneName = empty($ds->zoneCode) ? NULL : $this->zone_model->get_name($ds->zoneCode);
 
-    $bs = array();
+    $report_title = "รายงานสินค้าคงเหลือแยกตามโซน ณ วันที่ ".thai_date($ds->date, FALSE, '/');
+    $whList = $ds->allWhouse == 1 ? 'ทั้งหมด' : $whs;
+    $zoneList = $ds->allZone == 1 ? 'ทั้งหมด' : $ds->zoneCode." - ".$zoneName;
+    $productList = $ds->allProduct == 1 ? 'ทั้งหมด' : '('.$ds->pdFrom.') - ('.$ds->pdTo.')';
 
-    $result = $this->stock_balance_report_model->get_stock_balance_zone($allProduct, $pdFrom, $pdTo, $allWhouse, $warehouse, $allZone, $zoneCode);
+    $date = from_date($ds->date);
+    $today = from_date(now());
+
+    if($date == $today)
+    {
+      $res = $this->stock_balance_report_model->get_current_stock_zone($ds->allProduct, $ds->pdFrom, $ds->pdTo, $ds->allWhouse, $ds->warehouse, $ds->allZone, $ds->zoneCode);
+    }
+    else
+    {
+      $res = $this->stock_balance_report_model->get_prev_stock_zone($ds->allProduct, $ds->pdFrom, $ds->pdTo, $ds->allWhouse, $ds->warehouse, $ds->allZone, $ds->zoneCode, $date);
+    }
 
     //--- load excel library
     $this->load->library('excel');
@@ -185,16 +185,19 @@ class Stock_balance_zone extends PS_Controller
     $this->excel->getActiveSheet()->setCellValue('D5', 'ชื่อโซน');
     $this->excel->getActiveSheet()->setCellValue('E5', 'รหัสสินค้า');
     $this->excel->getActiveSheet()->setCellValue('F5', 'ชื่อสินค้า');
-    $this->excel->getActiveSheet()->setCellValue('G5', 'ราคาขาย');
+    $this->excel->getActiveSheet()->setCellValue('G5', 'ราคา');
     $this->excel->getActiveSheet()->setCellValue('H5', 'จำนวน');
     $this->excel->getActiveSheet()->setCellValue('I5', 'มูลค่า');
 
     $row = 6;
-    if(!empty($result))
+
+    if( ! empty($res))
     {
       $no = 1;
+
       $totalQty = 0;
-      foreach($result as $rs)
+
+      foreach($res as $rs)
       {
         $this->excel->getActiveSheet()->setCellValue('A'.$row, $no);
         $this->excel->getActiveSheet()->setCellValue('B'.$row, $rs->warehouse_code);
@@ -225,61 +228,6 @@ class Stock_balance_zone extends PS_Controller
     $writer->save('php://output');
 
   }
-
-
-  public function export_to_check()
-  {
-    ini_set('memory_limit','512M'); // This also needs to be increased in some cases. Can be changed to a higher value as per need)
-    ini_set('sqlsrv.ClientBufferMaxKBSize','524288'); // Setting to 512M
-    ini_set('pdo_sqlsrv.client_buffer_max_kb_size','524288'); // Setting to 512M - for pdo_sqlsrv
-
-    $allProduct = 1;
-    $pdFrom = NULL;
-    $pdTo = NULL;
-
-    $allWhouse = 1;
-    $warehouse = NULL;
-
-    $allZone = 0;
-    $zoneCode = $this->input->post('zone_code');
-    $token = $this->input->post('token');
-
-    $result = $this->stock_balance_report_model->get_stock_balance_zone($allProduct, $pdFrom, $pdTo, $allWhouse, $warehouse, $allZone, $zoneCode);
-
-    //--- load excel library
-    $this->load->library('excel');
-
-    $this->excel->setActiveSheetIndex(0);
-    $this->excel->getActiveSheet()->setTitle('Report Stock Zone');
-
-    //--- set Table header
-    $this->excel->getActiveSheet()->setCellValue('A1', 'barcode');
-    $this->excel->getActiveSheet()->setCellValue('B1', 'item_code');
-    $this->excel->getActiveSheet()->setCellValue('C1', 'qty');
-
-    $row = 2;
-    if(!empty($result))
-    {
-      foreach($result as $rs)
-      {
-        $this->excel->getActiveSheet()->setCellValue('A'.$row, $this->products_model->get_barcode($rs->product_code));
-        $this->excel->getActiveSheet()->setCellValue('B'.$row, $rs->product_code);
-        $this->excel->getActiveSheet()->setCellValue('C'.$row, $rs->qty);
-        $row++;
-      }
-
-      $this->excel->getActiveSheet()->getStyle('A2:A'.($row -1))->getNumberFormat()->setFormatCode('0');
-    }
-
-    setToken($token);
-    $file_name = "Report Stock Zone.xlsx";
-    header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'); /// form excel 2007 XLSX
-    header('Content-Disposition: attachment;filename="'.$file_name.'"');
-    $writer = PHPExcel_IOFactory::createWriter($this->excel, 'Excel2007');
-    $writer->save('php://output');
-  }
-
-
 } //--- end class
 
 

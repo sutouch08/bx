@@ -1047,11 +1047,11 @@ class Auto_complete extends CI_Controller
 
   	if($txt !== '*')
   	{
-  		$this->db->like('code', $txt);
-  		$this->db->or_like('name', $txt);
+  		$this->db->like('code', $txt, 'after');
   	}
 
   	$this->db->order_by('code', 'ASC');
+
   	$this->db->limit(50);
 
     $qs = $this->db->get('products');

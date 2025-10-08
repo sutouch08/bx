@@ -41,7 +41,7 @@ class Inventory_report_model extends CI_Model
   public function get_current_stock_balance($allProduct, $pdFrom, $pdTo, $allWhouse, $warehouse)
   {
     $this->db
-    ->select('s.*')
+    ->select('p.code, p.name, p.barcode, p.cost')
     ->select_sum('s.qty')
     ->from('stock AS s')
     ->join('products AS p', 's.product_code = p.code', 'left')
@@ -51,8 +51,8 @@ class Inventory_report_model extends CI_Model
     if($allProduct == 0 && ! empty($pdFrom) && ! empty($pdTo))
     {
       $this->db
-      ->where('p.stylel_code >=', $pdFrom)
-      ->where('p.style_code <=', $pdTo);
+      ->where('s.product_code >=', $pdFrom)
+      ->where('s.product_code <=', $pdTo);
     }
 
     if($allWhouse == 0 && ! empty($warehouse))
@@ -60,9 +60,51 @@ class Inventory_report_model extends CI_Model
       $this->db->where_in('z.warehouse_code', $warehouse);
     }
 
-    $this->db->group_by('s.product_code')->order_by('s.product_code', 'ASC');
+    $this->db
+    ->group_by('s.product_code')
+    ->order_by('s.product_code', 'ASC');
 
     $rs = $this->db->get();
+
+    if($rs->num_rows() > 0)
+    {
+      return $rs->result();
+    }
+
+    return NULL;
+  }
+
+
+  public function get_prev_stock_balance($allProduct, $pdFrom, $pdTo, $allWhouse, $warehouse, $date)
+  {
+    $qr  = "SELECT pd.barcode, pd.code, pd.name, pd.cost, (SUM(s.move_in) - SUM(s.move_out)) AS qty ";
+    $qr .= "FROM stock_movement AS s ";
+    $qr .= "LEFT JOIN products AS pd ON s.product_code = pd.code ";
+    $qr .= "WHERE s.date_add <= '{$date}' ";
+
+    if($allProduct == 0)
+    {
+      $qr .= "AND pd.code >= '{$pdFrom}' ";
+      $qr .= "AND pd.code <= '{$pdTo}' ";
+    }
+
+    if($allWhouse == 0)
+    {
+      $wh_list = "";
+      $i = 1;
+      foreach($warehouse as $wh)
+      {
+        $wh_list .= $i === 1 ? "'{$wh}'" : ", '{$wh}'";
+        $i++;
+      }
+
+      $qr .= "AND s.warehouse_code IN({$wh_list}) ";
+    }
+
+    $qr .= "GROUP BY pd.code ";
+    $qr .= "ORDER BY pd.code ASC";
+
+    $rs = $this->db->query($qr);
 
     if($rs->num_rows() > 0)
     {

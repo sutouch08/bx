@@ -26,115 +26,121 @@ class Stock_balance extends PS_Controller
 
   public function get_report()
   {
-    $allProduct = $this->input->get('allProduct');
-    $pdFrom = $this->input->get('pdFrom');
-    $pdTo = $this->input->get('pdTo');
+    ini_set('memory_limit','512M');
 
-    $allWhouse = $this->input->get('allWhouse');
-    $warehouse = $this->input->get('warehouse');
+    $sc = TRUE;
+    $ds = json_decode($this->input->post('data'));
 
-    $wh_list = '';
-    if(!empty($warehouse))
+    if( ! empty($ds))
     {
-      $i = 1;
-      foreach($warehouse as $wh)
+      $whs = "";
+
+      if( ! empty($ds->warehouse))
       {
-        $wh_list .= $i === 1 ? $wh : ', '.$wh;
-        $i++;
-      }
-    }
+        $i = 1;
 
-    //---  Report title
-    $sc['reportDate'] = thai_date(date('Y-m-d'),FALSE, '/');
-    $sc['whList']   = $allWhouse == 1 ? 'ทั้งหมด' : $wh_list;
-    $sc['productList']   = $allProduct == 1 ? 'ทั้งหมด' : '('.$pdFrom.') - ('.$pdTo.')';
-
-
-    $result = $this->inventory_report_model->get_current_stock_balance($allProduct, $pdFrom, $pdTo, $allWhouse, $warehouse);
-
-    $bs = array();
-
-    if(!empty($result))
-    {
-      $no = 1;
-      $totalQty = 0;
-      $totalAmount = 0;
-      foreach($result as $rs)
-      {
-        $item = $this->products_model->get_item($rs->product_code);
-        if(!empty($item))
+        foreach($ds->warehouse as $wh)
         {
-          $arr = array(
+          $whs .= $i === 1 ? $wh : ', '.$wh;
+          $i++;
+        }
+      }
+
+      $bs = [];
+      $bs['items'] = [];
+
+      $bs['reportDate'] = thai_date($ds->date, FALSE, '/');
+      $bs['whList'] = $ds->allWhouse == 1 ? 'ทั้งหมด' : $whs;
+      $bs['productList'] = $ds->allProduct == 1 ? 'ทั้งหมด' : "({$ds->pdFrom}) - ({$ds->pdTo})";
+
+      $date = from_date($ds->date);
+      $today = from_date(now());
+
+      if($date == $today)
+      {
+        $res = $this->inventory_report_model->get_current_stock_balance($ds->allProduct, $ds->pdFrom, $ds->pdTo, $ds->allWhouse, $ds->warehouse);
+      }
+      else
+      {
+        $res = $this->inventory_report_model->get_prev_stock_balance($ds->allProduct, $ds->pdFrom, $ds->pdTo, $ds->allWhouse, $ds->warehouse, $date);
+      }
+
+      if( ! empty($res))
+      {
+        $no = 1;
+        $totalQty = 0;
+        $totalAmount = 0;
+
+        foreach($res as $rs)
+        {
+          $bs['items'][] = array(
             'no' => number($no),
-            'barcode' => $item->barcode,
-            'pdCode' => $item->code,
-            'pdName' => $item->name,
-            'cost' => number($item->cost, 2),
+            'barcode' => $rs->barcode,
+            'pdCode' => $rs->code,
+            'pdName' => $rs->name,
+            'cost' => number($rs->cost, 2),
             'qty' => number($rs->qty),
-            'amount' => number($item->cost * $rs->qty, 2)
+            'amount' => number($rs->cost * $rs->qty, 2)
           );
 
-          array_push($bs, $arr);
           $no++;
-
           $totalQty += $rs->qty;
-          $totalAmount += ($rs->qty * $item->cost);
+          $totalAmount += ($rs->qty * $rs->cost);
         }
 
+        $bs['totalQty'] = number($totalQty);
+        $bs['totalAmount'] = number($totalAmount, 2);
       }
-
-      $arr = array(
-        'totalQty' => number($totalQty),
-        'totalAmount' => number($totalAmount, 2)
-      );
-
-      array_push($bs, $arr);
-
-      $bs;
+      else
+      {
+        $bs['items'][] = ['nodata' => 'nodata'];
+      }
     }
     else
     {
-      $arr = array('nodata' => 'nodata');
-      array_push($bs, $arr);
+      $sc = FALSE;
+      set_error('required');
     }
 
-    $sc['bs'] = $bs;
-
-    echo json_encode($sc);
+    echo $sc == TRUE ? json_encode($bs) : $this->error;
   }
-
-
-
 
 
   public function do_export()
   {
-    $allProduct = $this->input->post('allProduct');
-    $pdFrom = $this->input->post('pdFrom');
-    $pdTo = $this->input->post('pdTo');
+    ini_set('memory_limit','512M');
+    $ds = json_decode($this->input->post('data'));
+    $token = $this->input->post('token');
 
-    $allWhouse = $this->input->post('allWhouse');
-    $warehouse = $this->input->post('warehouse');
+    $whs = "";
 
-
-    $wh_list = '';
-    if(!empty($warehouse))
+    if( ! empty($ds->warehouse))
     {
       $i = 1;
-      foreach($warehouse as $wh)
+
+      foreach($ds->warehouse as $wh)
       {
-        $wh_list .= $i === 1 ? $wh : ', '.$wh;
+        $whs .= $i === 1 ? $wh : ', '.$wh;
         $i++;
       }
     }
 
-
     //---  Report title
-    $report_title = 'รายงานสินค้าคงเหลือ ณ วันที่  '.thai_date(date('Y-m-d'), '/');
-    $wh_title     = 'คลัง :  '. ($allWhouse == 1 ? 'ทั้งหมด' : $wh_list);
-    $pd_title     = 'สินค้า :  '. ($allProduct == 1 ? 'ทั้งหมด' : '('.$pdFrom.') - ('.$pdTo.')');
+    $report_title = 'รายงานสินค้าคงเหลือ ณ วันที่  '.thai_date($ds->date, FALSE, '/');
+    $wh_title = 'คลัง :  '. ($ds->allWhouse == 1 ? 'ทั้งหมด' : $whs);
+    $pd_title = 'สินค้า :  '. ($ds->allProduct == 1 ? 'ทั้งหมด' : "({$ds->pdFrom}) - ({$ds->pdTo})");
 
-    $result = $this->inventory_report_model->get_current_stock_balance($allProduct, $pdFrom, $pdTo, $allWhouse, $warehouse);
+    $date = from_date($ds->date);
+    $today = from_date(now());
+
+    if($date == $today)
+    {
+      $res = $this->inventory_report_model->get_current_stock_balance($ds->allProduct, $ds->pdFrom, $ds->pdTo, $ds->allWhouse, $ds->warehouse);
+    }
+    else
+    {
+      $res = $this->inventory_report_model->get_prev_stock_balance($ds->allProduct, $ds->pdFrom, $ds->pdTo, $ds->allWhouse, $ds->warehouse, $date);
+    }
 
     //--- load excel library
     $this->load->library('excel');
@@ -160,56 +166,45 @@ class Stock_balance extends PS_Controller
     $this->excel->getActiveSheet()->setCellValue('G4', 'มูลค่า');
 
     $row = 5;
-    if(!empty($result))
+
+    if( ! empty($res))
     {
       $no = 1;
-      foreach($result as $rs)
+
+      foreach($res as $rs)
       {
-        $item = $this->products_model->get_item($rs->product_code);
-        if(!empty($item))
-        {
-          $this->excel->getActiveSheet()->setCellValue('A'.$row, $no);
-          $this->excel->getActiveSheet()->setCellValue('B'.$row, $item->barcode);
-          $this->excel->getActiveSheet()->setCellValue('C'.$row, $item->code);
-          $this->excel->getActiveSheet()->setCellValue('D'.$row, $item->name);
-          $this->excel->getActiveSheet()->setCellValue('E'.$row, $item->cost);
-          $this->excel->getActiveSheet()->setCellValue('F'.$row, $rs->qty);
-          $this->excel->getActiveSheet()->setCellValue('G'.$row, ($item->cost * $rs->qty));
-          $no++;
-          $row++;
-        }
+        $this->excel->getActiveSheet()->setCellValue('A'.$row, $no);
+        $this->excel->getActiveSheet()->setCellValue('B'.$row, $rs->barcode);
+        $this->excel->getActiveSheet()->setCellValue('C'.$row, $rs->code);
+        $this->excel->getActiveSheet()->setCellValue('D'.$row, $rs->name);
+        $this->excel->getActiveSheet()->setCellValue('E'.$row, $rs->cost);
+        $this->excel->getActiveSheet()->setCellValue('F'.$row, $rs->qty);
+        $this->excel->getActiveSheet()->setCellValue('G'.$row, ($rs->cost * $rs->qty));
+        $no++;
+        $row++;
       }
 
-      $res = $row -1;
+      $re = $row -1;
 
       $this->excel->getActiveSheet()->setCellValue('A'.$row, 'รวม');
       $this->excel->getActiveSheet()->mergeCells('A'.$row.':E'.$row);
-      $this->excel->getActiveSheet()->setCellValue('F'.$row, '=SUM(F5:F'.$res.')');
-      $this->excel->getActiveSheet()->setCellValue('G'.$row, '=SUM(G5:G'.$res.')');
+      $this->excel->getActiveSheet()->setCellValue('F'.$row, '=SUM(F5:F'.$re.')');
+      $this->excel->getActiveSheet()->setCellValue('G'.$row, '=SUM(G5:G'.$re.')');
 
       $this->excel->getActiveSheet()->getStyle('A'.$row)->getAlignment()->setHorizontal('right');
-      $this->excel->getActiveSheet()->getStyle('B5:B'.$res)->getNumberFormat()->setFormatCode('0');
+      $this->excel->getActiveSheet()->getStyle('B5:B'.$re)->getNumberFormat()->setFormatCode('0');
       $this->excel->getActiveSheet()->getStyle('F5:G'.$row)->getAlignment()->setHorizontal('right');
       $this->excel->getActiveSheet()->getStyle('F5:F'.$row)->getNumberFormat()->setFormatCode('#,##0');
       $this->excel->getActiveSheet()->getStyle('G5:G'.$row)->getNumberFormat()->setFormatCode('#,##0.00');
     }
 
-
+    setToken($token);
     $file_name = "Report Stock Balance.xlsx";
     header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'); /// form excel 2007 XLSX
     header('Content-Disposition: attachment;filename="'.$file_name.'"');
     $writer = PHPExcel_IOFactory::createWriter($this->excel, 'Excel2007');
     $writer->save('php://output');
-
   }
 
 } //--- end class
-
-
-
-
-
-
-
-
- ?>
+?>
