@@ -15,7 +15,7 @@
 
 	<div class="col-lg-1-harf col-md-2 col-sm-2 col-xs-6 padding-5">
 		<label class="display-block not-show">stock</label>
-		<button type="button" class="btn btn-xs btn-primary btn-block" onclick="getSearch()">ตรวจสอบสต็อก</button>
+		<button type="button" class="btn btn-xs btn-primary btn-block" onclick="getStockSearch()">ตรวจสอบสต็อก</button>
 	</div>
 	<div class="col-lg-1-harf col-md-2 col-sm-2 col-xs-6 padding-5">
 		<label class="display-block not-show">stock</label>
@@ -141,7 +141,7 @@ function findOrder(){
 
 
 
-function getSearch(){
+function getStockSearch(){
 	var searchText = $.trim($('#search-text').val());
   var warehouse = $('#warehouse').val();
   var color = $('#color').val();
