@@ -1,5 +1,5 @@
 <?php $this->load->view('include/header'); ?>
-<script src="<?php echo base_url(); ?>/assets/js/md5.min.js"></script>
+<script src="<?php echo base_url(); ?>assets/js/md5.min.js"></script>
 <div class="row">
   <div class="col-lg-6 col-md-6 col-sm-6 col-xs-12 padding-5 padding-top-5">
     <h3 class="title"><?php echo $this->title; ?></h3>
